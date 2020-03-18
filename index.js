@@ -14,7 +14,6 @@ async function googleAuth() {
     client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL, // need to share doc with this email
     private_key: process.env.GOOGLE_PRIVATE_KEY,
   });
-  return 'doc.loadInfo()';
 }
 
 async function listChannels() {
@@ -30,8 +29,20 @@ async function sendMessage(message) {
     })
     .then(response => console.log(response));
 }
-try {
-  sendMessage(googleAuth());
-} catch (error) {
-  console.log(error);
+
+async function getSheetInfo() {
+  await doc.getInfo();
+  const title = await doc.title;
+  return title;
 }
+
+async function start() {
+  try {
+    googleAuth();
+    sendMessage(await getSheetInfo());
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+start();
