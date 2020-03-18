@@ -30,16 +30,39 @@ async function sendMessage(message) {
     .then(response => console.log(response));
 }
 
-async function getSheetInfo() {
+function getTasks(row, heads) {
+  // heads[4-11] are task fields
+  let tasks = '';
+  for (let i = 4; i < 12; i += 1) {
+    if (row[heads[i]] !== '') {
+      tasks += `\n${heads[i]}`;
+    }
+  }
+  return tasks;
+}
+
+async function loadSheet() {
   await doc.getInfo();
-  const title = await doc.title;
-  return title;
+  const sheet = doc.sheetsByIndex[0];
+  const rows = await sheet.getRows();
+  const headers = sheet.headerValues;
+  const txt = `
+  A new Errand has been added.
+
+  ${rows[0].Name}  
+  ${rows[0]['Phone number']}
+  ${rows[0].Address} 
+  needs assistance with the following tasks:
+  ${getTasks(rows[0], headers)}
+  `;
+
+  sendMessage(txt);
 }
 
 async function start() {
   try {
     googleAuth();
-    sendMessage(await getSheetInfo());
+    await loadSheet();
   } catch (error) {
     console.log(error);
   }
