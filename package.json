@@ -1,0 +1,24 @@
+{
+  "name": "slack-volunteer-seeker",
+  "version": "1.0.0",
+  "description": "Slackbot to coordinate errand volunteering",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/astoria-tech/slack-volunteer-seeker.git"
+  },
+  "author": "Kyle Tomanelli",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/astoria-tech/slack-volunteer-seeker/issues"
+  },
+  "homepage": "https://github.com/astoria-tech/slack-volunteer-seeker#readme",
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "google-spreadsheet": "^3.0.10",
+    "slack": "^11.0.2"
+  }
+}
