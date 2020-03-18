@@ -9,17 +9,23 @@ const channel = process.env.CHANNEL_ID;
 
 const bot = new Slack({ token });
 
+let size = 0;
+
+// confirms service account has access to specified spreadsheet
 async function googleAuth() {
   await doc.useServiceAccountAuth({
-    client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL, // need to share doc with this email
+    // need to share doc with this email
+    client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
     private_key: process.env.GOOGLE_PRIVATE_KEY,
   });
 }
 
+// this function is used for initial setup, need to get channel ID for message to send
 async function listChannels() {
   console.log(await bot.channels.list());
 }
 
+// This function actually sends the message to the slack channel
 async function sendMessage(message) {
   await bot.chat
     .postMessage({
@@ -30,6 +36,7 @@ async function sendMessage(message) {
     .then(response => console.log(response));
 }
 
+// Gets list of tasks from spreadsheet and adds to message text
 function getTasks(row, heads) {
   // heads[4-11] are task fields
   let tasks = '';
@@ -41,28 +48,50 @@ function getTasks(row, heads) {
   return tasks;
 }
 
-async function loadSheet() {
-  await doc.getInfo();
+// checks for updates on spreadsheet and executes slack message if new row has been detected
+async function checkRows(headers) {
+  const sheet = doc.sheetsByIndex[0];
+  const rows = await sheet.getRows();
+
+  const difference = rows.length - size;
+  if (difference > 0) {
+    for (let i = 0; i < difference; i += 1) {
+      const txt = `
+        A new Errand has been added.
+      
+        ${rows[size + i].Name}
+        ${rows[size + i]['Phone number']}
+        ${rows[size + i].Address}
+        needs assistance with the following tasks:
+        ${getTasks(rows[size + i], headers)}
+        `;
+
+      sendMessage(txt);
+    }
+    size = rows.length;
+  } else {
+    console.log('no change');
+  }
+}
+
+// Initial check of spreadsheet, contains the setInterval which runs checkRows every 30 seconds
+async function checkSheet() {
   const sheet = doc.sheetsByIndex[0];
   const rows = await sheet.getRows();
   const headers = sheet.headerValues;
-  const txt = `
-  A new Errand has been added.
+  size = rows.length;
 
-  ${rows[0].Name}  
-  ${rows[0]['Phone number']}
-  ${rows[0].Address} 
-  needs assistance with the following tasks:
-  ${getTasks(rows[0], headers)}
-  `;
-
-  sendMessage(txt);
+  setInterval(() => {
+    checkRows(headers);
+  }, 30000);
 }
 
+// start function. Runs google authentication, gets basic doc info and then runs check sheet
 async function start() {
   try {
     googleAuth();
-    await loadSheet();
+    await doc.getInfo();
+    await checkSheet();
   } catch (error) {
     console.log(error);
   }
