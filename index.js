@@ -1,6 +1,16 @@
 require('dotenv').config();
 const { GoogleSpreadsheet } = require('google-spreadsheet');
 
+const NodeGeocoder = require('node-geocoder');
+
+const ngcOptions = {
+  provider: 'mapquest',
+  httpAdapter: 'https',
+  apiKey: process.env.MAPQUEST_KEY,
+  formatter: null,
+};
+const geocoder = NodeGeocoder(ngcOptions);
+
 const doc = new GoogleSpreadsheet(process.env.SHEET_ID);
 const token = process.env.SLACK_XOXB;
 const Slack = require('slack');
@@ -96,5 +106,14 @@ async function start() {
     console.log(error);
   }
 }
-
+function getCoords(address) {
+  return new Promise((resolve, reject) => {
+    geocoder.geocode(address, (err, res) =>
+      resolve({
+        latitude: res[0].latitude,
+        longitude: res[0].longitude,
+      })
+    );
+  });
+}
 start();
