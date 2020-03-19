@@ -18,6 +18,7 @@
   "homepage": "https://github.com/astoria-tech/slack-volunteer-seeker#readme",
   "dependencies": {
     "dotenv": "^8.2.0",
+    "geolib": "^3.2.1",
     "google-spreadsheet": "^3.0.10",
     "node-geocoder": "^3.25.1",
     "slack": "^11.0.2"
