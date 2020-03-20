@@ -4,7 +4,8 @@
   "description": "Slackbot to coordinate errand volunteering",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
   },
   "repository": {
     "type": "git",
@@ -22,5 +23,10 @@
     "google-spreadsheet": "^3.0.10",
     "node-geocoder": "^3.25.1",
     "slack": "^11.0.2"
+  },
+  "devDependencies": {
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb-base": "^14.1.0",
+    "eslint-plugin-import": "^2.20.1"
   }
 }

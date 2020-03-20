@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+
+  bot:
+    build: '.'
+    environment:
+      MAPQUEST_KEY: ${MAPQUEST_KEY}
+      GOOGLE_SERVICE_ACCOUNT_EMAIL: ${GOOGLE_SERVICE_ACCOUNT_EMAIL}
+      GOOGLE_PRIVATE_KEY: ${GOOGLE_PRIVATE_KEY}
+      ERRAND_SHEET_ID: ${ERRAND_SHEET_ID}
+      VOLUNTEER_SHEET_ID: ${VOLUNTEER_SHEET_ID}
+      SLACK_XOXB: ${SLACK_XOXB}
+      CHANNEL_ID: ${CHANNEL_ID}
+    volumes:
+      - './index.js:/srv/index.js'
