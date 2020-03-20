@@ -12,5 +12,6 @@ services:
       VOLUNTEER_SHEET_ID: ${VOLUNTEER_SHEET_ID}
       SLACK_XOXB: ${SLACK_XOXB}
       CHANNEL_ID: ${CHANNEL_ID}
+      AIRTABLE_API_KEY: ${AIRTABLE_API_KEY}
     volumes:
       - './index.js:/srv/index.js'

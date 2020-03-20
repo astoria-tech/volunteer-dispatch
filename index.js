@@ -2,6 +2,7 @@ const { GoogleSpreadsheet } = require('google-spreadsheet');
 const NodeGeocoder = require('node-geocoder');
 const geolib = require('geolib');
 const Slack = require('slack');
+const Airtable = require('airtable');
 require('dotenv').config();
 
 // Geocoder
@@ -12,6 +13,9 @@ const ngcOptions = {
   formatter: null,
 };
 const geocoder = NodeGeocoder(ngcOptions);
+
+// Airtable
+var base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base('appwgY1BPRGt1RBbE');
 
 // Google Sheets
 const errandDoc = new GoogleSpreadsheet(process.env.ERRAND_SHEET_ID);
@@ -73,14 +77,13 @@ async function sendMessage(errand, task, vols) {
 }
 
 // Gets list of tasks from spreadsheet and adds to message text
-function getTasks(row, heads) {
-  // heads[4-11] are task fields
+function formatTasks(row) {
   let tasks = '';
-  for (let i = 4; i < 12; i += 1) {
-    if (row[heads[i]] !== '') {
-      tasks += `\n :exclamation: *${heads[i]}*`;
-    }
-  }
+
+  row.get('I need help with:').forEach((task) => {
+    tasks += `\n :exclamation: *${task}*`;
+  });
+
   return tasks;
 }
 
@@ -96,36 +99,38 @@ function getCoords(address) {
   });
 }
 
+async function asyncForEach(array, callback) {
+  for (let index = 0; index < array.length; index += 1) {
+    await callback(array[index], index, array);
+  }
+}
+
 // accepts errand address and checks volunteer spreadsheet for closest volunteers
 async function findClosestVol(address) {
-  const volSheet = volunteerDoc.sheetsByIndex[0];
-  const volRows = await volSheet.getRows();
-  const addressCoords = await getCoords(address);
-  const vols = [];
+  const recordsAndDistances = [];
   const metersToMiles = 0.000621371;
+  const errandCoords = await getCoords(address);
+  const allVolunteers = await base('Volunteers').select({ view: 'Grid view' }).firstPage();
 
-  for (let i = 0; i < volRows.length; i += 1) {
-    const distance = metersToMiles * geolib.getDistance(
-      await getCoords(volRows[i].Address),
-      addressCoords,
-    );
-    vols.push([i, distance]);
-  }
-  vols.sort((a, b) => {
-    return a[1] - b[1];
+  await asyncForEach(allVolunteers, async (record) => {
+    const volunteerCoords = await getCoords(record.get('Full Street address (You can leave out your apartment/unit.)'));
+    const distance = metersToMiles * geolib.getDistance(volunteerCoords, errandCoords);
+    recordsAndDistances.push([record, distance]);
   });
 
-  const volunteers = {};
-  for (let y = 0; y < 5; y += 1) {
-    if (vols[y]) {
-      volunteers[y + 1] = {
-        Name: volRows[vols[y][0]].Name,
-        Number: volRows[vols[y][0]]['Phone Number'],
-        Distance: vols[y][1],
+  // Sort the volunteers by distance and grab the closest 5
+  const closestVolunteers = recordsAndDistances.sort((a, b) => a[1] - b[1])
+    .slice(0, 5)
+    .map((recordAndDistance) => {
+      const [record, distance] = recordAndDistance;
+      return {
+        Name: record.get('Full Name'),
+        Number: record.get('Please provide your contact phone number:'),
+        Distance: distance,
       };
-    }
-  }
-  return volunteers;
+    });
+
+  return closestVolunteers;
 }
 
 // This function is only for rounding number of decimal points for distance calc
@@ -138,34 +143,36 @@ Number.prototype.toFixedDown = (digits) => {
 
 // checks for updates on errand spreadsheet, finds closest volunteers from volunteer spreadsheet and
 // executes slack message if new row has been detected
-async function checkRows(headers) {
-  const errandSheet = errandDoc.sheetsByIndex[0];
-  const errandRows = await errandSheet.getRows();
+async function checkForNewSubmissions() {
+  base('Submissions').select({ view: 'Grid view' }).firstPage(async (err, records) => {
+    // Return if error
+    if (err) { console.error(err); return; }
 
-  const difference = errandRows.length - size;
-  if (difference > 0) {
-    for (let i = 0; i < difference; i += 1) {
+    // Look for records that have not been posted to slack yet
+    records.forEach(async (record) => {
+      if (record.get('Posted to Slack?') === 'yes') { return; }
+
       const errandObject = {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `${errandRows[size + i].Name}\n${
-            errandRows[size + i]['Phone number']
-          }\n${errandRows[size + i].Address}`,
+          text: `${record.get('Name')}\n${
+            record.get('Phone number')
+          }\n${record.get('Address')}`,
         },
       };
 
+      // Process the requested tasks
       const taskObject = {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `Needs assistance with the following task(s):${getTasks(
-            errandRows[size + i],
-            headers
-          )}`,
+          text: `Needs assistance with the following task(s):${formatTasks(record)}`,
         },
       };
-      const volunteers = await findClosestVol(errandRows[size + i].Address);
+
+      // Find the closest volunteers
+      const volunteers = await findClosestVol(record.get('Address'));
       const volObject = [
         {
           type: 'section',
@@ -176,45 +183,28 @@ async function checkRows(headers) {
         },
       ];
 
-      for (let x = 0; x < Object.keys(volunteers).length; x += 1) {
+      volunteers.forEach((volunteer) => {
         volObject.push({
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text: `${volunteers[1 + x].Name}, ${
-              volunteers[1 + x].Number
-            } - ${volunteers[1 + x].Distance.toFixedDown(2)} Mi.`,
+            text: `${volunteer.Name}, ${volunteer.Number} - ${volunteer.Distance.toFixed(2)} Mi.`,
           },
         });
-      }
+      });
+
+      // Post the message to Slack
       sendMessage(errandObject, taskObject, volObject);
-    }
-    size = errandRows.length;
-  } else {
-    console.log('No new rows detected in the errand sheet.');
-  }
+      record.patchUpdate({ 'Posted to Slack?': 'yes' });
+    });
+  });
 }
 
-// Initial check of spreadsheet, contains the setInterval which runs checkRows every 30 seconds
-async function checkSheet() {
-  const sheet = errandDoc.sheetsByIndex[0];
-  const rows = await sheet.getRows();
-  const headers = sheet.headerValues;
-  size = rows.length;
-
-  setInterval(() => {
-    checkRows(headers);
-  }, 15000);
-}
-
-// start function. Runs google authentication, gets basic doc info and then runs check sheet
 async function start() {
   try {
     // console.log(listChannels());
-    googleAuth();
-    await errandDoc.getInfo();
-    await volunteerDoc.getInfo();
-    await checkSheet();
+    checkForNewSubmissions();
+    setInterval(checkForNewSubmissions, 15000);
   } catch (error) {
     console.log(error);
   }
