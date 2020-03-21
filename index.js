@@ -122,9 +122,9 @@ async function findClosestVol(address) {
     recordsAndDistances.push([record, distance]);
   });
 
-  // Sort the volunteers by distance and grab the closest 5
+  // Sort the volunteers by distance and grab the closest 10
   const closestVolunteers = recordsAndDistances.sort((a, b) => a[1] - b[1])
-    .slice(0, 5)
+    .slice(0, 10)
     .map((recordAndDistance) => {
       const [record, distance] = recordAndDistance;
       return {
@@ -182,7 +182,7 @@ async function checkForNewSubmissions() {
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text: '*Here are the 5 closest Volunteers*',
+            text: '*Here are the 10 closest volunteers*',
           },
         },
       ];
