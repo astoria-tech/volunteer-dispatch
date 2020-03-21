@@ -7,9 +7,13 @@ require('dotenv').config();
 
 // Geocoder
 const ngcOptions = {
-  provider: 'google',
+  //provider: 'google',
+  //apiKey: process.env.GOOGLE_API_KEY,
+
+  provider: 'mapquest',
+  apiKey: process.env.MAPQUEST_KEY,
+
   httpAdapter: 'https',
-  apiKey: process.env.GOOGLE_API_KEY,
   formatter: null,
 };
 const geocoder = NodeGeocoder(ngcOptions);
