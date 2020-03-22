@@ -70,11 +70,18 @@ async function sendMessage(errand, task, vols) {
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text: '*A new errand has been added!*',
+            text: ':exclamation: *A new errand has been added!* :exclamation:',
           },
         },
         errand,
         task,
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: ' ',
+          },
+        },
       ],
       attachments: [
         {
@@ -87,7 +94,7 @@ async function sendMessage(errand, task, vols) {
 
 // Gets list of tasks from spreadsheet and adds to message text
 function formatTasks(row) {
-  return row.get('Tasks').reduce((msg, task) => `${msg}\n :exclamation: *${task}*`, '');
+  return row.get('Tasks').reduce((msg, task) => `${msg}\n :small_orange_diamond: ${task}`, '');
 }
 
 // Accepts an address and returns lat/long
@@ -158,7 +165,7 @@ async function findVolunteers(request) {
   // Figure out which volunteers can fulfill at least one of the tasks
   await base('Volunteers (real)').select({ view: 'Grid view' }).eachPage(async (volunteers, nextPage) => {
     const suitableVolunteers = volunteers.filter((volunteer) => {
-      const capabilities = volunteer.get('I can provide the following support (non-binding)');
+      const capabilities = volunteer.get('I can provide the following support (non-binding)') || [];
 
       // console.log(`\nChecking ${volunteer.get('Full Name')}`);
       // console.log(capabilities);
@@ -211,7 +218,7 @@ async function findVolunteers(request) {
         Name: volunteer.get('Full Name'),
         Number: volunteer.get('Please provide your contact phone number:'),
         Distance: distance,
-        Record: volunteer,
+        record: volunteer,
       };
     });
 
@@ -234,20 +241,24 @@ Number.prototype.toFixedDown = (digits) => {
 // Checks for updates on errand spreadsheet, finds closest volunteers from volunteer spreadsheet and
 // executes slack message if new row has been detected
 async function checkForNewSubmissions() {
-  base('Submissions').select({ view: 'Grid view' }).eachPage(async (records, nextPage) => {
+  base('Requests').select({ view: 'Grid view' }).eachPage(async (records, nextPage) => {
     // Look for records that have not been posted to slack yet
     await asyncForEach(records, async (record) => {
       if (record.get('Posted to Slack?') === 'yes') { return; }
-
       log(`\nProcessing: ${record.get('Name')}`);
 
+      // Prepare the general info
+      const profileURL = `https://airtable.com/tblaL1g6IzH6uPclD/viwEjCF8PkEfQiLFC/${record.id}`
+      const header = [
+        `<${profileURL}|${record.get('Name')}>`,
+        record.get('Phone number'),
+        record.get('Address'),
+      ]
       const errandObject = {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `${record.get('Name')}\n${
-            record.get('Phone number')
-          }\n${record.get('Address')}`,
+          text: header.join('\n'),
         },
       };
 
@@ -256,7 +267,7 @@ async function checkForNewSubmissions() {
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `Needs assistance with the following task(s):${formatTasks(record)}`,
+          text: `*Needs assistance with:*${formatTasks(record)}`,
         },
       };
 
@@ -273,18 +284,22 @@ async function checkForNewSubmissions() {
       ];
 
       volunteers.forEach((volunteer) => {
+        const volunteerURL = `https://airtable.com/tblxqtMAabmJyl98c/viwNYMdylPukGiOYQ/${volunteer.record.id}`;
         volObject.push({
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text: `${volunteer.Name}, ${volunteer.Number} - ${volunteer.Distance.toFixed(2)} Mi.`,
+            text: `<${volunteerURL}|${volunteer.Name}> - ${volunteer.Number} - ${volunteer.Distance.toFixed(2)} Mi.`,
           },
         });
       });
 
       // Post the message to Slack
       sendMessage(errandObject, taskObject, volObject);
-      record.patchUpdate({ 'Posted to Slack?': 'yes' });
+      record.patchUpdate({
+        'Posted to Slack?': 'yes',
+        'Status': 'Needs to be assigned',
+      });
     });
 
     nextPage();
