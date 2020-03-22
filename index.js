@@ -53,11 +53,6 @@ async function googleAuth() {
   });
 }
 
-// This function is used for initial setup, need to get channel ID for message to send
-async function listChannels() {
-  console.log(await bot.channels.list());
-}
-
 // This function actually sends the message to the slack channel
 async function sendMessage(errand, task, vols) {
   await bot.chat
@@ -230,14 +225,6 @@ async function findVolunteers(request) {
   return closestVolunteers;
 }
 
-// This function is only for rounding number of decimal points for distance calc
-// eslint-disable-next-line no-extend-native
-Number.prototype.toFixedDown = (digits) => {
-  const re = new RegExp(`(\\d+\\.\\d{${digits}})(\\d)`);
-  const m = this.toString().match(re);
-  return m ? parseFloat(m[1]) : this.valueOf();
-};
-
 // Checks for updates on errand spreadsheet, finds closest volunteers from volunteer spreadsheet and
 // executes slack message if new row has been detected
 async function checkForNewSubmissions() {
@@ -248,12 +235,12 @@ async function checkForNewSubmissions() {
       log(`\nProcessing: ${record.get('Name')}`);
 
       // Prepare the general info
-      const profileURL = `https://airtable.com/tblaL1g6IzH6uPclD/viwEjCF8PkEfQiLFC/${record.id}`
+      const profileURL = `https://airtable.com/tblaL1g6IzH6uPclD/viwEjCF8PkEfQiLFC/${record.id}`;
       const header = [
         `<${profileURL}|${record.get('Name')}>`,
         record.get('Phone number'),
         record.get('Address'),
-      ]
+      ];
       const errandObject = {
         type: 'section',
         text: {
@@ -283,6 +270,7 @@ async function checkForNewSubmissions() {
         },
       ];
 
+      // Prepare the verbose volunteer info
       volunteers.forEach((volunteer) => {
         const volunteerURL = `https://airtable.com/tblxqtMAabmJyl98c/viwNYMdylPukGiOYQ/${volunteer.record.id}`;
         volObject.push({
@@ -293,6 +281,18 @@ async function checkForNewSubmissions() {
           },
         });
       });
+
+      // Prepare the phone number list
+      if (volunteers.length > 0) {
+        const msg = 'Here are the volunteer phone numbers for easy copy/pasting:';
+        volObject.push({
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: [msg].concat(volunteers.map((v) => v.Number)).join('\n'),
+          },
+        });
+      }
 
       // Post the message to Slack
       sendMessage(errandObject, taskObject, volObject);
