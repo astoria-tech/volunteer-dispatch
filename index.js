@@ -298,7 +298,7 @@ async function checkForNewSubmissions() {
       sendMessage(errandObject, taskObject, volObject);
       record.patchUpdate({
         'Posted to Slack?': 'yes',
-        'Status': 'Needs to be assigned',
+        'Status': 'Needs assigning',
       });
     });
 
