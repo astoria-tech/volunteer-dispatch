@@ -87,13 +87,7 @@ async function sendMessage(errand, task, vols) {
 
 // Gets list of tasks from spreadsheet and adds to message text
 function formatTasks(row) {
-  let tasks = '';
-
-  row.get('I need help with:').forEach((task) => {
-    tasks += `\n :exclamation: *${task}*`;
-  });
-
-  return tasks;
+  return row.get('Tasks').reduce((msg, task) => `${msg}\n :exclamation: *${task}*`, '');
 }
 
 // Accepts an address and returns lat/long
@@ -149,12 +143,16 @@ function log(s) {
   console.log('\x1b[33m%s\x1b[0m', s);
 }
 
+function fullAddress(record) {
+  return `${record.get('Address')} ${record.get('City')}, NY`;
+}
+
 // Accepts errand address and checks volunteer spreadsheet for closest volunteers
 async function findVolunteers(request) {
   const volunteerDistances = [];
   const metersToMiles = 0.000621371;
-  const tasks = request.get('I need help with:');
-  const errandCoords = await getCoords(request.get('Address'));
+  const tasks = request.get('Tasks');
+  const errandCoords = await getCoords(fullAddress(request));
   console.log(`Tasks: ${tasks}`);
 
   // Figure out which volunteers can fulfill at least one of the tasks
