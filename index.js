@@ -89,8 +89,16 @@ async function sendMessage(errand, task, vols) {
 
 // Gets list of tasks from spreadsheet and adds to message text
 function formatTasks(row) {
-  return row.get('Tasks').reduce((msg, task) => `${msg}\n :small_orange_diamond: ${task}`, '');
+  let formattedTasks = '';
+
+  const tasks = row.get('Tasks');
+  if (tasks) {
+    formattedTasks = row.get('Tasks').reduce((msg, task) => `${msg}\n :small_orange_diamond: ${task}`, '');
+  }
+
+  return formattedTasks;
 }
+
 
 // Accepts an address and returns lat/long
 function getCoords(address) {
@@ -153,7 +161,7 @@ function fullAddress(record) {
 async function findVolunteers(request) {
   const volunteerDistances = [];
   const metersToMiles = 0.000621371;
-  const tasks = request.get('Tasks');
+  const tasks = request.get('Tasks') || [];
   const errandCoords = await getCoords(fullAddress(request));
   console.log(`Tasks: ${tasks}`);
 
@@ -259,31 +267,30 @@ async function checkForNewSubmissions() {
       };
 
       // Find the closest volunteers
+      const volObject = [];
       const volunteers = await findVolunteers(record);
-      const volObject = [
-        {
+      if (volunteers.length > 0) {
+        // Header
+        volObject.push({
           type: 'section',
           text: {
             type: 'mrkdwn',
             text: '*Here are the 10 closest volunteers*',
           },
-        },
-      ];
-
-      // Prepare the verbose volunteer info
-      volunteers.forEach((volunteer) => {
-        const volunteerURL = `https://airtable.com/tblxqtMAabmJyl98c/viwNYMdylPukGiOYQ/${volunteer.record.id}`;
-        volObject.push({
-          type: 'section',
-          text: {
-            type: 'mrkdwn',
-            text: `<${volunteerURL}|${volunteer.Name}> - ${volunteer.Number} - ${volunteer.Distance.toFixed(2)} Mi.`,
-          },
         });
-      });
 
-      // Prepare the phone number list
-      if (volunteers.length > 0) {
+        // Prepare the verbose volunteer info
+        volunteers.forEach((volunteer) => {
+          const volunteerURL = `https://airtable.com/tblxqtMAabmJyl98c/viwNYMdylPukGiOYQ/${volunteer.record.id}`;
+          volObject.push({
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: `<${volunteerURL}|${volunteer.Name}> - ${volunteer.Number} - ${volunteer.Distance.toFixed(2)} Mi.`,
+            },
+          });
+        });
+
         const msg = 'Here are the volunteer phone numbers for easy copy/pasting:';
         volObject.push({
           type: 'section',
@@ -291,6 +298,12 @@ async function checkForNewSubmissions() {
             type: 'mrkdwn',
             text: [msg].concat(volunteers.map((v) => v.Number)).join('\n'),
           },
+        });
+      } else {
+        // No volunteers found
+        volObject.push({
+          type: 'section',
+          text: { type: 'mrkdwn', text: '*No volunteers match this request!*\n*Check the full Airtable record, there might be more info there.*' },
         });
       }
 
