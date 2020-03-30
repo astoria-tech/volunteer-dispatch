@@ -2,7 +2,7 @@
 
 A bot which locates the closest volunteers to check-in on & run errands for vulnerable members of the community.
 
-*Made by [Astoria Tech](https://github.com/astoria-tech) volunteers for use by the [Astoria Mutual Aid Network](https://astoriamutualaid.com).*
+*Made by [Astoria Tech](https://github.com/astoria-tech) volunteers, for use by the [Astoria Mutual Aid Network](https://astoriamutualaid.com).*
 
 ## How it works
 
@@ -40,8 +40,8 @@ And grab the API keys from each (and channel ID for Slack), and put them into th
 - Set the environment variables documented above.
 - Run `make develop` and the bot will start running, processing records every 15 seconds.
 
-## Example data
+## Setting up data backend
 
-Volunteers: https://airtable.com/shrx37haiGAG7uRj1/tblcapvKLgHEmpQPN?blocks=hide
+We store our data on Airtable. You can see the data and make your own copy with a single click here:
+https://airtable.com/universe/expOp8DfPcmAPTSOz/volunteer-dispatch
 
-Help Requests: https://airtable.com/shrhx8oySmpSDjvYK/tblPvXZgjE21iTT2e?blocks=hide
