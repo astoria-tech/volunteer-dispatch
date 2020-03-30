@@ -34,7 +34,7 @@ const volunteerDoc = new GoogleSpreadsheet(process.env.VOLUNTEER_SHEET_ID);
 
 // Slack
 const token = process.env.SLACK_XOXB;
-const channel = process.env.CHANNEL_ID;
+const channel = process.env.SLACK_CHANNEL_ID;
 const bot = new Slack({ token });
 
 // Confirms service account has access to specified spreadsheet
