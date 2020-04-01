@@ -38,37 +38,45 @@ const channel = process.env.SLACK_CHANNEL_ID;
 const bot = new Slack({ token });
 
 // This function actually sends the message to the slack channel
-async function sendMessage(errand, task, vols) {
-  await bot.chat
-    .postMessage({
-      token,
-      channel,
-      text: '',
-      blocks: [
-        {
-          type: 'section',
-          text: {
-            type: 'mrkdwn',
-            text: ':exclamation: *A new errand has been added!* :exclamation:',
+function sendMessage(errand, task, vols) {
+  return new Promise((resolve, reject) => {
+    bot.chat
+      .postMessage({
+        token,
+        channel,
+        text: '',
+        blocks: [
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: ':exclamation: *A new errand has been added!* :exclamation:',
+            },
           },
-        },
-        errand,
-        task,
-        {
-          type: 'section',
-          text: {
-            type: 'mrkdwn',
-            text: ' ',
+          errand,
+          task,
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: ' ',
+            },
           },
-        },
-      ],
-      attachments: [
-        {
-          blocks: vols,
-        },
-      ],
-    })
-    .then((response) => console.log(response));
+        ],
+        attachments: [
+          {
+            blocks: vols,
+          },
+        ],
+      }).then((response) => {
+        if (response) {
+          console.log(response);
+          resolve();
+        } else {
+          reject(console.log('Message not sent.'));
+        }
+      }).catch((error) => console.log(error));
+  });
 }
 
 // Gets list of tasks from spreadsheet and adds to message text
@@ -86,12 +94,15 @@ function formatTasks(row) {
 
 // Accepts an address and returns lat/long
 function getCoords(address) {
-  return new Promise((resolve) => {
+  return new Promise((resolve,reject) => {
     geocoder.geocode(address, (err, res) => {
-      resolve({
-        latitude: res[0].latitude,
-        longitude: res[0].longitude,
-      });
+      if(err) reject(console.log(err));
+      else{
+        resolve({
+          latitude: res[0].latitude,
+          longitude: res[0].longitude,
+        });
+      }
     });
   });
 }
@@ -304,11 +315,14 @@ async function checkForNewSubmissions() {
       }
 
       // Post the message to Slack
-      sendMessage(errandObject, taskObject, volObject);
-      record.patchUpdate({
+      sendMessage(errandObject, taskObject, volObject)
+      .then(record.patchUpdate({
         'Posted to Slack?': 'yes',
         'Status': 'Needs assigning',
-      });
+      })
+        .then(console.log('Updated record!'))
+        .catch((error) => console.log(error)))
+      .catch((error) => console.log(error));
     });
 
     nextPage();
