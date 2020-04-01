@@ -1,4 +1,3 @@
-const { GoogleSpreadsheet } = require('google-spreadsheet');
 const NodeGeocoder = require('node-geocoder');
 const geolib = require('geolib');
 const Slack = require('slack');
@@ -28,11 +27,6 @@ const geocoder = NodeGeocoder(ngcOptions);
 // Airtable
 const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base('appwgY1BPRGt1RBbE');
 
-// Google Sheets
-const errandDoc = new GoogleSpreadsheet(process.env.ERRAND_SHEET_ID);
-const volunteerDoc = new GoogleSpreadsheet(process.env.VOLUNTEER_SHEET_ID);
-
-// Slack
 const token = process.env.SLACK_XOXB;
 const channel = process.env.SLACK_CHANNEL_ID;
 const bot = new Slack({ token });
@@ -116,18 +110,13 @@ async function asyncForEach(array, callback) {
 
 const ERRAND_REQUIREMENTS = {
   'Grocery shopping': [
-    'Picking up groceries/prescriptions',
-    'Picking up groceries/medications - For this option',
-    'Running errands for vulnerable neighbors',
+    'Picking up groceries/medications',
   ],
   'Picking up a prescription': [
     'Picking up groceries/medications',
-    'Picking up groceries/medications - For this option',
-    'Running errands for vulnerable neighbors',
   ],
   'Transportation to/from a medical appointment': [
     'Transportation',
-    'Transportation (By selecting this option you are affirming that you have a valid drivers license and valid vehicular insurance through May 2020)',
   ],
   'Dog walking': [
     'Pet-sitting/walking/feeding',
