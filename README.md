@@ -36,7 +36,7 @@ And grab the API keys from each (and channel ID for Slack), and put them into th
 
 ## How to run
 
-- Clone this repo and navigate to the project root in your terminal>
+- Clone this repo and navigate to the project root in your terminal.
 - Set the environment variables documented above.
 - Run `make develop` and the bot will start running, processing records every 15 seconds.
 
@@ -45,3 +45,10 @@ And grab the API keys from each (and channel ID for Slack), and put them into th
 We store our data on Airtable. You can see the data and make your own copy with a single click here:
 https://airtable.com/universe/expOp8DfPcmAPTSOz/volunteer-dispatch
 
+## How we have it deployed
+
+We use a tool called [Shipyard](https://shipyard.build) to deploy the bot. In short, it compiles
+the Docker Compose file to Kubernetes manifests and deploys to a managed cluster.
+
+Shipyard will host the bot for free for any mutual aid or relief organizations. Send a message to
+[covid@shipyard.build](mailto:covid@shipyard.build) and they'll set you up with an account.
