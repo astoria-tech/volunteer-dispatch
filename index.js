@@ -14,11 +14,11 @@ require('dotenv').config();
 
 // Geocoder
 const ngcOptions = {
-  // provider: 'google',
-  // apiKey: process.env.GOOGLE_API_KEY,
+  provider: 'google',
+  apiKey: process.env.GOOGLE_API_KEY,
 
-  provider: 'mapquest',
-  apiKey: process.env.MAPQUEST_KEY,
+  //provider: 'mapquest',
+  //apiKey: process.env.MAPQUEST_KEY,
 
   httpAdapter: 'https',
   formatter: null,
@@ -36,22 +36,6 @@ const volunteerDoc = new GoogleSpreadsheet(process.env.VOLUNTEER_SHEET_ID);
 const token = process.env.SLACK_XOXB;
 const channel = process.env.SLACK_CHANNEL_ID;
 const bot = new Slack({ token });
-
-// Confirms service account has access to specified spreadsheet
-async function googleAuth() {
-  const privateKey = Buffer.from(process.env.GOOGLE_PRIVATE_KEY, 'base64').toString();
-
-  await errandDoc.useServiceAccountAuth({
-    // need to share doc with this email
-    client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-    private_key: privateKey,
-  });
-  await volunteerDoc.useServiceAccountAuth({
-    // need to share doc with this email
-    client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-    private_key: privateKey,
-  });
-}
 
 // This function actually sends the message to the slack channel
 async function sendMessage(errand, task, vols) {
@@ -162,55 +146,67 @@ async function findVolunteers(request) {
   const volunteerDistances = [];
   const metersToMiles = 0.000621371;
   const tasks = request.get('Tasks') || [];
-  const errandCoords = await getCoords(fullAddress(request));
+  let errandCoords;
+  try {
+    errandCoords = await getCoords(fullAddress(request));
+  } catch (e) {
+    /* handle error */
+    console.log(e);
+    return;
+  }
+
   console.log(`Tasks: ${tasks}`);
 
   // Figure out which volunteers can fulfill at least one of the tasks
-  await base('Volunteers (real)').select({ view: 'Grid view' }).eachPage(async (volunteers, nextPage) => {
-    const suitableVolunteers = volunteers.filter((volunteer) => {
-      const capabilities = volunteer.get('I can provide the following support (non-binding)') || [];
+  try {
+    await base('Volunteers (real)').select({ view: 'Grid view' }).eachPage(async (volunteers, nextPage) => {
+      const suitableVolunteers = volunteers.filter((volunteer) => {
+        const capabilities = volunteer.get('I can provide the following support (non-binding)') || [];
 
-      // console.log(`\nChecking ${volunteer.get('Full Name')}`);
-      // console.log(capabilities);
+        // console.log(`\nChecking ${volunteer.get('Full Name')}`);
+        // console.log(capabilities);
 
-      // Figure out which tasks this volunteer can handle
-      const handleableTasks = [];
-      for (let i = 0; i < tasks.length; i += 1) {
-        // If the beginning of any capability matches the requirement,
-        // the volunteer can handle the task
-        const requirements = ERRAND_REQUIREMENTS[tasks[i]];
-        const canHandleTask = requirements.some((r) => capabilities.some((c) => c.startsWith(r)));
+        // Figure out which tasks this volunteer can handle
+        const handleableTasks = [];
+        for (let i = 0; i < tasks.length; i += 1) {
+          // If the beginning of any capability matches the requirement,
+          // the volunteer can handle the task
+          const requirements = ERRAND_REQUIREMENTS[tasks[i]];
+          const canHandleTask = requirements.some((r) => capabilities.some((c) => c.startsWith(r)));
 
-        // Filter out this volunteer if they can't handle the task
-        // console.log(`${volunteer.get('Full Name')} can handle ${tasks[i]}? ${canHandleTask}`);
-        if (canHandleTask) {
-          handleableTasks.push(tasks[i]);
+          // Filter out this volunteer if they can't handle the task
+          // console.log(`${volunteer.get('Full Name')} can handle ${tasks[i]}? ${canHandleTask}`);
+          if (canHandleTask) {
+            handleableTasks.push(tasks[i]);
+          }
         }
-      }
 
-      return handleableTasks.length > 0;
+        return handleableTasks.length > 0;
+      });
+
+      // Calculate the distance to each volunteer
+      await asyncForEach(suitableVolunteers, async (volunteer) => {
+        const volAddress = volunteer.get('Full Street address (You can leave out your apartment/unit.)') || '';
+
+        // Check if we need to retrieve the addresses coordinates
+        // NOTE: We do this to prevent using up our free tier queries on Mapquest (15k/month)
+        if (volAddress !== volunteer.get('_coordinates_address')) {
+          volunteer.set('_coordinates', JSON.stringify(await getCoords(volAddress)));
+          volunteer.set('_coordinates_address', volAddress);
+          volunteer.save();
+        }
+        const volCoords = JSON.parse(volunteer.get('_coordinates'));
+
+        // Calculate the distance
+        const distance = metersToMiles * geolib.getDistance(volCoords, errandCoords);
+        volunteerDistances.push([volunteer, distance]);
+      });
+
+      nextPage();
     });
-
-    // Calculate the distance to each volunteer
-    await asyncForEach(suitableVolunteers, async (volunteer) => {
-      const volAddress = volunteer.get('Full Street address (You can leave out your apartment/unit.)') || '';
-
-      // Check if we need to retrieve the addresses coordinates
-      // NOTE: We do this to prevent using up our free tier queries on Mapquest (15k/month)
-      if (volAddress !== volunteer.get('_coordinates_address')) {
-        volunteer.set('_coordinates', JSON.stringify(await getCoords(volAddress)));
-        volunteer.set('_coordinates_address', volAddress);
-        volunteer.save();
-      }
-      const volCoords = JSON.parse(volunteer.get('_coordinates'));
-
-      // Calculate the distance
-      const distance = metersToMiles * geolib.getDistance(volCoords, errandCoords);
-      volunteerDistances.push([volunteer, distance]);
-    });
-
-    nextPage();
-  });
+  } catch (e) {
+    console.log(e);
+  }
 
   // Sort the volunteers by distance and grab the closest 10
   const closestVolunteers = volunteerDistances.sort((a, b) => a[1] - b[1])
