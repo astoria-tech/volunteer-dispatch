@@ -62,12 +62,11 @@ function sendMessage(errand, task, vols) {
             blocks: vols,
           },
         ],
-      }).then((response) => {
+      }).then((response,err) => {
         if (response) {
-          console.log(response);
-          resolve();
+          resolve(response);
         } else {
-          reject(console.log('Message not sent.'));
+          reject(err);
         }
       }).catch((error) => console.log(error));
   });
@@ -91,8 +90,7 @@ function getCoords(address) {
   return new Promise((resolve,reject) => {
     geocoder.geocode(address, (err, res) => {
       if (err) {
-        console.log(err);
-        reject();
+        reject(err);
       } else {
         resolve({
           latitude: res[0].latitude,
@@ -314,14 +312,19 @@ async function checkForNewSubmissions() {
       }
 
       // Post the message to Slack
-      sendMessage(errandObject, taskObject, volObject)
-        .catch((error) => console.log(error))
-        .then(record.patchUpdate({
+      const slackRes = await sendMessage(
+        errandObject, 
+        taskObject, 
+        volObject
+        );
+       console.log(slackRes);
+       await record
+       .patchUpdate({
           'Posted to Slack?': 'yes',
           'Status': record.get('Status') || 'Needs assigning', // don't overwrite the status
         })
           .then(console.log('Updated record!'))
-          .catch((error) => console.log(error)));
+          .catch((error) => console.log(error));
     });
 
     nextPage();
