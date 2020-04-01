@@ -90,8 +90,10 @@ function formatTasks(row) {
 function getCoords(address) {
   return new Promise((resolve,reject) => {
     geocoder.geocode(address, (err, res) => {
-      if(err) reject(console.log(err));
-      else{
+      if (err) {
+        console.log(err);
+        reject();
+      } else {
         resolve({
           latitude: res[0].latitude,
           longitude: res[0].longitude,
@@ -146,67 +148,75 @@ async function findVolunteers(request) {
   const volunteerDistances = [];
   const metersToMiles = 0.000621371;
   const tasks = request.get('Tasks') || [];
-  let errandCoords;
-  try {
-    errandCoords = await getCoords(fullAddress(request));
-  } catch (e) {
-    /* handle error */
-    console.log(e);
-    return;
-  }
+  const errandCoords = await getCoords(fullAddress(request));
 
   console.log(`Tasks: ${tasks}`);
 
   // Figure out which volunteers can fulfill at least one of the tasks
-  try {
-    await base('Volunteers (real)').select({ view: 'Grid view' }).eachPage(async (volunteers, nextPage) => {
-      const suitableVolunteers = volunteers.filter((volunteer) => {
-        const capabilities = volunteer.get('I can provide the following support (non-binding)') || [];
+  await base('Volunteers (real)').select({ view: 'Grid view' }).eachPage(async (volunteers, nextPage) => {
+    const suitableVolunteers = volunteers.filter((volunteer) => {
+      const capabilities = volunteer.get('I can provide the following support (non-binding)') || [];
 
-        // console.log(`\nChecking ${volunteer.get('Full Name')}`);
-        // console.log(capabilities);
+      // console.log(`\nChecking ${volunteer.get('Full Name')}`);
+      // console.log(capabilities);
 
-        // Figure out which tasks this volunteer can handle
-        const handleableTasks = [];
-        for (let i = 0; i < tasks.length; i += 1) {
-          // If the beginning of any capability matches the requirement,
-          // the volunteer can handle the task
-          const requirements = ERRAND_REQUIREMENTS[tasks[i]];
-          const canHandleTask = requirements.some((r) => capabilities.some((c) => c.startsWith(r)));
+      // Figure out which tasks this volunteer can handle
+      const handleableTasks = [];
+      for (let i = 0; i < tasks.length; i += 1) {
+        // If the beginning of any capability matches the requirement,
+        // the volunteer can handle the task
+        const requirements = ERRAND_REQUIREMENTS[tasks[i]];
+        const canHandleTask = requirements.some((r) => capabilities.some((c) => c.startsWith(r)));
 
-          // Filter out this volunteer if they can't handle the task
-          // console.log(`${volunteer.get('Full Name')} can handle ${tasks[i]}? ${canHandleTask}`);
-          if (canHandleTask) {
-            handleableTasks.push(tasks[i]);
-          }
+        // Filter out this volunteer if they can't handle the task
+        // console.log(`${volunteer.get('Full Name')} can handle ${tasks[i]}? ${canHandleTask}`);
+        if (canHandleTask) {
+          handleableTasks.push(tasks[i]);
         }
+      }
 
-        return handleableTasks.length > 0;
-      });
-
-      // Calculate the distance to each volunteer
-      await asyncForEach(suitableVolunteers, async (volunteer) => {
-        const volAddress = volunteer.get('Full Street address (You can leave out your apartment/unit.)') || '';
-
-        // Check if we need to retrieve the addresses coordinates
-        // NOTE: We do this to prevent using up our free tier queries on Mapquest (15k/month)
-        if (volAddress !== volunteer.get('_coordinates_address')) {
-          volunteer.set('_coordinates', JSON.stringify(await getCoords(volAddress)));
-          volunteer.set('_coordinates_address', volAddress);
-          volunteer.save();
-        }
-        const volCoords = JSON.parse(volunteer.get('_coordinates'));
-
-        // Calculate the distance
-        const distance = metersToMiles * geolib.getDistance(volCoords, errandCoords);
-        volunteerDistances.push([volunteer, distance]);
-      });
-
-      nextPage();
+      return handleableTasks.length > 0;
     });
-  } catch (e) {
-    console.log(e);
-  }
+
+    // Calculate the distance to each volunteer
+    await asyncForEach(suitableVolunteers, async (volunteer) => {
+      const volAddress = volunteer.get('Full Street address (You can leave out your apartment/unit.)') || '';
+
+      // Check if we need to retrieve the addresses coordinates
+      // NOTE: We do this to prevent using up our free tier queries on Mapquest (15k/month)
+      if (volAddress !== volunteer.get('_coordinates_address')) {
+        let newVolCoords;
+        try {
+          newVolCoords = await getCoords(volAddress);
+        } catch (e) {
+          console.log('Unable to retrieve volunteer coordinates:', volunteer.get('Full Name'));
+          return;
+        }
+
+        volunteer.patchUpdate({
+          '_coordinates': JSON.stringify(newVolCoords),
+          '_coordinates_address': volAddress,
+        });
+        volunteer.fetch();
+      }
+
+      // Try to get coordinates for this volunteer
+      let volCoords;
+      try {
+        volCoords = JSON.parse(volunteer.get('_coordinates'));
+      } catch (e) {
+        console.log('Unable to parse volunteer coordinates:', volunteer.get('Full Name'));
+        return;
+      }
+
+      // Calculate the distance
+      const distance = metersToMiles * geolib.getDistance(volCoords, errandCoords);
+
+      volunteerDistances.push([volunteer, distance]);
+    });
+
+    nextPage();
+  });
 
   // Sort the volunteers by distance and grab the closest 10
   const closestVolunteers = volunteerDistances.sort((a, b) => a[1] - b[1])
@@ -305,13 +315,13 @@ async function checkForNewSubmissions() {
 
       // Post the message to Slack
       sendMessage(errandObject, taskObject, volObject)
-      .then(record.patchUpdate({
-        'Posted to Slack?': 'yes',
-        'Status': 'Needs assigning',
-      })
-        .then(console.log('Updated record!'))
-        .catch((error) => console.log(error)))
-      .catch((error) => console.log(error));
+        .catch((error) => console.log(error))
+        .then(record.patchUpdate({
+          'Posted to Slack?': 'yes',
+          'Status': record.get('Status') || 'Needs assigning', // don't overwrite the status
+        })
+          .then(console.log('Updated record!'))
+          .catch((error) => console.log(error)));
     });
 
     nextPage();
@@ -321,10 +331,15 @@ async function checkForNewSubmissions() {
 async function start() {
   try {
     checkForNewSubmissions();
-    setInterval(checkForNewSubmissions, 15000);
+    setInterval(checkForNewSubmissions, 20000);
   } catch (error) {
     console.log(error);
   }
 }
+
+process.on('unhandledRejection', (reason, p) => {
+  console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
+  // application specific logging, throwing an error, or other logic here
+});
 
 start();
