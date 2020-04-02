@@ -99,9 +99,21 @@ function fullAddress(record) {
 async function findVolunteers(request) {
   const volunteerDistances = [];
 
+  let errandCoords;
+    try {
+      errandCoords = await getCoords(fullAddress(request));
+    } catch (e) {
+      console.error('Error getting coordinates for request: '+ e);
+      let errorToInsertInAirtable = Date.now() + ' - ' + e;
+      const existingErrors = request.get('Error');
+      if (typeof existingErrors !== "undefined" && existingErrors.length > 0) {
+          errorToInsertInAirtable = existingErrors + ', ' + errorToInsertInAirtable
+      }
+      base('Requests').update(request.id, {'Error': errorToInsertInAirtable}).catch(console.error);
+      return [];
+    }
+    
   const tasks = request.get('Tasks') || [];
-  const errandCoords = await getCoords(fullAddress(request));
-
   console.log(`Tasks: ${tasks}`);
 
   // Figure out which volunteers can fulfill at least one of the tasks
