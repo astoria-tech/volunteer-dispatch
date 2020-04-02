@@ -1,5 +1,6 @@
 const Slack = require('slack');
 const Airtable = require('airtable');
+const table = require('./table');
 
 const { getCoords, distanceBetweenCoords } = require('./geo');
 require('dotenv').config();
@@ -109,7 +110,7 @@ async function findVolunteers(request) {
       if (typeof existingErrors !== "undefined" && existingErrors.length > 0) {
           errorToInsertInAirtable = existingErrors + ', ' + errorToInsertInAirtable
       }
-      base('Requests').update(request.id, {'Error': errorToInsertInAirtable}).catch(console.error);
+      base(table.REQUESTS).update(request.id, {'Error': errorToInsertInAirtable}).catch(console.error);
       return [];
     }
     
@@ -117,7 +118,7 @@ async function findVolunteers(request) {
   console.log(`Tasks: ${tasks}`);
 
   // Figure out which volunteers can fulfill at least one of the tasks
-  await base('Volunteers (real)').select({ view: 'Grid view' }).eachPage(async (volunteers, nextPage) => {
+  await base(table.VOLUNTEERS).select({ view: 'Grid view' }).eachPage(async (volunteers, nextPage) => {
     const suitableVolunteers = volunteers.filter((volunteer) => {
       const capabilities = volunteer.get('I can provide the following support (non-binding)') || [];
 
@@ -205,7 +206,7 @@ async function findVolunteers(request) {
 // Checks for updates on errand spreadsheet, finds closest volunteers from volunteer spreadsheet and
 // executes slack message if new row has been detected
 async function checkForNewSubmissions() {
-  base('Requests').select({ view: 'Grid view' }).eachPage(async (records, nextPage) => {
+  base(table.REQUESTS).select({ view: 'Grid view' }).eachPage(async (records, nextPage) => {
     // Look for records that have not been posted to slack yet
     for (const record of records) {
       if (record.get('Posted to Slack?') !== 'yes') {
