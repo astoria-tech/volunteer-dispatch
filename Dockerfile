@@ -5,4 +5,4 @@ ADD . ./
 
 RUN npm install
 
-CMD npm start
+CMD ["node", "src/index.js"]
