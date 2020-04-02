@@ -1,5 +1,6 @@
 const NodeGeocoder = require('node-geocoder');
 const geolib = require('geolib');
+require('dotenv').config();
 
 const METERS_TO_MILES = 0.000621371;
 
