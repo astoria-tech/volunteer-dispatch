@@ -94,7 +94,7 @@ function formatTasks(row) {
 function getCoords(address) {
   return new Promise((resolve, reject) => {
     geocoder.geocode(address, (err, res) => {
-      if (err) {
+      if (err || res.length === 0) {
         reject(err);
       } else {
         resolve({
