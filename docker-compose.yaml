@@ -17,3 +17,6 @@ services:
       - ".:/srv/"
       - notused:/srv/node_modules
     command: npm start
+
+volumes:
+  notused:
