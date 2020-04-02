@@ -1,14 +1,22 @@
-version: '3'
+version: "3"
 
 services:
-
   bot:
-    build: '.'
+    build:
+      context: .
+      args:
+        - NODE_ENV=development
     environment:
+      NODE_ENV: development
       MAPQUEST_KEY: ${MAPQUEST_KEY}
       GOOGLE_API_KEY: ${GOOGLE_API_KEY}
       SLACK_XOXB: ${SLACK_XOXB}
       SLACK_CHANNEL_ID: ${SLACK_CHANNEL_ID}
       AIRTABLE_API_KEY: ${AIRTABLE_API_KEY}
     volumes:
-      - './index.js:/srv/index.js'
+      - ".:/srv/"
+      - notused:/srv/node_modules
+    command: npm start
+
+volumes:
+  notused:
