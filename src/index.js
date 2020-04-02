@@ -104,7 +104,7 @@ async function findVolunteers(request) {
     try {
       errandCoords = await getCoords(fullAddress(request));
     } catch (e) {
-      console.error('Error getting coordinates for request: '+ e);
+      console.error('Error getting coordinates for requester ' + request.get('Name') + ' with error: '+ e);
       let errorToInsertInAirtable = Date.now() + ' - ' + e;
       const existingErrors = request.get('Error');
       if (typeof existingErrors !== "undefined" && existingErrors.length > 0) {
