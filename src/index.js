@@ -105,7 +105,7 @@ async function findVolunteers(request) {
   console.log(`Tasks: ${tasks}`);
 
   // Figure out which volunteers can fulfill at least one of the tasks
-  await base('Volunteers (real)').select({ view: 'Grid view' }).eachPage(async (volunteers, nextPage) => {
+  await base('Volunteers').select({ view: 'Grid view' }).eachPage(async (volunteers, nextPage) => {
     const suitableVolunteers = volunteers.filter((volunteer) => {
       const capabilities = volunteer.get('I can provide the following support (non-binding)') || [];
 
