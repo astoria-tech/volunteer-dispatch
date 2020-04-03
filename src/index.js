@@ -1,6 +1,7 @@
 const Slack = require('slack');
 const Airtable = require('airtable');
 const table = require('./table');
+const CustomAirtable = require('./custom-airtable')
 
 const { getCoords, distanceBetweenCoords } = require('./geo');
 require('dotenv').config();
@@ -14,6 +15,7 @@ require('dotenv').config();
 
 // Airtable
 const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base('appwgY1BPRGt1RBbE');
+const customAirtable = new CustomAirtable(base);
 
 const token = process.env.SLACK_XOXB;
 const channel = process.env.SLACK_CHANNEL_ID;
@@ -102,16 +104,11 @@ async function findVolunteers(request) {
 
   let errandCoords;
     try {
-      errandCoords = await getCoords(fullAddress(request));
+        errandCoords = await getCoords(fullAddress(request));
     } catch (e) {
-      console.error('Error getting coordinates for requester ' + request.get('Name') + ' with error: '+ e);
-      let errorToInsertInAirtable = Date.now() + ' - ' + e;
-      const existingErrors = request.get('Error');
-      if (typeof existingErrors !== "undefined" && existingErrors.length > 0) {
-          errorToInsertInAirtable = existingErrors + ', ' + errorToInsertInAirtable
-      }
-      base(table.REQUESTS).update(request.id, {'Error': errorToInsertInAirtable}).catch(console.error);
-      return [];
+        console.error('Error getting coordinates for requester ' + request.get('Name') + ' with error: ' + JSON.stringify(e));
+        customAirtable.logErrorToTable(table.REQUESTS, request, e, 'getCoords');
+        return [];
     }
     
   const tasks = request.get('Tasks') || [];
@@ -154,8 +151,9 @@ async function findVolunteers(request) {
         try {
           newVolCoords = await getCoords(volAddress);
         } catch (e) {
-          console.log('Unable to retrieve volunteer coordinates:', volunteer.get('Full Name'));
-          return;
+            console.log('Unable to retrieve volunteer coordinates:', volunteer.get('Full Name'));
+            customAirtable.logErrorToTable(table.VOLUNTEERS, volunteer, e, 'getCoords');
+            return;
         }
 
         volunteer.patchUpdate({
