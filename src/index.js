@@ -12,7 +12,7 @@ require('dotenv').config();
 */
 
 // Airtable
-const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base('appwgY1BPRGt1RBbE');
+const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base('appEwduS0FSdDmaan');
 
 const token = process.env.SLACK_XOXB;
 const channel = process.env.SLACK_CHANNEL_ID;
