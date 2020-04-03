@@ -4,6 +4,7 @@
     "no-console": "off",
     "no-await-in-loop": "off",
     "quote-props": "off",
-    "no-restricted-syntax": "off"
+    "no-restricted-syntax": "off",
+    "arrow-parens": "off"
   }
 }

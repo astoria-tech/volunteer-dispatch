@@ -1,7 +1,7 @@
 const Airtable = require('airtable');
 
 const { getCoords, distanceBetweenCoords } = require('./geo');
-const { sendMessage } = require('./slack')
+const { sendMessage } = require('./slack');
 
 require('dotenv').config();
 
@@ -139,31 +139,33 @@ async function findVolunteers(request) {
   return closestVolunteers;
 }
 
-// Checks for updates on errand spreadsheet, finds closest volunteers from volunteer spreadsheet and
-// executes slack message if new row has been detected
+// Checks for updates in the Requests table. If new row detected, finds closest volunteers from
+// Volunteers table, and posts the request to Slack
 async function checkForNewSubmissions() {
-    base('Requests').select({ view: 'Grid view' }).eachPage(async (records, nextPage) => {
-        // Look for records that have not been posted to slack yet        
-        records.map(async record => {
-            
-            if (record.get('Posted to Slack?') !== 'yes') {
-                const volunteers = await findVolunteers(record);
-                // Post the message to Slack
-                sendMessage(record, volunteers);
-                    
-                await record.patchUpdate({
-                    'Posted to Slack?': 'yes',
-                    'Status': record.get('Status') || 'Needs assigning', // don't overwrite the status
-                })
-                    .then(console.log('Updated record!'))
-                    .catch((error) => console.log(error));
-                }
+  base('Requests').select({ view: 'Grid view' }).eachPage(async (records, nextPage) => {
+    // Look for records that have not been posted to slack yet
+    records.map(async record => {
+      if (record.get('Posted to Slack?') !== 'yes') {
+        // Find the nearest volunteers
+        const volunteers = await findVolunteers(record);
+
+        // Post the message to Slack
+        sendMessage(record, volunteers);
+
+        // Update the record in Airtable
+        await record.patchUpdate({
+          'Posted to Slack?': 'yes',
+          'Status': record.get('Status') || 'Needs assigning', // Don't overwrite the status
         })
-        
-        nextPage();
+          .then(console.log('Updated record!'))
+          .catch((error) => console.log(error));
+      }
     });
+
+    nextPage();
+  });
 }
-    
+
 async function start() {
   try {
     console.log('Volunteer Dispatch started!');

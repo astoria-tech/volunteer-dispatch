@@ -33,6 +33,7 @@ function getCoords(address) {
   });
 }
 
+// eslint-disable-next-line
 const distanceBetweenCoords = (volCoords, errandCoords) => METERS_TO_MILES * geolib.getDistance(volCoords, errandCoords);
 
 module.exports = {
