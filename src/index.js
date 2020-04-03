@@ -1,7 +1,7 @@
 const Slack = require('slack');
 const Airtable = require('airtable');
 const table = require('./table');
-const CustomAirtable = require('./custom-airtable')
+const CustomAirtable = require('./custom-airtable');
 
 const { getCoords, distanceBetweenCoords } = require('./geo');
 require('dotenv').config();
@@ -103,14 +103,14 @@ async function findVolunteers(request) {
   const volunteerDistances = [];
 
   let errandCoords;
-    try {
-        errandCoords = await getCoords(fullAddress(request));
-    } catch (e) {
-        console.error('Error getting coordinates for requester ' + request.get('Name') + ' with error: ' + JSON.stringify(e));
-        customAirtable.logErrorToTable(table.REQUESTS, request, e, 'getCoords');
-        return [];
-    }
-    
+  try {
+    errandCoords = await getCoords(fullAddress(request));
+  } catch (e) {
+    console.error(`Error getting coordinates for requester ${request.get('Name')} with error: ${JSON.stringify(e)}`);
+    customAirtable.logErrorToTable(table.REQUESTS, request, e, 'getCoords');
+    return [];
+  }
+
   const tasks = request.get('Tasks') || [];
   console.log(`Tasks: ${tasks}`);
 
@@ -151,9 +151,9 @@ async function findVolunteers(request) {
         try {
           newVolCoords = await getCoords(volAddress);
         } catch (e) {
-            console.log('Unable to retrieve volunteer coordinates:', volunteer.get('Full Name'));
-            customAirtable.logErrorToTable(table.VOLUNTEERS, volunteer, e, 'getCoords');
-            return;
+          console.log('Unable to retrieve volunteer coordinates:', volunteer.get('Full Name'));
+          customAirtable.logErrorToTable(table.VOLUNTEERS, volunteer, e, 'getCoords');
+          return;
         }
 
         volunteer.patchUpdate({
