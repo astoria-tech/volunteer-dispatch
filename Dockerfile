@@ -12,4 +12,4 @@ RUN npm install
 
 COPY . ./
 
-CMD ["node", "src/index.js"]
+CMD ["/srv/entrypoints/start.sh"]

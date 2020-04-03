@@ -287,6 +287,7 @@ async function checkForNewSubmissions() {
 
 async function start() {
   try {
+    console.log('Volunteer Dispatch started!');
     checkForNewSubmissions();
     setInterval(checkForNewSubmissions, 20000);
   } catch (error) {

@@ -14,9 +14,5 @@ services:
       SLACK_CHANNEL_ID: ${SLACK_CHANNEL_ID}
       AIRTABLE_API_KEY: ${AIRTABLE_API_KEY}
     volumes:
-      - ".:/srv/"
-      - notused:/srv/node_modules
+      - "./src:/srv/src"
     command: npm start
-
-volumes:
-  notused:
