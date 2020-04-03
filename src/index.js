@@ -1,4 +1,3 @@
-// const Slack = require('slack');
 const Airtable = require('airtable');
 
 const { getCoords, distanceBetweenCoords } = require('./geo');
@@ -14,53 +13,6 @@ require('dotenv').config();
 
 // Airtable
 const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base('appEwduS0FSdDmaan');
-
-// const token = process.env.SLACK_XOXB;
-// const channel = process.env.SLACK_CHANNEL_ID;
-// const bot = new Slack({ token });
-
-// // This function actually sends the message to the slack channel
-// const sendMessage = (errand, task, vols) => bot.chat
-//   .postMessage({
-//     token,
-//     channel,
-//     text: '',
-//     blocks: [
-//       {
-//         type: 'section',
-//         text: {
-//           type: 'mrkdwn',
-//           text: ':exclamation: *A new errand has been added!* :exclamation:',
-//         },
-//       },
-//       errand,
-//       task,
-//       {
-//         type: 'section',
-//         text: {
-//           type: 'mrkdwn',
-//           text: ' ',
-//         },
-//       },
-//     ],
-//     attachments: [
-//       {
-//         blocks: vols,
-//       },
-//     ],
-//   });
-
-// Gets list of tasks from spreadsheet and adds to message text
-function formatTasks(row) {
-  let formattedTasks = '';
-
-  const tasks = row.get('Tasks');
-  if (tasks) {
-    formattedTasks = row.get('Tasks').reduce((msg, task) => `${msg}\n :small_orange_diamond: ${task}`, '');
-  }
-
-  return formattedTasks;
-}
 
 
 const ERRAND_REQUIREMENTS = {
@@ -88,9 +40,9 @@ const ERRAND_REQUIREMENTS = {
   'Other': [],
 };
 
-function log(s) {
-  console.log('\x1b[33m%s\x1b[0m', s);
-}
+// function log(s) {
+//   console.log('\x1b[33m%s\x1b[0m', s);
+// }
 
 function fullAddress(record) {
   return `${record.get('Address')} ${record.get('City')}, NY`;
@@ -194,98 +146,28 @@ async function findVolunteers(request) {
 // Checks for updates on errand spreadsheet, finds closest volunteers from volunteer spreadsheet and
 // executes slack message if new row has been detected
 async function checkForNewSubmissions() {
-  base('Requests').select({ view: 'Grid view' }).eachPage(async (records, nextPage) => {
-    // Look for records that have not been posted to slack yet
-    for (const record of records) {
-      if (record.get('Posted to Slack?') !== 'yes') {
-        log(`\nProcessing: ${record.get('Name')}`);
-
-        // Prepare the general info
-        const profileURL = `https://airtable.com/tblaL1g6IzH6uPclD/viwEjCF8PkEfQiLFC/${record.id}`;
-        const header = [
-          `<${profileURL}|${record.get('Name')}>`,
-          record.get('Phone number'),
-          record.get('Address'),
-        ];
-        const errandObject = {
-          type: 'section',
-          text: {
-            type: 'mrkdwn',
-            text: header.join('\n'),
-          },
-        };
-
-        // Process the requested tasks
-        const taskObject = {
-          type: 'section',
-          text: {
-            type: 'mrkdwn',
-            text: `*Needs assistance with:*${formatTasks(record)}`,
-          },
-        };
-
-        // Find the closest volunteers
-        const volObject = [];
-        const volunteers = await findVolunteers(record);
-        if (volunteers.length > 0) {
-        // Header
-          volObject.push({
-            type: 'section',
-            text: {
-              type: 'mrkdwn',
-              text: '*Here are the 10 closest volunteers*',
-            },
-          });
-
-          // Prepare the verbose volunteer info
-          volunteers.forEach((volunteer) => {
-            const volunteerURL = `https://airtable.com/tblxqtMAabmJyl98c/viwNYMdylPukGiOYQ/${volunteer.record.id}`;
-            volObject.push({
-              type: 'section',
-              text: {
-                type: 'mrkdwn',
-                text: `<${volunteerURL}|${volunteer.Name}> - ${volunteer.Number} - ${volunteer.Distance.toFixed(2)} Mi.`,
-              },
-            });
-          });
-
-          const msg = 'Here are the volunteer phone numbers for easy copy/pasting:';
-          volObject.push({
-            type: 'section',
-            text: {
-              type: 'mrkdwn',
-              text: [msg].concat(volunteers.map((v) => v.Number)).join('\n'),
-            },
-          });
-        } else {
-        // No volunteers found
-          volObject.push({
-            type: 'section',
-            text: { type: 'mrkdwn', text: '*No volunteers match this request!*\n*Check the full Airtable record, there might be more info there.*' },
-          });
-        }
-
-        // Post the message to Slack
-        const slackRes = await sendMessage(
-          errandObject,
-          taskObject,
-          volObject,
-        );
-        console.log(slackRes);
-        await record
-          .patchUpdate({
-            'Posted to Slack?': 'yes',
-            'Status': record.get('Status') || 'Needs assigning', // don't overwrite the status
-          })
-          .then(console.log('Updated record!'))
-          .catch((error) => console.log(error));
-      }
-    }
-
-    nextPage();
-  });
+    base('Requests').select({ view: 'Grid view' }).eachPage(async (records, nextPage) => {
+        // Look for records that have not been posted to slack yet        
+        records.map(async record => {
+            
+            if (record.get('Posted to Slack?') !== 'yes') {
+                const volunteers = await findVolunteers(record);
+                // Post the message to Slack
+                sendMessage(record, volunteers);
+                    
+                await record.patchUpdate({
+                    'Posted to Slack?': 'yes',
+                    'Status': record.get('Status') || 'Needs assigning', // don't overwrite the status
+                })
+                    .then(console.log('Updated record!'))
+                    .catch((error) => console.log(error));
+                }
+        })
+        
+        nextPage();
+    });
 }
-
+    
 async function start() {
   try {
     checkForNewSubmissions();
