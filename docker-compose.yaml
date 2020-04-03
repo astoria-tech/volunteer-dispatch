@@ -7,16 +7,11 @@ services:
       args:
         - NODE_ENV=development
     environment:
-      NODE_ENV: development
+      NODE_ENV: ${NODE_ENV:-development}
       MAPQUEST_KEY: ${MAPQUEST_KEY}
       GOOGLE_API_KEY: ${GOOGLE_API_KEY}
       SLACK_XOXB: ${SLACK_XOXB}
       SLACK_CHANNEL_ID: ${SLACK_CHANNEL_ID}
       AIRTABLE_API_KEY: ${AIRTABLE_API_KEY}
     volumes:
-      - ".:/srv/"
-      - notused:/srv/node_modules
-    command: npm start
-
-volumes:
-  notused:
+      - "./src:/srv/src"

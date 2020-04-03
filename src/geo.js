@@ -9,8 +9,8 @@ const ngcOptions = {
   provider: 'google',
   apiKey: process.env.GOOGLE_API_KEY,
 
-//   provider: 'mapquest',
-//   apiKey: process.env.MAPQUEST_KEY,
+  // provider: 'mapquest',
+  // apiKey: process.env.MAPQUEST_KEY,
 
   httpAdapter: 'https',
   formatter: null,

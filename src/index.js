@@ -2,6 +2,7 @@ const Airtable = require('airtable');
 
 const { getCoords, distanceBetweenCoords } = require('./geo');
 const { sendMessage } = require('./slack')
+
 require('dotenv').config();
 
 /* System notes:
@@ -12,8 +13,7 @@ require('dotenv').config();
 */
 
 // Airtable
-const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base('appEwduS0FSdDmaan');
-
+const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base('appwgY1BPRGt1RBbE');
 
 const ERRAND_REQUIREMENTS = {
   'Grocery shopping': [
@@ -40,10 +40,6 @@ const ERRAND_REQUIREMENTS = {
   'Other': [],
 };
 
-// function log(s) {
-//   console.log('\x1b[33m%s\x1b[0m', s);
-// }
-
 function fullAddress(record) {
   return `${record.get('Address')} ${record.get('City')}, NY`;
 }
@@ -58,7 +54,7 @@ async function findVolunteers(request) {
   console.log(`Tasks: ${tasks}`);
 
   // Figure out which volunteers can fulfill at least one of the tasks
-  await base('Volunteers').select({ view: 'Grid view' }).eachPage(async (volunteers, nextPage) => {
+  await base('Volunteers (real)').select({ view: 'Grid view' }).eachPage(async (volunteers, nextPage) => {
     const suitableVolunteers = volunteers.filter((volunteer) => {
       const capabilities = volunteer.get('I can provide the following support (non-binding)') || [];
 
@@ -170,6 +166,7 @@ async function checkForNewSubmissions() {
     
 async function start() {
   try {
+    console.log('Volunteer Dispatch started!');
     checkForNewSubmissions();
     setInterval(checkForNewSubmissions, 20000);
   } catch (error) {
