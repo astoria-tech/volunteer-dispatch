@@ -142,7 +142,7 @@ async function findVolunteers(request) {
           newVolCoords = await getCoords(volAddress);
         } catch (e) {
           console.log('Unable to retrieve volunteer coordinates:', volunteer.get('Full Name'));
-          return;
+          continue;
         }
 
         volunteer.patchUpdate({
@@ -158,7 +158,7 @@ async function findVolunteers(request) {
         volCoords = JSON.parse(volunteer.get('_coordinates'));
       } catch (e) {
         console.log('Unable to parse volunteer coordinates:', volunteer.get('Full Name'));
-        return;
+        continue;
       }
 
       // Calculate the distance
