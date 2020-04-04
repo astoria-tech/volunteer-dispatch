@@ -3,7 +3,6 @@ const Slack = require("slack");
 const token = process.env.SLACK_XOXB;
 const channel = process.env.SLACK_CHANNEL_ID;
 const bot = new Slack({ token });
-const requestsURL = "https://airtable.com/tblaL1g6IzH6uPclD/viwEjCF8PkEfQiLFC/";
 
 // This function actually sends the message to the slack channel
 const sendMessage = (record, volunteers) => {
@@ -29,7 +28,7 @@ const sendMessage = (record, volunteers) => {
 };
 
 const getRequester = record => {
-  const recordURL = `${requestsURL}${record.id}`;
+  const recordURL = `${process.env.AIRTABLE_REQUESTS_SHEET_URL}${record.id}`;
   const textLines = [
     `<${recordURL}|${record.get("Name")}>`,
     record.get("Phone number"),
@@ -79,7 +78,7 @@ const getVolunteers = volunteers => {
 
     // Prepare the detailed volunteer info
     volunteers.forEach(volunteer => {
-      const volunteerURL = `https://airtable.com/tblxqtMAabmJyl98c/viwNYMdylPukGiOYQ/${volunteer.record.id}`;
+      const volunteerURL = `${process.env.AIRTABLE_VOLUNTEERS_SHEET_URL}${volunteer.record.id}`;
       const volunteerText = `<${volunteerURL}|${volunteer.Name}> - ${
         volunteer.Number
       } - ${volunteer.Distance.toFixed(2)} Mi.`;
