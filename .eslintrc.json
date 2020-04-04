@@ -1,6 +1,7 @@
 {
   "extends": "airbnb-base",
   "rules": {
+    "arrow-parens": "off",
     "no-console": "off",
     "no-await-in-loop": "off",
     "quote-props": "off",
