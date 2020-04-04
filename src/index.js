@@ -158,6 +158,7 @@ async function checkForNewSubmissions() {
   base(table.REQUESTS).select({ view: 'Grid view' }).eachPage(async (records, nextPage) => {
     // Look for records that have not been posted to slack yet
     for (const record of records) {
+      if (typeof record.get('Name') === 'undefined') continue;
       if (record.get('Posted to Slack?') !== 'yes') {
         console.log(`\nProcessing: ${record.get('Name')}`);
 
