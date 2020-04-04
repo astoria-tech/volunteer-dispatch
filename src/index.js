@@ -153,7 +153,8 @@ async function findVolunteers(request) {
         } catch (e) {
           console.log('Unable to retrieve volunteer coordinates:', volunteer.get('Full Name'));
           customAirtable.logErrorToTable(table.VOLUNTEERS, volunteer, e, 'getCoords');
-          return;
+          // eslint-disable-next-line no-continue
+          continue;
         }
 
         volunteer.patchUpdate({
@@ -169,7 +170,8 @@ async function findVolunteers(request) {
         volCoords = JSON.parse(volunteer.get('_coordinates'));
       } catch (e) {
         console.log('Unable to parse volunteer coordinates:', volunteer.get('Full Name'));
-        return;
+        // eslint-disable-next-line no-continue
+        continue;
       }
 
       // Calculate the distance
