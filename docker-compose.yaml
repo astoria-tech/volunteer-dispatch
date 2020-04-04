@@ -5,7 +5,7 @@ services:
     build:
       context: .
       args:
-        - NODE_ENV=development
+        - NODE_ENV=${NODE_ENV:-development}
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       MAPQUEST_KEY: ${MAPQUEST_KEY}
@@ -13,5 +13,6 @@ services:
       SLACK_XOXB: ${SLACK_XOXB}
       SLACK_CHANNEL_ID: ${SLACK_CHANNEL_ID}
       AIRTABLE_API_KEY: ${AIRTABLE_API_KEY}
+      AIRTABLE_BASE_ID: ${AIRTABLE_BASE_ID}
     volumes:
       - "./src:/srv/src"
