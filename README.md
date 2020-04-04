@@ -29,7 +29,9 @@ Get the integration points setup:
 
 And grab the API keys from each (and channel ID for Slack), and put them into the following enviornment variables:
 
+- `NODE_ENV` - "development" or "production". "development" uses Mapquest as your Geo provider; "production" will use Google.
 - `AIRTABLE_API_KEY`
+- `AIRTABLE_BASE_ID` - Get this from the [Airtable API page](https://airtable.com/api): click the workspace you're testing on (see the "Setting up data backend" section below)
 - `MAPQUEST_KEY`
 - `SLACK_XOXB` - Slack bot token. To setup: create an app, add the OAuth `chat:write` bot scope, install the app to a channel, and grab the bot token
 - `SLACK_CHANNEL_ID` - Slack channel ID, something like `C0107MVRF08`

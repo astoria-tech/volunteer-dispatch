@@ -5,10 +5,18 @@ services:
   bot:
     build: '.'
     environment:
+<<<<<<< HEAD
+=======
+      NODE_ENV: ${NODE_ENV:-development}
+>>>>>>> bd54cda25cfbe864dcb006cdee8c33096a812fab
       MAPQUEST_KEY: ${MAPQUEST_KEY}
       GOOGLE_API_KEY: ${GOOGLE_API_KEY}
       SLACK_XOXB: ${SLACK_XOXB}
       SLACK_CHANNEL_ID: ${SLACK_CHANNEL_ID}
       AIRTABLE_API_KEY: ${AIRTABLE_API_KEY}
     volumes:
+<<<<<<< HEAD
       - './index.js:/srv/index.js'
+=======
+      - "./src:/srv/src"
+>>>>>>> bd54cda25cfbe864dcb006cdee8c33096a812fab

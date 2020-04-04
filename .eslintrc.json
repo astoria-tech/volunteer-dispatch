@@ -4,6 +4,11 @@
     "no-console": "off",
     "no-await-in-loop": "off",
     "quote-props": "off",
+<<<<<<< HEAD
     "no-restricted-syntax": "off"
+=======
+    "no-restricted-syntax": "off",
+    "arrow-parens": "off"
+>>>>>>> bd54cda25cfbe864dcb006cdee8c33096a812fab
   }
 }
