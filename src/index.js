@@ -12,6 +12,7 @@ require('dotenv').config();
 */
 
 // Airtable
+// eslint-disable-next-line
 const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(process.env.AIRTABLE_BASE_ID);
 
 const ERRAND_REQUIREMENTS = {

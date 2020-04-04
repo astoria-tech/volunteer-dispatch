@@ -3,6 +3,7 @@
   "rules": {
     "arrow-parens": "off",
     "no-console": "off",
+    "no-continue": "off",
     "no-await-in-loop": "off",
     "quote-props": "off",
     "no-restricted-syntax": "off"
