@@ -52,6 +52,7 @@ const doesVolunteerHaveACar = (volunteer) => {
   }
   return false;
 };
+
 const possibleTasks = [
   new Task('Grocery shopping', ['Picking up groceries/medications']),
   new Task('Picking up a prescription', ['Picking up groceries/medications']),
@@ -68,8 +69,10 @@ const possibleTasks = [
     'Checking in on people',
     'Navigating the health care/insurance websites',
   ]),
-  new Task('Other', []),
+  // Set an unmatchable requirement since we don't know the nature of an "Other"
+  new Task('Other', ['unmatchable-requirement']),
 ];
+
 const cache = {};
 possibleTasks.forEach((errand) => {
   cache[errand.rawTask] = errand;
