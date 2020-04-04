@@ -5,27 +5,15 @@ require('dotenv').config();
 const METERS_TO_MILES = 0.000621371;
 
 // Geocoder
-const getNgcOptions = () => {
-  const options = {
-    httpAdapter: 'https',
-    formatter: null,
-  };
-
-  if (process.env.NODE_ENV === 'development') {
-    options.provider = 'mapquest';
-    options.apiKey = process.env.MAPQUEST_KEY;
-  } else if (process.env.NODE_ENV === 'production') {
-    options.provider = 'google';
-    options.apiKey = process.env.GOOGLE_API_KEY;
-  } else {
-    console.error('Please set NODE_ENV in .env to development or production');
-    process.exit(1);
-  }
-
-  return options;
+const ngcOptions = {
+  httpAdapter: 'https',
+  formatter: null,
 };
 
-const ngcOptions = getNgcOptions();
+// Use Google Maps if API key provided, otherwise use MapQuest
+const useGoogleApi = process.env.GOOGLE_API_KEY !== '';
+ngcOptions.provider = useGoogleApi ? 'google' : 'mapquest';
+ngcOptions.apiKey = useGoogleApi ? process.env.GOOGLE_API_KEY : process.env.MAPQUEST_KEY;
 const geocoder = NodeGeocoder(ngcOptions);
 
 // Accepts an address and returns lat/long
