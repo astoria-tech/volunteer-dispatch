@@ -13,7 +13,7 @@ const ngcOptions = {
 // Use Google Maps if API key provided, otherwise use MapQuest
 const useGoogleApi = process.env.GOOGLE_API_KEY !== '';
 ngcOptions.provider = useGoogleApi ? 'google' : 'mapquest';
-ngcOptions.apiKey = useGoogleApi ? process.env.GOOGLE_API_KEY : process.env.MAPQUEST_KEY
+ngcOptions.apiKey = useGoogleApi ? process.env.GOOGLE_API_KEY : process.env.MAPQUEST_KEY;
 const geocoder = NodeGeocoder(ngcOptions);
 
 // Accepts an address and returns lat/long
