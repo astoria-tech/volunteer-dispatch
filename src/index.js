@@ -1,4 +1,6 @@
 const Airtable = require('airtable');
+const table = require('./table');
+const CustomAirtable = require('./custom-airtable');
 
 const { sendMessage } = require('./slack');
 const { getCoords, distanceBetweenCoords } = require('./geo');
@@ -14,6 +16,7 @@ require('dotenv').config();
 // Airtable
 // eslint-disable-next-line
 const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(process.env.AIRTABLE_BASE_ID);
+const customAirtable = new CustomAirtable(base);
 
 const ERRAND_REQUIREMENTS = {
   'Grocery shopping': [
@@ -48,13 +51,20 @@ function fullAddress(record) {
 async function findVolunteers(request) {
   const volunteerDistances = [];
 
-  const tasks = request.get('Tasks') || [];
-  const errandCoords = await getCoords(fullAddress(request));
+  let errandCoords;
+  try {
+    errandCoords = await getCoords(fullAddress(request));
+  } catch (e) {
+    console.error(`Error getting coordinates for requester ${request.get('Name')} with error: ${JSON.stringify(e)}`);
+    customAirtable.logErrorToTable(table.REQUESTS, request, e, 'getCoords');
+    return [];
+  }
 
+  const tasks = request.get('Tasks') || [];
   console.log(`Tasks: ${tasks}`);
 
   // Figure out which volunteers can fulfill at least one of the tasks
-  await base('Volunteers').select({ view: 'Grid view' }).eachPage(async (volunteers, nextPage) => {
+  await base(table.VOLUNTEERS).select({ view: 'Grid view' }).eachPage(async (volunteers, nextPage) => {
     const suitableVolunteers = volunteers.filter((volunteer) => {
       const capabilities = volunteer.get('I can provide the following support (non-binding)') || [];
 
@@ -91,6 +101,8 @@ async function findVolunteers(request) {
           newVolCoords = await getCoords(volAddress);
         } catch (e) {
           console.log('Unable to retrieve volunteer coordinates:', volunteer.get('Full Name'));
+          customAirtable.logErrorToTable(table.VOLUNTEERS, volunteer, e, 'getCoords');
+          // eslint-disable-next-line no-continue
           continue;
         }
 
@@ -107,6 +119,7 @@ async function findVolunteers(request) {
         volCoords = JSON.parse(volunteer.get('_coordinates'));
       } catch (e) {
         console.log('Unable to parse volunteer coordinates:', volunteer.get('Full Name'));
+        // eslint-disable-next-line no-continue
         continue;
       }
 
@@ -142,7 +155,7 @@ async function findVolunteers(request) {
 // Checks for updates on errand spreadsheet, finds closest volunteers from volunteer spreadsheet and
 // executes slack message if new row has been detected
 async function checkForNewSubmissions() {
-  base('Requests').select({ view: 'Grid view' }).eachPage(async (records, nextPage) => {
+  base(table.REQUESTS).select({ view: 'Grid view' }).eachPage(async (records, nextPage) => {
     // Look for records that have not been posted to slack yet
     for (const record of records) {
       if (record.get('Posted to Slack?') !== 'yes') {

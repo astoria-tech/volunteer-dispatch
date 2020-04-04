@@ -44,7 +44,7 @@ function getCoords(address) {
   });
 }
 
-// eslint-disable-next-line
+// eslint-disable-next-line max-len
 const distanceBetweenCoords = (volCoords, errandCoords) => METERS_TO_MILES * geolib.getDistance(volCoords, errandCoords);
 
 module.exports = {
