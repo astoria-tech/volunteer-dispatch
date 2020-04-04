@@ -1,5 +1,6 @@
 const Slack = require('slack');
 const Airtable = require('airtable');
+const Task = require('./task');
 
 const { getCoords, distanceBetweenCoords } = require('./geo');
 require('dotenv').config();
@@ -62,31 +63,6 @@ function formatTasks(row) {
 }
 
 
-const ERRAND_REQUIREMENTS = {
-  'Grocery shopping': [
-    'Picking up groceries/medications',
-  ],
-  'Picking up a prescription': [
-    'Picking up groceries/medications',
-  ],
-  'Transportation to/from a medical appointment': [
-    'Transportation',
-  ],
-  'Dog walking': [
-    'Pet-sitting/walking/feeding',
-  ],
-  'Loneliness': [
-    'Check-in on folks throughout the day (in-person or phone call)',
-    'Checking in on people',
-  ],
-  'Accessing verified health information': [
-    'Check-in on folks throughout the day (in-person or phone call)',
-    'Checking in on people',
-    'Navigating the health care/insurance websites',
-  ],
-  'Other': [],
-};
-
 function log(s) {
   console.log('\x1b[33m%s\x1b[0m', s);
 }
@@ -99,36 +75,15 @@ function fullAddress(record) {
 async function findVolunteers(request) {
   const volunteerDistances = [];
 
-  const tasks = request.get('Tasks') || [];
+  const tasks = request.get('Tasks').map(Task.mapFromRawTask) || [];
   const errandCoords = await getCoords(fullAddress(request));
 
-  console.log(`Tasks: ${tasks}`);
+  console.log(`Tasks: ${tasks.map((task) => task.rawTask).join(', ')}`);
 
   // Figure out which volunteers can fulfill at least one of the tasks
   await base('Volunteers (real)').select({ view: 'Grid view' }).eachPage(async (volunteers, nextPage) => {
-    const suitableVolunteers = volunteers.filter((volunteer) => {
-      const capabilities = volunteer.get('I can provide the following support (non-binding)') || [];
-
-      // console.log(`\nChecking ${volunteer.get('Full Name')}`);
-      // console.log(capabilities);
-
-      // Figure out which tasks this volunteer can handle
-      const handleableTasks = [];
-      for (let i = 0; i < tasks.length; i += 1) {
-        // If the beginning of any capability matches the requirement,
-        // the volunteer can handle the task
-        const requirements = ERRAND_REQUIREMENTS[tasks[i]];
-        const canHandleTask = requirements.some((r) => capabilities.some((c) => c.startsWith(r)));
-
-        // Filter out this volunteer if they can't handle the task
-        // console.log(`${volunteer.get('Full Name')} can handle ${tasks[i]}? ${canHandleTask}`);
-        if (canHandleTask) {
-          handleableTasks.push(tasks[i]);
-        }
-      }
-
-      return handleableTasks.length > 0;
-    });
+    const suitableVolunteers = volunteers.filter((volunteer) => tasks
+      .some((task) => task.canBeFulfilledByVolunteer(volunteer)));
 
     // Calculate the distance to each volunteer
     for (const volunteer of suitableVolunteers) {
@@ -142,6 +97,7 @@ async function findVolunteers(request) {
           newVolCoords = await getCoords(volAddress);
         } catch (e) {
           console.log('Unable to retrieve volunteer coordinates:', volunteer.get('Full Name'));
+          // eslint-disable-next-line no-continue
           continue;
         }
 
@@ -158,6 +114,7 @@ async function findVolunteers(request) {
         volCoords = JSON.parse(volunteer.get('_coordinates'));
       } catch (e) {
         console.log('Unable to parse volunteer coordinates:', volunteer.get('Full Name'));
+        // eslint-disable-next-line no-continue
         continue;
       }
 
