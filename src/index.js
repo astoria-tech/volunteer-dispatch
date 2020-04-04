@@ -156,26 +156,30 @@ async function findVolunteers(request) {
 // executes slack message if new row has been detected
 async function checkForNewSubmissions() {
   base(table.REQUESTS).select({ view: 'Grid view' }).eachPage(async (records, nextPage) => {
+    // Remove records we don't want to process from the array.
+    const cleanRecords = records.filter(r => {
+      if (typeof r.get('Name') === 'undefined') return false;
+      if (r.get('Posted to Slack?') === 'yes') return false;
+      return true;
+    });
+
     // Look for records that have not been posted to slack yet
-    for (const record of records) {
-      if (typeof record.get('Name') === 'undefined') continue;
-      if (record.get('Posted to Slack?') !== 'yes') {
-        console.log(`\nProcessing: ${record.get('Name')}`);
+    for (const record of cleanRecords) {
+      console.log(`\nProcessing: ${record.get('Name')}`);
 
-        // Find the closest volunteers
-        const volunteers = await findVolunteers(record);
+      // Find the closest volunteers
+      const volunteers = await findVolunteers(record);
 
-        // Send the message to Slack
-        sendMessage(record, volunteers);
+      // Send the message to Slack
+      sendMessage(record, volunteers);
 
-        await record
-          .patchUpdate({
-            'Posted to Slack?': 'yes',
-            'Status': record.get('Status') || 'Needs assigning', // don't overwrite the status
-          })
-          .then(console.log('Updated record!'))
-          .catch((error) => console.log(error));
-      }
+      await record
+        .patchUpdate({
+          'Posted to Slack?': 'yes',
+          'Status': record.get('Status') || 'Needs assigning', // don't overwrite the status
+        })
+        .then(console.log('Updated record!'))
+        .catch((error) => console.log(error));
     }
 
     nextPage();
