@@ -1,4 +1,5 @@
 const Airtable = require('airtable');
+const Task = require('./task');
 const table = require('./table');
 const CustomAirtable = require('./custom-airtable');
 
@@ -14,34 +15,9 @@ require('dotenv').config();
 */
 
 // Airtable
-// eslint-disable-next-line
+// eslint-disable-next-line max-len
 const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(process.env.AIRTABLE_BASE_ID);
 const customAirtable = new CustomAirtable(base);
-
-const ERRAND_REQUIREMENTS = {
-  'Grocery shopping': [
-    'Picking up groceries/medications',
-  ],
-  'Picking up a prescription': [
-    'Picking up groceries/medications',
-  ],
-  'Transportation to/from a medical appointment': [
-    'Transportation',
-  ],
-  'Dog walking': [
-    'Pet-sitting/walking/feeding',
-  ],
-  'Loneliness': [
-    'Check-in on folks throughout the day (in-person or phone call)',
-    'Checking in on people',
-  ],
-  'Accessing verified health information': [
-    'Check-in on folks throughout the day (in-person or phone call)',
-    'Checking in on people',
-    'Navigating the health care/insurance websites',
-  ],
-  'Other': [],
-};
 
 function fullAddress(record) {
   return `${record.get('Address')} ${record.get('City')}, NY`;
@@ -51,6 +27,7 @@ function fullAddress(record) {
 async function findVolunteers(request) {
   const volunteerDistances = [];
 
+  const tasks = request.get('Tasks').map(Task.mapFromRawTask) || [];
   let errandCoords;
   try {
     errandCoords = await getCoords(fullAddress(request));
@@ -60,34 +37,12 @@ async function findVolunteers(request) {
     return [];
   }
 
-  const tasks = request.get('Tasks') || [];
-  console.log(`Tasks: ${tasks}`);
+  console.log(`Tasks: ${tasks.map((task) => task.rawTask).join(', ')}`);
 
   // Figure out which volunteers can fulfill at least one of the tasks
   await base(table.VOLUNTEERS).select({ view: 'Grid view' }).eachPage(async (volunteers, nextPage) => {
-    const suitableVolunteers = volunteers.filter((volunteer) => {
-      const capabilities = volunteer.get('I can provide the following support (non-binding)') || [];
-
-      // console.log(`\nChecking ${volunteer.get('Full Name')}`);
-      // console.log(capabilities);
-
-      // Figure out which tasks this volunteer can handle
-      const handleableTasks = [];
-      for (let i = 0; i < tasks.length; i += 1) {
-        // If the beginning of any capability matches the requirement,
-        // the volunteer can handle the task
-        const requirements = ERRAND_REQUIREMENTS[tasks[i]];
-        const canHandleTask = requirements.some((r) => capabilities.some((c) => c.startsWith(r)));
-
-        // Filter out this volunteer if they can't handle the task
-        // console.log(`${volunteer.get('Full Name')} can handle ${tasks[i]}? ${canHandleTask}`);
-        if (canHandleTask) {
-          handleableTasks.push(tasks[i]);
-        }
-      }
-
-      return handleableTasks.length > 0;
-    });
+    // eslint-disable-next-line max-len
+    const suitableVolunteers = volunteers.filter((volunteer) => tasks.some((task) => task.canBeFulfilledByVolunteer(volunteer)));
 
     // Calculate the distance to each volunteer
     for (const volunteer of suitableVolunteers) {
