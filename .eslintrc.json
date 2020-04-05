@@ -1,5 +1,9 @@
 {
-  "extends": ["airbnb-base","plugin:jest/recommended"],
+  "extends": [
+    "airbnb-base",
+    "plugin:jest/recommended",
+    "plugin:prettier/recommended"
+  ],
   "plugins": ["jest"],
   "rules": {
     "arrow-parens": "off",

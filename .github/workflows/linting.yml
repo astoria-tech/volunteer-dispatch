@@ -23,3 +23,13 @@ jobs:
         run: npm ci
       - name: ESlint
         run: npm run lint
+  no-console:
+    runs-on: ubuntu-latest
+    container:
+      image: node:12
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Check for console usage
+        run: |
+          [ $(grep -R "console." src | wc -l) = 0 ]

@@ -1,22 +1,22 @@
-require('dotenv').config();
-const Slack = require('slack');
+require("dotenv").config();
+const Slack = require("slack");
 
 const token = process.env.SLACK_XOXB;
 const channel = process.env.SLACK_CHANNEL_ID;
 const bot = new Slack({ token });
 
 const formatTasks = (record) => {
-  const tasks = record.get('Tasks');
-  const otherTasks = record.get('Task - other');
+  const tasks = record.get("Tasks");
+  const otherTasks = record.get("Task - other");
 
   // Put each task on a new line
-  let formattedTasks = '';
+  let formattedTasks = "";
   if (tasks) {
     formattedTasks = record
-      .get('Tasks')
+      .get("Tasks")
       .reduce(
         (taskList, task) => `${taskList}\n :small_orange_diamond: ${task}`,
-        '',
+        ""
       );
   }
 
@@ -28,25 +28,25 @@ const formatTasks = (record) => {
 };
 
 const getSection = (text) => ({
-  type: 'section',
+  type: "section",
   text: {
-    type: 'mrkdwn',
+    type: "mrkdwn",
     text,
   },
 });
 
 const getLanguage = (record) => {
-  const languages = [record.get('Language'), record.get('Language - other')];
+  const languages = [record.get("Language"), record.get("Language - other")];
 
   const languageList = languages
     .reduce((list, language) => {
       if (language) list.push(language);
       return list;
     }, [])
-    .join(', ');
+    .join(", ");
 
   const formattedLanguageList = `Speaks: ${
-    languageList.length ? languageList : 'None specified'
+    languageList.length ? languageList : "None specified"
   }`;
 
   return formattedLanguageList;
@@ -55,13 +55,13 @@ const getLanguage = (record) => {
 const getRequester = (record) => {
   const recordURL = `${process.env.AIRTABLE_REQUESTS_VIEW_URL}/${record.id}`;
   const textLines = [
-    '*Requester:*',
-    `<${recordURL}|${record.get('Name')}>`,
-    record.get('Phone number'),
-    record.get('Address'),
+    "*Requester:*",
+    `<${recordURL}|${record.get("Name")}>`,
+    record.get("Phone number"),
+    record.get("Address"),
     getLanguage(record),
   ];
-  const text = textLines.join('\n');
+  const text = textLines.join("\n");
 
   const requesterObject = getSection(text);
 
@@ -77,10 +77,10 @@ const getTasks = (record) => {
 
 const subsidyIsRequested = (record) => {
   const subsidy = record.get(
-    'Please note, we are a volunteer-run organization, but may be able to help offset some of the cost of hard goods. Do you need a subsidy for your assistance?',
+    "Please note, we are a volunteer-run organization, but may be able to help offset some of the cost of hard goods. Do you need a subsidy for your assistance?"
   )
-    ? ':white_check_mark:'
-    : ':no_entry_sign:';
+    ? ":white_check_mark:"
+    : ":no_entry_sign:";
 
   const subsidyObject = getSection(`*Subsidy requested:* ${subsidy}`);
 
@@ -88,17 +88,17 @@ const subsidyIsRequested = (record) => {
 };
 
 const getTimeframe = (record) => {
-  const timeframe = record.get('Timeframe');
+  const timeframe = record.get("Timeframe");
   const timeframeObject = getSection(`*Requested timeframe:* ${timeframe}`);
 
   return timeframeObject;
 };
 
 const getAnythingElse = (record) => {
-  const anythingElse = record.get('Anything else');
+  const anythingElse = record.get("Anything else");
 
   const anythingElseObject = getSection(
-    `*Other notes from requester:* \n${anythingElse || 'None'}`,
+    `*Other notes from requester:* \n${anythingElse || "None"}`
   );
 
   return anythingElseObject;
@@ -109,7 +109,7 @@ const getVolunteers = (volunteers) => {
 
   if (volunteers.length > 0) {
     // Heading for volunteers
-    volObject.push(getSection('*Here are the 10 closest volunteers*'));
+    volObject.push(getSection("*Here are the 10 closest volunteers*"));
 
     // Prepare the detailed volunteer info
     volunteers.forEach((volunteer) => {
@@ -122,13 +122,14 @@ const getVolunteers = (volunteers) => {
     });
 
     // Add phone number list for copy/paste
-    const msg = 'Here are the volunteer phone numbers for easy copy/pasting:';
-    const phoneText = [msg].concat(volunteers.map((v) => v.Number)).join('\n');
+    const msg = "Here are the volunteer phone numbers for easy copy/pasting:";
+    const phoneText = [msg].concat(volunteers.map((v) => v.Number)).join("\n");
 
     volObject.push(getSection(phoneText));
   } else {
     // No volunteers found
-    const noneFoundText = '*No volunteers match this request!*\n*Check the full Airtable record, there might be more info there.*';
+    const noneFoundText =
+      "*No volunteers match this request!*\n*Check the full Airtable record, there might be more info there.*";
 
     volObject.push(getSection(noneFoundText));
   }
@@ -138,14 +139,14 @@ const getVolunteers = (volunteers) => {
 
 // This function actually sends the message to the slack channel
 const sendMessage = (record, volunteers) => {
-  const text = 'A new errand has been added!';
+  const text = "A new errand has been added!";
   const heading = getSection(`:exclamation: *${text}* :exclamation:`);
   const requester = getRequester(record);
   const tasks = getTasks(record);
   const subsidyRequested = subsidyIsRequested(record);
   const requestedTimeframe = getTimeframe(record);
   const anythingElse = getAnythingElse(record);
-  const space = getSection(' ');
+  const space = getSection(" ");
   const volunteerList = getVolunteers(volunteers);
 
   return bot.chat.postMessage({

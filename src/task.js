@@ -1,4 +1,4 @@
-const preconditions = require('preconditions').singleton();
+const preconditions = require("preconditions").singleton();
 
 class Task {
   /**
@@ -35,42 +35,53 @@ class Task {
   canBeFulfilledByVolunteer(volunteer) {
     preconditions.shouldBeObject(volunteer);
     preconditions.shouldBeFunction(volunteer.get);
-    const capabilities = volunteer.get('I can provide the following support (non-binding)') || [];
+    const capabilities =
+      volunteer.get("I can provide the following support (non-binding)") || [];
     // If the beginning of any capability matches the requirement,
     // the volunteer can handle the task
-    return (this.supportRequirements.length === 0
-      || this.supportRequirements.some((r) => capabilities.some((c) => c.startsWith(r))))
-      && (this.otherFulfillmentRequirements.length === 0
-         || this.otherFulfillmentRequirements.some((requirement) => requirement(volunteer)));
+    return (
+      (this.supportRequirements.length === 0 ||
+        this.supportRequirements.some((r) =>
+          capabilities.some((c) => c.startsWith(r))
+        )) &&
+      (this.otherFulfillmentRequirements.length === 0 ||
+        this.otherFulfillmentRequirements.some((requirement) =>
+          requirement(volunteer)
+        ))
+    );
   }
 }
 
 const doesVolunteerHaveACar = (volunteer) => {
-  const transportationModes = volunteer.get('Do you have a private mode of transportation with valid license/insurance? ');
+  const transportationModes = volunteer.get(
+    "Do you have a private mode of transportation with valid license/insurance? "
+  );
   if (transportationModes) {
-    return transportationModes.indexOf('Yes, I have a car') !== -1;
+    return transportationModes.indexOf("Yes, I have a car") !== -1;
   }
   return false;
 };
 
 const possibleTasks = [
-  new Task('Grocery shopping', ['Picking up groceries/medications']),
-  new Task('Picking up a prescription', ['Picking up groceries/medications']),
-  new Task('Transportation to/from a medical appointment', [], [doesVolunteerHaveACar]),
-  new Task('Dog walking', [
-    'Pet-sitting/walking/feeding',
+  new Task("Grocery shopping", ["Picking up groceries/medications"]),
+  new Task("Picking up a prescription", ["Picking up groceries/medications"]),
+  new Task(
+    "Transportation to/from a medical appointment",
+    [],
+    [doesVolunteerHaveACar]
+  ),
+  new Task("Dog walking", ["Pet-sitting/walking/feeding"]),
+  new Task("Loneliness", [
+    "Check-in on folks throughout the day (in-person or phone call)",
+    "Checking in on people",
   ]),
-  new Task('Loneliness', [
-    'Check-in on folks throughout the day (in-person or phone call)',
-    'Checking in on people',
-  ]),
-  new Task('Accessing verified health information', [
-    'Check-in on folks throughout the day (in-person or phone call)',
-    'Checking in on people',
-    'Navigating the health care/insurance websites',
+  new Task("Accessing verified health information", [
+    "Check-in on folks throughout the day (in-person or phone call)",
+    "Checking in on people",
+    "Navigating the health care/insurance websites",
   ]),
   // Set an unmatchable requirement since we don't know the nature of an "Other"
-  new Task('Other', ['unmatchable-requirement']),
+  new Task("Other", ["unmatchable-requirement"]),
 ];
 
 const cache = {};
