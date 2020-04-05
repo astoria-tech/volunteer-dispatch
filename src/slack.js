@@ -28,7 +28,7 @@ const sendMessage = (record, volunteers) => {
 };
 
 const getRequester = record => {
-  const recordURL = `${process.env.AIRTABLE_REQUESTS_SHEET_URL}${record.id}`;
+  const recordURL = `${process.env.AIRTABLE_REQUESTS_SHEET_URL}/${record.id}`;
   const textLines = [
     `<${recordURL}|${record.get("Name")}>`,
     record.get("Phone number"),
@@ -78,7 +78,7 @@ const getVolunteers = volunteers => {
 
     // Prepare the detailed volunteer info
     volunteers.forEach(volunteer => {
-      const volunteerURL = `${process.env.AIRTABLE_VOLUNTEERS_SHEET_URL}${volunteer.record.id}`;
+      const volunteerURL = `${process.env.AIRTABLE_VOLUNTEERS_SHEET_URL}/${volunteer.record.id}`;
       const volunteerText = `<${volunteerURL}|${volunteer.Name}> - ${
         volunteer.Number
       } - ${volunteer.Distance.toFixed(2)} Mi.`;
