@@ -27,7 +27,7 @@ function fullAddress(record) {
 async function findVolunteers(request) {
   const volunteerDistances = [];
 
-  const tasks = request.get('Tasks').map(Task.mapFromRawTask) || [];
+  const tasks = (request.get('Tasks') || []).map(Task.mapFromRawTask);
   let errandCoords;
   try {
     errandCoords = await getCoords(fullAddress(request));
