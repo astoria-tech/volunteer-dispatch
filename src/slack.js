@@ -99,15 +99,25 @@ const getTimeframe = record => {
 };
 
 const formatTasks = record => {
-  let formattedTasks = "";
   const tasks = record.get("Tasks");
+  const otherTasks = record.get("Task - other");
 
   // Put each task on a new line
+  let formattedTasks = "";
   if (tasks) {
     formattedTasks = record
       .get("Tasks")
-      .reduce((msg, task) => `${msg}\n :small_orange_diamond: ${task}`, "");
+      .reduce(
+        (taskList, task) => `${taskList}\n :small_orange_diamond: ${task}`,
+        ""
+      );
   }
+
+  if (otherTasks) {
+    formattedTasks += `\n :small_orange_diamond: ${otherTasks}`;
+  }
+
+  console.log(formattedTasks);
 
   return formattedTasks;
 };
