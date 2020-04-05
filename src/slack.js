@@ -11,6 +11,7 @@ const sendMessage = (record, volunteers) => {
   const requester = getRequester(record);
   const tasks = getTasks(record);
   const language = getLanguage(record);
+  const requestedTimeframe = getTimeframe(record);
   const space = getSection(" ");
   const volunteerList = getVolunteers(volunteers);
 
@@ -18,7 +19,7 @@ const sendMessage = (record, volunteers) => {
     token,
     channel,
     text,
-    blocks: [heading, requester, tasks, language, space],
+    blocks: [heading, requester, tasks, language, requestedTimeframe, space],
     attachments: [
       {
         blocks: volunteerList
@@ -53,6 +54,13 @@ const getLanguage = record => {
   const languageObject = getSection(`*Speaks:* ${language}`);
 
   return languageObject;
+};
+
+const getTimeframe = record => {
+  const timeframe = record.get("Timeframe");
+  const timeframeObject = getSection(`*Requested timeframe:* ${timeframe}`);
+
+  return timeframeObject;
 };
 
 const formatTasks = record => {

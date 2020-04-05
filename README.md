@@ -2,7 +2,7 @@
 
 A bot which locates the closest volunteers to check-in on & run errands for vulnerable members of the community.
 
-*Made by [Astoria Tech](https://github.com/astoria-tech) volunteers, for use by the [Astoria Mutual Aid Network](https://astoriamutualaid.com).*
+_Made by [Astoria Tech](https://github.com/astoria-tech) volunteers, for use by the [Astoria Mutual Aid Network](https://astoriamutualaid.com)._
 
 ## How it works
 
@@ -31,6 +31,8 @@ And grab the API keys from each (and channel ID for Slack), and put them into th
 
 - `AIRTABLE_API_KEY`
 - `AIRTABLE_BASE_ID` - Get this from the [Airtable API page](https://airtable.com/api): click the workspace you're testing on (see the "Setting up data backend" section below)
+- `AIRTABLE_REQUESTS_SHEET_URL` - Get directly from your Airtable workspace: copy the "Requests" sheet's URL and put it here
+- `AIRTABLE_VOLUNTEERS_SHEET_URL` - Same: copy the "Volunteers" sheet's URL and put it here
 - `MAPQUEST_KEY`
 - `SLACK_XOXB` - Slack bot token. To setup: create an app, add the OAuth `chat:write` bot scope, install the app to a channel, and grab the bot token
 - `SLACK_CHANNEL_ID` - Slack channel ID, something like `C0107MVRF08`
