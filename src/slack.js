@@ -10,6 +10,7 @@ const sendMessage = (record, volunteers) => {
   const heading = getSection(`:exclamation: *${text}* :exclamation:`);
   const requester = getRequester(record);
   const tasks = getTasks(record);
+  const subsidyRequested = subsidyIsRequested(record);
   const language = getLanguage(record);
   const requestedTimeframe = getTimeframe(record);
   const space = getSection(" ");
@@ -19,7 +20,15 @@ const sendMessage = (record, volunteers) => {
     token,
     channel,
     text,
-    blocks: [heading, requester, tasks, language, requestedTimeframe, space],
+    blocks: [
+      heading,
+      requester,
+      tasks,
+      subsidyRequested,
+      language,
+      requestedTimeframe,
+      space
+    ],
     attachments: [
       {
         blocks: volunteerList
@@ -49,9 +58,35 @@ const getTasks = record => {
   return tasksObject;
 };
 
+const subsidyIsRequested = record => {
+  const subsidy = record.get(
+    "Please note, we are a volunteer-run organization, but may be able to help offset some of the cost of hard goods. Do you need a subsidy for your assistance?"
+  )
+    ? ":white_check_mark:"
+    : ":no_entry_sign:";
+
+  const subsidyObject = getSection(`*Subsidy requested:* ${subsidy}`);
+
+  return subsidyObject;
+};
+
 const getLanguage = record => {
-  const language = record.get("Language");
-  const languageObject = getSection(`*Speaks:* ${language}`);
+  const languages = [record.get("Language"), record.get("Language - other")];
+
+  const languageList = languages
+    .reduce((list, language) => {
+      if (language) list.push(language);
+      return list;
+    }, [])
+    .join(", ");
+
+  console.log(languageList);
+
+  const languageObject = getSection(
+    `*Speaks:* ${languageList.length ? languageList : "None specified"}`
+  );
+
+  console.log(languageObject);
 
   return languageObject;
 };
