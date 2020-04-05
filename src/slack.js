@@ -11,7 +11,6 @@ const sendMessage = (record, volunteers) => {
   const requester = getRequester(record);
   const tasks = getTasks(record);
   const subsidyRequested = subsidyIsRequested(record);
-  const language = getLanguage(record);
   const requestedTimeframe = getTimeframe(record);
   const space = getSection(" ");
   const volunteerList = getVolunteers(volunteers);
@@ -25,7 +24,6 @@ const sendMessage = (record, volunteers) => {
       requester,
       tasks,
       subsidyRequested,
-      language,
       requestedTimeframe,
       space
     ],
@@ -40,9 +38,11 @@ const sendMessage = (record, volunteers) => {
 const getRequester = record => {
   const recordURL = `${process.env.AIRTABLE_REQUESTS_SHEET_URL}/${record.id}`;
   const textLines = [
+    "*Requester:*",
     `<${recordURL}|${record.get("Name")}>`,
     record.get("Phone number"),
-    record.get("Address")
+    record.get("Address"),
+    getLanguage(record)
   ];
   const text = textLines.join("\n");
 
@@ -80,15 +80,11 @@ const getLanguage = record => {
     }, [])
     .join(", ");
 
-  console.log(languageList);
+  const formattedLanguageList = `Speaks: ${
+    languageList.length ? languageList : "None specified"
+  }`;
 
-  const languageObject = getSection(
-    `*Speaks:* ${languageList.length ? languageList : "None specified"}`
-  );
-
-  console.log(languageObject);
-
-  return languageObject;
+  return formattedLanguageList;
 };
 
 const getTimeframe = record => {
