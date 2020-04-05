@@ -12,6 +12,7 @@ const sendMessage = (record, volunteers) => {
   const tasks = getTasks(record);
   const subsidyRequested = subsidyIsRequested(record);
   const requestedTimeframe = getTimeframe(record);
+  const anythingElse = getAnythingElse(record);
   const space = getSection(" ");
   const volunteerList = getVolunteers(volunteers);
 
@@ -23,8 +24,9 @@ const sendMessage = (record, volunteers) => {
       heading,
       requester,
       tasks,
-      subsidyRequested,
       requestedTimeframe,
+      subsidyRequested,
+      anythingElse,
       space
     ],
     attachments: [
@@ -113,9 +115,17 @@ const formatTasks = record => {
     formattedTasks += `\n :small_orange_diamond: ${otherTasks}`;
   }
 
-  console.log(formattedTasks);
-
   return formattedTasks;
+};
+
+const getAnythingElse = record => {
+  const anythingElse = record.get("Anything else");
+
+  const anythingElseObject = getSection(
+    `*Other notes from requester:* \n${anythingElse ? anythingElse : "None"}`
+  );
+
+  return anythingElseObject;
 };
 
 const getVolunteers = volunteers => {
