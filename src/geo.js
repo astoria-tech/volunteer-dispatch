@@ -11,10 +11,12 @@ const ngcOptions = {
 };
 
 // Use Google Maps if API key provided, otherwise use MapQuest
-const useGoogleApi = process.env.GOOGLE_API_KEY !== '';
+const useGoogleApi = (typeof process.env.GOOGLE_API_KEY === 'string') && process.env.GOOGLE_API_KEY.length > 0;
 ngcOptions.provider = useGoogleApi ? 'google' : 'mapquest';
 ngcOptions.apiKey = useGoogleApi ? process.env.GOOGLE_API_KEY : process.env.MAPQUEST_KEY;
 const geocoder = NodeGeocoder(ngcOptions);
+
+console.log('Geocoder:', ngcOptions.provider);
 
 // Accepts an address and returns lat/long
 function getCoords(address) {
