@@ -25,7 +25,8 @@
     "geolib": "^3.2.1",
     "node-geocoder": "^3.25.1",
     "preconditions": "^2.2.3",
-    "slack": "^11.0.2"
+    "slack": "^11.0.2",
+    "winston": "^3.2.1"
   },
   "devDependencies": {
     "eslint": "^6.8.0",
