@@ -1,7 +1,7 @@
-const { createLogger, format, transports } = require('winston');
+const { createLogger, format, transports } = require("winston");
 
 const myFormat = format.printf(
-  ({ level, message, timestamp }) => `${timestamp} ${level}: ${message}`,
+  ({ level, message, timestamp }) => `${timestamp} ${level}: ${message}`
 );
 
 const logger = createLogger({

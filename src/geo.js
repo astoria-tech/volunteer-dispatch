@@ -1,26 +1,27 @@
-const NodeGeocoder = require('node-geocoder');
-const geolib = require('geolib');
-const { logger } = require('./logger');
-require('dotenv').config();
+const NodeGeocoder = require("node-geocoder");
+const geolib = require("geolib");
+const { logger } = require("./logger");
+require("dotenv").config();
 
 const METERS_TO_MILES = 0.000621371;
 
 // Geocoder
 const ngcOptions = {
-  httpAdapter: 'https',
+  httpAdapter: "https",
   formatter: null,
 };
 
 // Use Google Maps if API key provided, otherwise use MapQuest
-const useGoogleApi = typeof process.env.GOOGLE_API_KEY === 'string'
-  && process.env.GOOGLE_API_KEY.length > 0;
-ngcOptions.provider = useGoogleApi ? 'google' : 'mapquest';
+const useGoogleApi =
+  typeof process.env.GOOGLE_API_KEY === "string" &&
+  process.env.GOOGLE_API_KEY.length > 0;
+ngcOptions.provider = useGoogleApi ? "google" : "mapquest";
 ngcOptions.apiKey = useGoogleApi
   ? process.env.GOOGLE_API_KEY
   : process.env.MAPQUEST_KEY;
 const geocoder = NodeGeocoder(ngcOptions);
 
-logger.info('Geocoder:', ngcOptions.provider);
+logger.info("Geocoder:", ngcOptions.provider);
 
 // Accepts an address and returns lat/long
 function getCoords(address) {
@@ -39,7 +40,8 @@ function getCoords(address) {
 }
 
 // eslint-disable-next-line max-len
-const distanceBetweenCoords = (volCoords, errandCoords) => METERS_TO_MILES * geolib.getDistance(volCoords, errandCoords);
+const distanceBetweenCoords = (volCoords, errandCoords) =>
+  METERS_TO_MILES * geolib.getDistance(volCoords, errandCoords);
 
 module.exports = {
   distanceBetweenCoords,

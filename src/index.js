@@ -1,12 +1,12 @@
-const Airtable = require('airtable');
-const Task = require('./task');
-const table = require('./table');
-const CustomAirtable = require('./custom-airtable');
-const { logger } = require('./logger');
+const Airtable = require("airtable");
+const Task = require("./task");
+const table = require("./table");
+const CustomAirtable = require("./custom-airtable");
+const { logger } = require("./logger");
 
-const { sendMessage } = require('./slack');
-const { getCoords, distanceBetweenCoords } = require('./geo');
-require('dotenv').config();
+const { sendMessage } = require("./slack");
+const { getCoords, distanceBetweenCoords } = require("./geo");
+require("dotenv").config();
 
 /* System notes:
  * - Certain tasks should probably have an unmatchable requirement (because the tasks requires
@@ -18,63 +18,66 @@ require('dotenv').config();
 // Airtable
 // eslint-disable-next-line max-len
 const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(
-  process.env.AIRTABLE_BASE_ID,
+  process.env.AIRTABLE_BASE_ID
 );
 const customAirtable = new CustomAirtable(base);
 
 function fullAddress(record) {
-  return `${record.get('Address')} ${record.get('City')}, NY`;
+  return `${record.get("Address")} ${record.get("City")}, NY`;
 }
 
 // Accepts errand address and checks volunteer spreadsheet for closest volunteers
 async function findVolunteers(request) {
   const volunteerDistances = [];
 
-  const tasks = (request.get('Tasks') || []).map(Task.mapFromRawTask);
+  const tasks = (request.get("Tasks") || []).map(Task.mapFromRawTask);
   let errandCoords;
   try {
     errandCoords = await getCoords(fullAddress(request));
   } catch (e) {
     logger.error(
       `Error getting coordinates for requester ${request.get(
-        'Name',
-      )} with error: ${JSON.stringify(e)}`,
+        "Name"
+      )} with error: ${JSON.stringify(e)}`
     );
-    customAirtable.logErrorToTable(table.REQUESTS, request, e, 'getCoords');
+    customAirtable.logErrorToTable(table.REQUESTS, request, e, "getCoords");
     return [];
   }
 
-  logger.info(`Tasks: ${tasks.map((task) => task.rawTask).join(', ')}`);
+  logger.info(`Tasks: ${tasks.map((task) => task.rawTask).join(", ")}`);
 
   // Figure out which volunteers can fulfill at least one of the tasks
   await base(table.VOLUNTEERS)
-    .select({ view: 'Grid view' })
+    .select({ view: "Grid view" })
     .eachPage(async (volunteers, nextPage) => {
       // eslint-disable-next-line max-len
-      const suitableVolunteers = volunteers.filter((volunteer) => tasks.some((task) => task.canBeFulfilledByVolunteer(volunteer)));
+      const suitableVolunteers = volunteers.filter((volunteer) =>
+        tasks.some((task) => task.canBeFulfilledByVolunteer(volunteer))
+      );
 
       // Calculate the distance to each volunteer
       for (const volunteer of suitableVolunteers) {
-        const volAddress = volunteer.get(
-          'Full Street address (You can leave out your apartment/unit.)',
-        ) || '';
+        const volAddress =
+          volunteer.get(
+            "Full Street address (You can leave out your apartment/unit.)"
+          ) || "";
 
         // Check if we need to retrieve the addresses coordinates
         // NOTE: We do this to prevent using up our free tier queries on Mapquest (15k/month)
-        if (volAddress !== volunteer.get('_coordinates_address')) {
+        if (volAddress !== volunteer.get("_coordinates_address")) {
           let newVolCoords;
           try {
             newVolCoords = await getCoords(volAddress);
           } catch (e) {
             logger.info(
-              'Unable to retrieve volunteer coordinates:',
-              volunteer.get('Full Name'),
+              "Unable to retrieve volunteer coordinates:",
+              volunteer.get("Full Name")
             );
             customAirtable.logErrorToTable(
               table.VOLUNTEERS,
               volunteer,
               e,
-              'getCoords',
+              "getCoords"
             );
             // eslint-disable-next-line no-continue
             continue;
@@ -90,11 +93,11 @@ async function findVolunteers(request) {
         // Try to get coordinates for this volunteer
         let volCoords;
         try {
-          volCoords = JSON.parse(volunteer.get('_coordinates'));
+          volCoords = JSON.parse(volunteer.get("_coordinates"));
         } catch (e) {
           logger.info(
-            'Unable to parse volunteer coordinates:',
-            volunteer.get('Full Name'),
+            "Unable to parse volunteer coordinates:",
+            volunteer.get("Full Name")
           );
           // eslint-disable-next-line no-continue
           continue;
@@ -115,16 +118,16 @@ async function findVolunteers(request) {
     .map((volunteerAndDistance) => {
       const [volunteer, distance] = volunteerAndDistance;
       return {
-        Name: volunteer.get('Full Name'),
-        Number: volunteer.get('Please provide your contact phone number:'),
+        Name: volunteer.get("Full Name"),
+        Number: volunteer.get("Please provide your contact phone number:"),
         Distance: distance,
         record: volunteer,
       };
     });
 
-  logger.info('Closest:');
+  logger.info("Closest:");
   closestVolunteers.forEach((v) => {
-    logger.info(v.Name, v.Distance.toFixed(2), 'Mi');
+    logger.info(v.Name, v.Distance.toFixed(2), "Mi");
   });
 
   return closestVolunteers;
@@ -134,18 +137,18 @@ async function findVolunteers(request) {
 // executes slack message if new row has been detected
 async function checkForNewSubmissions() {
   base(table.REQUESTS)
-    .select({ view: 'Grid view' })
+    .select({ view: "Grid view" })
     .eachPage(async (records, nextPage) => {
       // Remove records we don't want to process from the array.
       const cleanRecords = records.filter((r) => {
-        if (typeof r.get('Name') === 'undefined') return false;
-        if (r.get('Posted to Slack?') === 'yes') return false;
+        if (typeof r.get("Name") === "undefined") return false;
+        if (r.get("Posted to Slack?") === "yes") return false;
         return true;
       });
 
       // Look for records that have not been posted to slack yet
       for (const record of cleanRecords) {
-        logger.info(`\nProcessing: ${record.get('Name')}`);
+        logger.info(`\nProcessing: ${record.get("Name")}`);
 
         // Find the closest volunteers
         const volunteers = await findVolunteers(record);
@@ -155,10 +158,10 @@ async function checkForNewSubmissions() {
 
         await record
           .patchUpdate({
-            'Posted to Slack?': 'yes',
-            Status: record.get('Status') || 'Needs assigning', // don't overwrite the status
+            "Posted to Slack?": "yes",
+            Status: record.get("Status") || "Needs assigning", // don't overwrite the status
           })
-          .then(logger.info('Updated record!'))
+          .then(logger.info("Updated record!"))
           .catch((error) => logger.error(error));
       }
 
@@ -168,7 +171,7 @@ async function checkForNewSubmissions() {
 
 async function start() {
   try {
-    logger.info('\nVolunteer Dispatch started!');
+    logger.info("\nVolunteer Dispatch started!");
     checkForNewSubmissions();
     setInterval(checkForNewSubmissions, 20000);
   } catch (error) {
@@ -176,8 +179,8 @@ async function start() {
   }
 }
 
-process.on('unhandledRejection', (reason, p) => {
-  logger.error('Unhandled Rejection at: Promise', p, 'reason:', reason);
+process.on("unhandledRejection", (reason, p) => {
+  logger.error("Unhandled Rejection at: Promise", p, "reason:", reason);
   // application specific logging, throwing an error, or other logic here
 });
 
