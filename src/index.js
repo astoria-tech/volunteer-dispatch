@@ -1,6 +1,6 @@
 const Airtable = require("airtable");
 const Task = require("./task");
-const table = require("./table");
+const config = require("./config");
 const CustomAirtable = require("./custom-airtable");
 const { logger } = require("./logger");
 
@@ -17,8 +17,8 @@ require("dotenv").config();
 
 // Airtable
 // eslint-disable-next-line max-len
-const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(
-  process.env.AIRTABLE_BASE_ID
+const base = new Airtable({ apiKey: config.AIRTABLE_API_KEY }).base(
+  config.AIRTABLE_BASE_ID
 );
 const customAirtable = new CustomAirtable(base);
 
@@ -40,14 +40,19 @@ async function findVolunteers(request) {
         "Name"
       )} with error: ${JSON.stringify(e)}`
     );
-    customAirtable.logErrorToTable(table.REQUESTS, request, e, "getCoords");
+    customAirtable.logErrorToTable(
+      config.AIRTABLE_REQUESTS_TABLE_NAME,
+      request,
+      e,
+      "getCoords"
+    );
     return [];
   }
 
   logger.info(`Tasks: ${tasks.map((task) => task.rawTask).join(", ")}`);
 
   // Figure out which volunteers can fulfill at least one of the tasks
-  await base(table.VOLUNTEERS)
+  await base(config.AIRTABLE_VOLUNTEERS_TABLE_NAME)
     .select({ view: "Grid view" })
     .eachPage(async (volunteers, nextPage) => {
       // eslint-disable-next-line max-len
@@ -74,7 +79,7 @@ async function findVolunteers(request) {
               volunteer.get("Full Name")
             );
             customAirtable.logErrorToTable(
-              table.VOLUNTEERS,
+              config.AIRTABLE_VOLUNTEERS_TABLE_NAME,
               volunteer,
               e,
               "getCoords"
@@ -136,7 +141,7 @@ async function findVolunteers(request) {
 // Checks for updates on errand spreadsheet, finds closest volunteers from volunteer spreadsheet and
 // executes slack message if new row has been detected
 async function checkForNewSubmissions() {
-  base(table.REQUESTS)
+  base(config.AIRTABLE_REQUESTS_TABLE_NAME)
     .select({ view: "Grid view" })
     .eachPage(async (records, nextPage) => {
       // Remove records we don't want to process from the array.
