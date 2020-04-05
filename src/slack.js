@@ -1,128 +1,176 @@
-const Slack = require('slack');
-
+require("dotenv").config();
+const Slack = require("slack");
 const token = process.env.SLACK_XOXB;
 const channel = process.env.SLACK_CHANNEL_ID;
 const bot = new Slack({ token });
 
-const getErrand = record => {
-  // Prepare the general info
-  const profileURL = `https://airtable.com/tblaL1g6IzH6uPclD/viwEjCF8PkEfQiLFC/${record.id}`;
-  const header = [
-    `<${profileURL}|${record.get('Name')}>`,
-    record.get('Phone number'),
-    record.get('Address'),
-  ];
-  const errandObject = {
-    type: 'section',
-    text: {
-      type: 'mrkdwn',
-      text: header.join('\n'),
-    },
-  };
+// This function actually sends the message to the slack channel
+const sendMessage = (record, volunteers) => {
+  const text = "A new errand has been added!";
+  const heading = getSection(`:exclamation: *${text}* :exclamation:`);
+  const requester = getRequester(record);
+  const tasks = getTasks(record);
+  const subsidyRequested = subsidyIsRequested(record);
+  const requestedTimeframe = getTimeframe(record);
+  const anythingElse = getAnythingElse(record);
+  const space = getSection(" ");
+  const volunteerList = getVolunteers(volunteers);
 
-  return errandObject;
+  return bot.chat.postMessage({
+    token,
+    channel,
+    text,
+    blocks: [
+      heading,
+      requester,
+      tasks,
+      requestedTimeframe,
+      subsidyRequested,
+      anythingElse,
+      space
+    ],
+    attachments: [
+      {
+        blocks: volunteerList
+      }
+    ]
+  });
 };
 
-const getVolunteers = volunteers => {
-  // Find the closest volunteers
-  const volObject = [];
+const getRequester = record => {
+  const recordURL = `${process.env.AIRTABLE_REQUESTS_VIEW_URL}/${record.id}`;
+  const textLines = [
+    "*Requester:*",
+    `<${recordURL}|${record.get("Name")}>`,
+    record.get("Phone number"),
+    record.get("Address"),
+    getLanguage(record)
+  ];
+  const text = textLines.join("\n");
 
-  if (volunteers.length > 0) {
-    // Header
-    volObject.push({
-      type: 'section',
-      text: {
-        type: 'mrkdwn',
-        text: '*Here are the 10 closest volunteers*',
-      },
-    });
+  const requesterObject = getSection(text);
 
-    // Prepare the verbose volunteer info
-    volunteers.forEach((volunteer) => {
-      const volunteerURL = `https://airtable.com/tblxqtMAabmJyl98c/viwNYMdylPukGiOYQ/${volunteer.record.id}`;
-      volObject.push({
-        type: 'section',
-        text: {
-          type: 'mrkdwn',
-          text: `<${volunteerURL}|${volunteer.Name}> - ${volunteer.Number} - ${volunteer.Distance.toFixed(2)} Mi.`,
-        },
-      });
-    });
+  return requesterObject;
+};
 
-    const msg = 'Here are the volunteer phone numbers for easy copy/pasting:';
-    volObject.push({
-      type: 'section',
-      text: {
-        type: 'mrkdwn',
-        text: [msg].concat(volunteers.map((v) => v.Number)).join('\n'),
-      },
-    });
-  } else {
-    // No volunteers found
-    volObject.push({
-      type: 'section',
-      text: { type: 'mrkdwn', text: '*No volunteers match this request!*\n*Check the full Airtable record, there might be more info there.*' },
-    });
+const getTasks = record => {
+  const tasks = formatTasks(record);
+  const tasksObject = getSection(`*Needs assistance with:*${tasks}`);
+
+  return tasksObject;
+};
+
+const subsidyIsRequested = record => {
+  const subsidy = record.get(
+    "Please note, we are a volunteer-run organization, but may be able to help offset some of the cost of hard goods. Do you need a subsidy for your assistance?"
+  )
+    ? ":white_check_mark:"
+    : ":no_entry_sign:";
+
+  const subsidyObject = getSection(`*Subsidy requested:* ${subsidy}`);
+
+  return subsidyObject;
+};
+
+const getLanguage = record => {
+  const languages = [record.get("Language"), record.get("Language - other")];
+
+  const languageList = languages
+    .reduce((list, language) => {
+      if (language) list.push(language);
+      return list;
+    }, [])
+    .join(", ");
+
+  const formattedLanguageList = `Speaks: ${
+    languageList.length ? languageList : "None specified"
+  }`;
+
+  return formattedLanguageList;
+};
+
+const getTimeframe = record => {
+  const timeframe = record.get("Timeframe");
+  const timeframeObject = getSection(`*Requested timeframe:* ${timeframe}`);
+
+  return timeframeObject;
+};
+
+const formatTasks = record => {
+  const tasks = record.get("Tasks");
+  const otherTasks = record.get("Task - other");
+
+  // Put each task on a new line
+  let formattedTasks = "";
+  if (tasks) {
+    formattedTasks = record
+      .get("Tasks")
+      .reduce(
+        (taskList, task) => `${taskList}\n :small_orange_diamond: ${task}`,
+        ""
+      );
   }
 
-  return volObject;
-};
-
-// Gets list of tasks from spreadsheet and adds to message text
-const formatTasks = row => {
-  let formattedTasks = '';
-
-  const tasks = row.get('Tasks');
-  if (tasks) {
-    formattedTasks = row.get('Tasks').reduce((msg, task) => `${msg}\n :small_orange_diamond: ${task}`, '');
+  if (otherTasks) {
+    formattedTasks += `\n :small_orange_diamond: ${otherTasks}`;
   }
 
   return formattedTasks;
 };
 
-const getTask = record => {
-  // Process the requested tasks
-  const taskObject = {
-    type: 'section',
-    text: {
-      type: 'mrkdwn',
-      text: `*Needs assistance with:*${formatTasks(record)}`,
-    },
-  };
+const getAnythingElse = record => {
+  const anythingElse = record.get("Anything else");
 
-  return taskObject;
+  const anythingElseObject = getSection(
+    `*Other notes from requester:* \n${anythingElse ? anythingElse : "None"}`
+  );
+
+  return anythingElseObject;
 };
 
-// This function actually sends the message to the slack channel
-const sendMessage = (record, volunteers) => {
-  const errand = getErrand(record);
-  const task = getTask(record);
-  const vols = getVolunteers(volunteers);
+const getVolunteers = volunteers => {
+  const volObject = [];
 
-  return bot.chat.postMessage({
-    token,
-    channel,
-    text: '',
-    blocks: [{
-      type: 'section',
-      text: {
-        type: 'mrkdwn',
-        text: ':exclamation: *A new errand has been added!* :exclamation:',
-      },
-    },
-    errand,
-    task,
-    {
-      type: 'section',
-      text: {
-        type: 'mrkdwn',
-        text: ' ',
-      },
-    }],
-    attachments: [{ blocks: vols }],
-  });
+  if (volunteers.length > 0) {
+    // Heading for volunteers
+    volObject.push(getSection("*Here are the 10 closest volunteers*"));
+
+    // Prepare the detailed volunteer info
+    volunteers.forEach(volunteer => {
+      const volunteerURL = `${process.env.AIRTABLE_VOLUNTEERS_VIEW_URL}/${volunteer.record.id}`;
+      const volunteerText = `<${volunteerURL}|${volunteer.Name}> - ${
+        volunteer.Number
+      } - ${volunteer.Distance.toFixed(2)} Mi.`;
+
+      volObject.push(getSection(volunteerText));
+    });
+
+    // Add phone number list for copy/paste
+    const msg = "Here are the volunteer phone numbers for easy copy/pasting:";
+    const phoneText = [msg].concat(volunteers.map(v => v.Number)).join("\n");
+
+    volObject.push(getSection(phoneText));
+  } else {
+    // No volunteers found
+    const noneFoundText =
+      "*No volunteers match this request!*\n*Check the full Airtable record, there might be more info there.*";
+
+    volObject.push(getSection(noneFoundText));
+  }
+
+  return volObject;
+};
+
+const getSection = text => {
+  return {
+    type: "section",
+    text: {
+      type: "mrkdwn",
+      text
+    }
+  };
 };
 
 module.exports = {
-  sendMessage,
+  sendMessage
 };
