@@ -19,7 +19,7 @@ ngcOptions.provider = useGoogleApi ? "google" : "mapquest";
 ngcOptions.apiKey = useGoogleApi ? config.GOOGLE_API_KEY : config.MAPQUEST_KEY;
 const geocoder = NodeGeocoder(ngcOptions);
 
-logger.info("Geocoder:", ngcOptions.provider);
+logger.info(`Geocoder: ${ngcOptions.provider}`);
 
 // Accepts an address and returns lat/long
 function getCoords(address) {
@@ -37,7 +37,6 @@ function getCoords(address) {
   });
 }
 
-// eslint-disable-next-line max-len
 const distanceBetweenCoords = (volCoords, errandCoords) =>
   METERS_TO_MILES * geolib.getDistance(volCoords, errandCoords);
 
