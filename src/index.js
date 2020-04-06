@@ -16,14 +16,13 @@ require("dotenv").config();
  */
 
 // Airtable
-// eslint-disable-next-line max-len
 const base = new Airtable({ apiKey: config.AIRTABLE_API_KEY }).base(
   config.AIRTABLE_BASE_ID
 );
 const customAirtable = new CustomAirtable(base);
 
 function fullAddress(record) {
-  return `${record.get("Address")} ${record.get("City")}, NY`;
+  return `${record.get("Address")} ${record.get("City")}, ${config.VOLUNTEER_DISPATCH_STATE}`;
 }
 
 // Accepts errand address and checks volunteer spreadsheet for closest volunteers
@@ -55,7 +54,6 @@ async function findVolunteers(request) {
   await base(config.AIRTABLE_VOLUNTEERS_TABLE_NAME)
     .select({ view: "Grid view" })
     .eachPage(async (volunteers, nextPage) => {
-      // eslint-disable-next-line max-len
       const suitableVolunteers = volunteers.filter((volunteer) =>
         tasks.some((task) => task.canBeFulfilledByVolunteer(volunteer))
       );
@@ -84,7 +82,6 @@ async function findVolunteers(request) {
               e,
               "getCoords"
             );
-            // eslint-disable-next-line no-continue
             continue;
           }
 
@@ -104,7 +101,6 @@ async function findVolunteers(request) {
             "Unable to parse volunteer coordinates:",
             volunteer.get("Full Name")
           );
-          // eslint-disable-next-line no-continue
           continue;
         }
 
@@ -132,7 +128,7 @@ async function findVolunteers(request) {
 
   logger.info("Closest:");
   closestVolunteers.forEach((v) => {
-    logger.info(v.Name, v.Distance.toFixed(2), "Mi");
+    logger.info(`${v.Name} ${v.Distance.toFixed(2)} Mi`);
   });
 
   return closestVolunteers;
@@ -153,20 +149,21 @@ async function checkForNewSubmissions() {
 
       // Look for records that have not been posted to slack yet
       for (const record of cleanRecords) {
-        logger.info(`\nProcessing: ${record.get("Name")}`);
+        logger.info(`New help request for: ${record.get("Name")}`);
 
         // Find the closest volunteers
         const volunteers = await findVolunteers(record);
 
         // Send the message to Slack
         sendMessage(record, volunteers);
+        logger.info('Posted to Slack!');
 
         await record
           .patchUpdate({
             "Posted to Slack?": "yes",
             Status: record.get("Status") || "Needs assigning", // don't overwrite the status
           })
-          .then(logger.info("Updated record!"))
+          .then(logger.info("Updated Airtable record!"))
           .catch((error) => logger.error(error));
       }
 
@@ -176,9 +173,9 @@ async function checkForNewSubmissions() {
 
 async function start() {
   try {
-    logger.info("\nVolunteer Dispatch started!");
+    logger.info("Volunteer Dispatch started!");
     checkForNewSubmissions();
-    setInterval(checkForNewSubmissions, 20000);
+    setInterval(checkForNewSubmissions, 15000);
   } catch (error) {
     logger.error(error);
   }
