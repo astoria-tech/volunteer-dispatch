@@ -22,7 +22,9 @@ const base = new Airtable({ apiKey: config.AIRTABLE_API_KEY }).base(
 const customAirtable = new CustomAirtable(base);
 
 function fullAddress(record) {
-  return `${record.get("Address")} ${record.get("City")}, ${config.VOLUNTEER_DISPATCH_STATE}`;
+  return `${record.get("Address")} ${record.get("City")}, ${
+    config.VOLUNTEER_DISPATCH_STATE
+  }`;
 }
 
 // Accepts errand address and checks volunteer spreadsheet for closest volunteers
@@ -156,7 +158,7 @@ async function checkForNewSubmissions() {
 
         // Send the message to Slack
         sendMessage(record, volunteers);
-        logger.info('Posted to Slack!');
+        logger.info("Posted to Slack!");
 
         await record
           .patchUpdate({
