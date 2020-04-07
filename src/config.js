@@ -2,7 +2,7 @@ const config = {
   // Geocoder
   GOOGLE_API_KEY: process.env.GOOGLE_API_KEY,
   MAPQUEST_KEY: process.env.MAPQUEST_KEY,
-  VOLUNTEER_DISPATCH_STATE: process.env.VOLUNTEER_DISPATCH_STATE || "NY",
+  VOLUNTEER_DISPATCH_STATE: process.env.VOLUNTEER_DISPATCH_STATE || "DC",
 
   // Airtable
   AIRTABLE_API_KEY: process.env.AIRTABLE_API_KEY,
