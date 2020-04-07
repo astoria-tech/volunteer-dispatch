@@ -22,7 +22,7 @@ const base = new Airtable({ apiKey: config.AIRTABLE_API_KEY }).base(
 const customAirtable = new CustomAirtable(base);
 
 function fullAddress(record) {
-  return `${record.get("Address")} ${record.get("City")}, ${record.get("State")}`;
+  return `${record.get("Address")} ${record.get("City")}, ${config.VOLUNTEER_DISPATCH_STATE}`;
 }
 
 // Accepts errand address and checks volunteer spreadsheet for closest volunteers
