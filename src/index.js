@@ -157,8 +157,9 @@ async function checkForNewSubmissions() {
         const volunteers = await findVolunteers(record);
 
         // Send the message to Slack
-        sendMessage(record, volunteers);
-        logger.info("Posted to Slack!");
+        await sendMessage(record, volunteers)
+          .then(logger.info("Posted to Slack!"))
+          .catch((error) => logger.error(error));
 
         await record
           .patchUpdate({
