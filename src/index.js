@@ -1,11 +1,12 @@
 const Airtable = require("airtable");
+
+const CustomAirtable = require("./custom-airtable");
 const Task = require("./task");
 const config = require("./config");
-const CustomAirtable = require("./custom-airtable");
-const { logger } = require("./logger");
-
-const { sendMessage } = require("./slack");
+const http = require("./http");
 const { getCoords, distanceBetweenCoords } = require("./geo");
+const { logger } = require("./logger");
+const { sendMessage } = require("./slack");
 require("dotenv").config();
 
 /* System notes:
@@ -184,8 +185,13 @@ async function checkForNewSubmissions() {
 async function start() {
   try {
     logger.info("Volunteer Dispatch started!");
-    checkForNewSubmissions();
+
+    // Run once right away, and run again every 15 seconds
+    setTimeout(checkForNewSubmissions, 0);
     setInterval(checkForNewSubmissions, 15000);
+
+    // Run an HTTP server for health-check purposes
+    http.run();
   } catch (error) {
     logger.error(error);
   }

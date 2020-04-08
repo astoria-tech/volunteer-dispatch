@@ -1,7 +1,10 @@
 version: "3"
 
 services:
+
   bot:
+    labels:
+      shipyard.route: '/'
     build:
       context: .
       args:
@@ -19,3 +22,5 @@ services:
       VOLUNTEER_DISPATCH_STATE: ${VOLUNTEER_DISPATCH_STATE}
     volumes:
       - "./src:/srv/src"
+    ports:
+      - '3000:3000'
