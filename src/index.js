@@ -157,17 +157,24 @@ async function checkForNewSubmissions() {
         const volunteers = await findVolunteers(record);
 
         // Send the message to Slack
-        await sendMessage(record, volunteers)
-          .then(logger.info("Posted to Slack!"))
-          .catch((error) => logger.error(error));
+        let messageSent = false;
+        try {
+          await sendMessage(record, volunteers);
+          messageSent = true;
+          logger.info("Posted to Slack!");
+        } catch (error) {
+          logger.error("Unable to post to Slack: ", error);
+        }
 
-        await record
-          .patchUpdate({
-            "Posted to Slack?": "yes",
-            Status: record.get("Status") || "Needs assigning", // don't overwrite the status
-          })
-          .then(logger.info("Updated Airtable record!"))
-          .catch((error) => logger.error(error));
+        if (messageSent) {
+          await record
+            .patchUpdate({
+              "Posted to Slack?": "yes",
+              Status: record.get("Status") || "Needs assigning", // don't overwrite the status
+            })
+            .then(logger.info("Updated Airtable record!"))
+            .catch((error) => logger.error(error));
+        }
       }
 
       nextPage();

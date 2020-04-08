@@ -96,11 +96,26 @@ const getTimeframe = (record) => {
   return timeframeObject;
 };
 
+const truncateLongResponses = (response, recordId) => {
+  const charLimit = 2000;
+  let truncatedResponse;
+
+  if (response.length > 2000) {
+    const recordURL = `${config.AIRTABLE_REQUESTS_VIEW_URL}/${recordId}`;
+
+    truncatedResponse = response.substring(0, charLimit);
+    truncatedResponse += `... <${recordURL}|See Airtable record for full response.>`;
+  }
+
+  return truncatedResponse || response;
+};
+
 const getAnythingElse = (record) => {
   const anythingElse = record.get("Anything else");
+  const truncatedResponse = truncateLongResponses(anythingElse, record.id);
 
   const anythingElseObject = getSection(
-    `*Other notes from requester:* \n${anythingElse || "None"}`
+    `*Other notes from requester:* \n${truncatedResponse || "None"}`
   );
 
   return anythingElseObject;
