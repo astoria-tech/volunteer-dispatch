@@ -39,13 +39,7 @@ const getSection = (text) => ({
 
 const getLanguage = (record) => {
   const languages = [record.get("Language"), record.get("Language - other")];
-
-  const languageList = languages
-    .reduce((list, language) => {
-      if (language) list.push(language);
-      return list;
-    }, [])
-    .join(", ");
+  const languageList = languages.filter((language) => language).join(", ");
 
   const formattedLanguageList = `Speaks: ${
     languageList.length ? languageList : "None specified"
@@ -111,7 +105,7 @@ const truncateLongResponses = (response, recordId) => {
 };
 
 const getAnythingElse = (record) => {
-  const anythingElse = record.get("Anything else");
+  const anythingElse = record.get("Anything else") || "";
   const truncatedResponse = truncateLongResponses(anythingElse, record.id);
 
   const anythingElseObject = getSection(
