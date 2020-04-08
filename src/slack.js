@@ -96,17 +96,6 @@ const getTimeframe = (record) => {
   return timeframeObject;
 };
 
-const getAnythingElse = (record) => {
-  const anythingElse = record.get("Anything else");
-  const truncatedResponse = truncateLongResponses(anythingElse, record.id);
-
-  const anythingElseObject = getSection(
-    `*Other notes from requester:* \n${truncatedResponse || "None"}`
-  );
-
-  return anythingElseObject;
-};
-
 const truncateLongResponses = (response, recordId) => {
   const charLimit = 2000;
   let truncatedResponse;
@@ -119,6 +108,17 @@ const truncateLongResponses = (response, recordId) => {
   }
 
   return truncatedResponse || response;
+};
+
+const getAnythingElse = (record) => {
+  const anythingElse = record.get("Anything else");
+  const truncatedResponse = truncateLongResponses(anythingElse, record.id);
+
+  const anythingElseObject = getSection(
+    `*Other notes from requester:* \n${truncatedResponse || "None"}`
+  );
+
+  return anythingElseObject;
 };
 
 const getVolunteers = (volunteers) => {
