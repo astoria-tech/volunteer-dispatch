@@ -6,9 +6,11 @@ const config = require("./config");
 const http = require("./http");
 const { getCoords, distanceBetweenCoords } = require("./geo");
 const { logger } = require("./logger");
-const { sendMessage } = require("./slack");
+const { bot } = require("./slack/");
+const { sendMessage } = require("./slack/dispatch");
+const { sendAlert } = require("./slack/error");
 require("dotenv").config();
-
+sendAlert(bot);
 /* System notes:
  * - Certain tasks should probably have an unmatchable requirement (because the tasks requires
  *   looking a shortlist of specialized volunteers)
@@ -160,11 +162,12 @@ async function checkForNewSubmissions() {
         // Send the message to Slack
         let messageSent = false;
         try {
-          await sendMessage(record, volunteers);
+          await sendMessage(bot, record, volunteers);
           messageSent = true;
           logger.info("Posted to Slack!");
         } catch (error) {
           logger.error("Unable to post to Slack: ", error);
+          console.log(error);
         }
 
         if (messageSent) {
@@ -198,6 +201,8 @@ async function start() {
 }
 
 process.on("unhandledRejection", (reason, p) => {
+  console.log(reason, p);
+
   logger.error("Unhandled Rejection at: Promise", p, "reason:", reason);
   // application specific logging, throwing an error, or other logic here
 });

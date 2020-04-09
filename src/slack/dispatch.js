@@ -1,11 +1,8 @@
 require("dotenv").config();
-const Slack = require("slack");
-
-const config = require("./config");
-
+const config = require("../config");
 const token = config.SLACK_TOKEN;
 const channel = config.SLACK_CHANNEL_ID;
-const bot = new Slack({ token });
+const { getSection } = require("./");
 
 const formatTasks = (record) => {
   const tasks = record.get("Tasks");
@@ -28,14 +25,6 @@ const formatTasks = (record) => {
 
   return formattedTasks;
 };
-
-const getSection = (text) => ({
-  type: "section",
-  text: {
-    type: "mrkdwn",
-    text,
-  },
-});
 
 const getLanguage = (record) => {
   const languages = [record.get("Language"), record.get("Language - other")];
@@ -149,7 +138,7 @@ const getVolunteers = (volunteers) => {
 };
 
 // This function actually sends the message to the slack channel
-const sendMessage = (record, volunteers) => {
+const sendMessage = (bot, record, volunteers) => {
   const text = "A new errand has been added!";
   const heading = getSection(`:exclamation: *${text}* :exclamation:`);
   const requester = getRequester(record);
