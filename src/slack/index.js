@@ -1,6 +1,6 @@
 require("dotenv").config();
-const config = require("../config");
 const Slack = require("slack");
+const config = require("../config");
 
 const token = config.SLACK_TOKEN;
 const bot = new Slack({ token });

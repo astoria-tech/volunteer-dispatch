@@ -6,15 +6,15 @@ const { sendAlert } = require("../slack/error");
 // of the base functionality and `.exceptions.handle()`.
 //
 module.exports = class SlackErrorTransport extends Transport {
-  constructor(opts) {
-    super(opts);
-    //
-    // Consume any custom options here. e.g.:
-    // - Connection information for databases
-    // - Authentication information for APIs (e.g. loggly, papertrail,
-    //   logentries, etc.).
-    //
-  }
+  // constructor(opts) {
+  //   super(opts);
+  //   //
+  //   // Consume any custom options here. e.g.:
+  //   // - Connection information for databases
+  //   // - Authentication information for APIs (e.g. loggly, papertrail,
+  //   //   logentries, etc.).
+  //   //
+  // }
 
   async log(info, callback) {
     setImmediate(() => {
