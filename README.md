@@ -36,6 +36,7 @@ And grab the API keys from each (and channel ID for Slack), and put them into th
 - `MAPQUEST_KEY`
 - `SLACK_XOXB` - Slack bot token. To setup: create an app, add the OAuth `chat:write` bot scope, install the app to a channel, and grab the bot token
 - `SLACK_CHANNEL_ID` - Slack channel ID (e.g. `C0107MVRF08`)
+- `SLACK_ALERT_CHANNEL_ID` - Slack channel for developer alerts
 
 ## How to run
 

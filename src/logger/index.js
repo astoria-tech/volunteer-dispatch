@@ -1,4 +1,5 @@
 const { createLogger, format, transports } = require("winston");
+const SlackErrorTransport = require("./slack-error-transport");
 
 const myFormat = format.printf(
   ({ level, message, timestamp }) => `${timestamp} ${level}: ${message}`
@@ -6,6 +7,9 @@ const myFormat = format.printf(
 
 const logger = createLogger({
   format: format.combine(format.timestamp(), myFormat),
-  transports: [new transports.Console()],
+  transports: [
+    new transports.Console(),
+    new SlackErrorTransport({ level: "error" }),
+  ],
 });
 exports.logger = logger;

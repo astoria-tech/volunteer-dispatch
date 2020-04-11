@@ -1,8 +1,7 @@
 require("dotenv").config();
 const config = require("../config");
-const token = config.SLACK_TOKEN;
+const { getSection, bot, token } = require("./");
 const channel = config.SLACK_CHANNEL_ID;
-const { getSection, bot } = require("./");
 
 const formatTasks = (record) => {
   const tasks = record.get("Tasks");

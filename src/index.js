@@ -5,9 +5,8 @@ const Task = require("./task");
 const config = require("./config");
 const http = require("./http");
 const { getCoords, distanceBetweenCoords } = require("./geo");
-const { logger } = require("./logger");
+const { logger } = require("./logger/");
 const { sendMessage } = require("./slack/dispatch");
-const { sendAlert } = require("./slack/error");
 require("dotenv").config();
 
 /* System notes:
@@ -161,12 +160,11 @@ async function checkForNewSubmissions() {
         // Send the message to Slack
         let messageSent = false;
         try {
-          await sendMessage(bot, record, volunteers);
+          await sendMessage(record, volunteers);
           messageSent = true;
           logger.info("Posted to Slack!");
         } catch (error) {
           logger.error("Unable to post to Slack: ", error);
-          console.log(error);
         }
 
         if (messageSent) {

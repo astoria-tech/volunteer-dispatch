@@ -15,5 +15,6 @@ const getSection = (text) => ({
 
 module.exports = {
   bot,
+  token,
   getSection,
 };

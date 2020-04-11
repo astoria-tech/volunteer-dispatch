@@ -27,7 +27,8 @@
     "node-geocoder": "^3.25.1",
     "preconditions": "^2.2.3",
     "slack": "^11.0.2",
-    "winston": "^3.2.1"
+    "winston": "^3.2.1",
+    "winston-transport": "^4.3.0"
   },
   "devDependencies": {
     "eslint": "^6.8.0",

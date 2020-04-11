@@ -1,6 +1,6 @@
 const NodeGeocoder = require("node-geocoder");
 const geolib = require("geolib");
-const { logger } = require("./logger");
+const { logger } = require("./logger/");
 const config = require("./config");
 require("dotenv").config();
 
