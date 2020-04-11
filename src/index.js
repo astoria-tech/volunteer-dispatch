@@ -6,11 +6,10 @@ const config = require("./config");
 const http = require("./http");
 const { getCoords, distanceBetweenCoords } = require("./geo");
 const { logger } = require("./logger");
-const { bot } = require("./slack/");
 const { sendMessage } = require("./slack/dispatch");
 const { sendAlert } = require("./slack/error");
 require("dotenv").config();
-sendAlert(bot);
+
 /* System notes:
  * - Certain tasks should probably have an unmatchable requirement (because the tasks requires
  *   looking a shortlist of specialized volunteers)
