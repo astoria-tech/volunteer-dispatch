@@ -11,5 +11,7 @@ const logger = createLogger({
     new transports.Console(),
     new SlackErrorTransport({ level: "error" }),
   ],
+  exceptionHandlers: [new transports.Console(), new SlackErrorTransport()],
 });
+
 exports.logger = logger;

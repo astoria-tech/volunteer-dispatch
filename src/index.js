@@ -197,10 +197,11 @@ async function start() {
   }
 }
 
-process.on("unhandledRejection", (reason, p) => {
-  console.log(reason, p);
-
-  logger.error("Unhandled Rejection at: Promise", p, "reason:", reason);
+process.on("unhandledRejection", (reason, promise) => {
+  logger.error({
+    message: `Unhandled Rejection: ${reason.message}`,
+    stack: reason.stack,
+  });
   // application specific logging, throwing an error, or other logic here
 });
 

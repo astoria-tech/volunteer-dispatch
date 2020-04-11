@@ -16,13 +16,13 @@ module.exports = class SlackErrorTransport extends Transport {
     //
   }
 
-  log(info, callback) {
+  async log(info, callback) {
     setImmediate(() => {
       this.emit("logged", info);
     });
 
     // Perform the writing to the remote service
-    sendAlert(info);
+    await sendAlert(info);
 
     callback();
   }
