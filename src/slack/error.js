@@ -8,8 +8,11 @@ let prevErrorMessage = "";
 let prevStackTrace = "";
 let threadTs = "";
 
-// For use by SlackErrorTranport in winston
+// For use by SlackErrorTranport in winston logger
 const sendAlert = async (error) => {
+  // Exit if no slack alert channel is provided
+  if (!channel) return;
+
   // For new errors (i.e., not the same error as the previous one)
   if (error.message !== prevErrorMessage && error.stack !== prevStackTrace) {
     const errorMessage = getSection(`:fire: *${error.message}* :fire:\n\n`);
