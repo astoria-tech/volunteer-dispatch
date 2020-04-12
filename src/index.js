@@ -5,8 +5,8 @@ const Task = require("./task");
 const config = require("./config");
 const http = require("./http");
 const { getCoords, distanceBetweenCoords } = require("./geo");
-const { logger } = require("./logger");
-const { sendMessage } = require("./slack");
+const { logger } = require("./logger/");
+const { sendMessage } = require("./slack/dispatch");
 require("dotenv").config();
 
 /* System notes:
@@ -197,8 +197,11 @@ async function start() {
   }
 }
 
-process.on("unhandledRejection", (reason, p) => {
-  logger.error("Unhandled Rejection at: Promise", p, "reason:", reason);
+process.on("unhandledRejection", (reason, promise) => {
+  logger.error({
+    message: `Unhandled Rejection: ${reason.message}`,
+    stack: reason.stack,
+  });
   // application specific logging, throwing an error, or other logic here
 });
 

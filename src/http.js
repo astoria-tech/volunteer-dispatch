@@ -1,5 +1,5 @@
 const express = require("express");
-const { logger } = require("./logger");
+const { logger } = require("./logger/");
 
 const app = express();
 const port = 3000;

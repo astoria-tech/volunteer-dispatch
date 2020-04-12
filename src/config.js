@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const config = {
   // Geocoder
   GOOGLE_API_KEY: process.env.GOOGLE_API_KEY,
@@ -17,6 +19,7 @@ const config = {
   // Slack
   SLACK_TOKEN: process.env.SLACK_XOXB,
   SLACK_CHANNEL_ID: process.env.SLACK_CHANNEL_ID,
+  SLACK_ALERT_CHANNEL_ID: process.env.SLACK_ALERT_CHANNEL_ID,
 };
 
 module.exports = Object.freeze(config);
