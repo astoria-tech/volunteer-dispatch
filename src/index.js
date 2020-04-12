@@ -184,11 +184,16 @@ async function checkForNewSubmissions() {
 
 async function start() {
   try {
-    logger.info("Volunteer Dispatch started!");
-
     // Run once right away, and run again every 15 seconds
-    setTimeout(checkForNewSubmissions, 0);
-    setInterval(checkForNewSubmissions, 15000);
+    if (config.VOLUNTEER_DISPATCH_PREVENT_PROCESSING) {
+      logger.info(
+        "Processing prevented by VOLUNTEER_DISPATCH_PREVENT_PROCESSING flag!"
+      );
+    } else {
+      logger.info("Volunteer Dispatch started!");
+      setTimeout(checkForNewSubmissions, 0);
+      setInterval(checkForNewSubmissions, 15000);
+    }
 
     // Run an HTTP server for health-check purposes
     http.run();
