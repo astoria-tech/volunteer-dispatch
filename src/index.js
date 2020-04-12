@@ -1,9 +1,8 @@
 const Airtable = require("airtable");
 
-const CustomAirtable = require("./custom-airtable");
 const Task = require("./task");
 const config = require("./config");
-const CustomAirtable = require("./airtable-utils");
+const AirtableUtils = require("./airtable-utils");
 const http = require("./http");
 const { getCoords, distanceBetweenCoords } = require("./geo");
 const { logger } = require("./logger/");
@@ -24,7 +23,7 @@ require("dotenv").config();
 const base = new Airtable({ apiKey: config.AIRTABLE_API_KEY }).base(
   config.AIRTABLE_BASE_ID
 );
-const customAirtable = new CustomAirtable(base);
+const customAirtable = new AirtableUtils(base);
 const requestService = new RequestService(
   base(config.AIRTABLE_REQUESTS_TABLE_NAME)
 );
