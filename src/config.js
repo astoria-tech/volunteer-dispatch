@@ -1,6 +1,19 @@
 require("dotenv").config();
 
+function envBoolean(name, defaultValue) {
+  if (process.env[name]) {
+    return process.env[name] === "true";
+  }
+  return defaultValue;
+}
+
 const config = {
+  // General
+  VOLUNTEER_DISPATCH_PREVENT_PROCESSING: envBoolean(
+    "VOLUNTEER_DISPATCH_PREVENT_PROCESSING",
+    false
+  ),
+
   // Geocoder
   GOOGLE_API_KEY: process.env.GOOGLE_API_KEY,
   MAPQUEST_KEY: process.env.MAPQUEST_KEY,
