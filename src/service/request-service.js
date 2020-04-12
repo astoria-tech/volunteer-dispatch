@@ -1,7 +1,7 @@
 const preconditions = require("preconditions").singleton();
 
 const AirtableUtils = require("../airtable-utils");
-const { logger } = require("../logger/");
+const { logger } = require("../logger");
 
 /**
  * APIs that deal with Request
