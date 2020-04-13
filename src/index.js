@@ -1,11 +1,14 @@
 const Airtable = require("airtable");
 
-const CustomAirtable = require("./custom-airtable");
 const Task = require("./task");
 const config = require("./config");
+const AirtableUtils = require("./airtable-utils");
 const http = require("./http");
 const { getCoords, distanceBetweenCoords } = require("./geo");
 const { logger } = require("./logger/");
+const Request = require("./model/request-record");
+const RequestService = require("./service/request-service");
+
 const { sendMessage } = require("./slack/dispatch");
 require("dotenv").config();
 
@@ -20,7 +23,10 @@ require("dotenv").config();
 const base = new Airtable({ apiKey: config.AIRTABLE_API_KEY }).base(
   config.AIRTABLE_BASE_ID
 );
-const customAirtable = new CustomAirtable(base);
+const customAirtable = new AirtableUtils(base);
+const requestService = new RequestService(
+  base(config.AIRTABLE_REQUESTS_TABLE_NAME)
+);
 
 function fullAddress(record) {
   return `${record.get("Address")} ${record.get("City")}, ${
@@ -141,17 +147,28 @@ async function findVolunteers(request) {
 // executes slack message if new row has been detected
 async function checkForNewSubmissions() {
   base(config.AIRTABLE_REQUESTS_TABLE_NAME)
-    .select({ view: "Grid view" })
+    .select({
+      view: "Grid view",
+      filterByFormula: "NOT({Was split?} = 'yes')",
+    })
     .eachPage(async (records, nextPage) => {
       // Remove records we don't want to process from the array.
-      const cleanRecords = records.filter((r) => {
-        if (typeof r.get("Name") === "undefined") return false;
-        if (r.get("Posted to Slack?") === "yes") return false;
-        return true;
-      });
+      const cleanRecords = records
+        .filter((r) => {
+          if (typeof r.get("Name") === "undefined") return false;
+          if (r.get("Posted to Slack?") === "yes") return false;
+          return true;
+        })
+        .map((r) => new Request(r));
 
       // Look for records that have not been posted to slack yet
       for (const record of cleanRecords) {
+        if (record.tasks.length > 1) {
+          // noinspection ES6MissingAwait
+          requestService.splitMultiTaskRequest(record);
+          continue;
+        }
+
         logger.info(`New help request for: ${record.get("Name")}`);
 
         // Find the closest volunteers

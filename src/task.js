@@ -83,7 +83,7 @@ const possibleTasks = [
   // Set an unmatchable requirement since we don't know the nature of an "Other"
   new Task("Other", ["unmatchable-requirement"]),
 ];
-
+Task.possibleTasks = possibleTasks;
 const cache = {};
 possibleTasks.forEach((errand) => {
   cache[errand.rawTask] = errand;
