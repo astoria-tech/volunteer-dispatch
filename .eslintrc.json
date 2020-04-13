@@ -11,6 +11,7 @@
     "no-continue": "off",
     "no-await-in-loop": "off",
     "quote-props": "off",
-    "no-restricted-syntax": "off"
+    "no-restricted-syntax": "off",
+    "max-len": [2, {"code": 100, "tabWidth": 2, "ignoreUrls": true, "ignoreStrings": true}]
   }
 }
