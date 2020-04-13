@@ -185,7 +185,7 @@ async function checkForNewSubmissions() {
         }
 
         if (messageSent) {
-          await record
+          await record.airtableRequest
             .patchUpdate({
               "Posted to Slack?": "yes",
               Status: record.get("Status") || "Needs assigning", // don't overwrite the status
