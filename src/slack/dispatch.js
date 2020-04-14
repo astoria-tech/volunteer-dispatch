@@ -1,8 +1,124 @@
 require("dotenv").config();
+const axios = require("axios");
 const config = require("../config");
 const { getSection, bot, token } = require(".");
 
 const channel = config.SLACK_CHANNEL_ID;
+
+function getDate() {
+  const date = new Date();
+  return `${date.getUTCFullYear()}-${
+    date.getUTCMonth() + 1
+  }-${date.getUTCDate()}`;
+}
+
+const slackButtons = [
+  {
+    blocks: [
+      {
+        type: "actions",
+        block_id: "followup",
+        elements: [
+          {
+            type: "button",
+            text: {
+              type: "plain_text",
+              text: "Flag for Follow-up?",
+            },
+            style: "primary",
+            value: "follow_up_requested",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    blocks: [
+      {
+        type: "section",
+        block_id: "calendar",
+        text: {
+          type: "mrkdwn",
+          text: "Pick a date for the reminder.",
+        },
+        accessory: {
+          type: "datepicker",
+          action_id: "datepicker123",
+          initial_date: `${getDate()}`,
+        },
+      },
+    ],
+  },
+  {
+    blocks: [
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: "What time would you like to be reminded?",
+        },
+      },
+      {
+        type: "actions",
+        block_id: "time",
+
+        elements: [
+          {
+            type: "button",
+            text: {
+              type: "plain_text",
+              text: "8AM",
+            },
+            style: "primary",
+            value: "8am",
+          },
+          {
+            type: "button",
+            text: {
+              type: "plain_text",
+              text: "12PM",
+            },
+            style: "primary",
+            value: "12pm",
+          },
+          {
+            type: "button",
+            text: {
+              type: "plain_text",
+              text: "4PM",
+            },
+            style: "primary",
+            value: "4pm",
+          },
+          {
+            type: "button",
+            text: {
+              type: "plain_text",
+              text: "8PM",
+            },
+            style: "primary",
+            value: "8pm",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    blocks: [
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: ":white_check_mark: Your follow-up reminder has been set!",
+        },
+      },
+    ],
+  },
+];
+
+const getButtons = (index) => {
+  return slackButtons[index];
+};
 
 const formatTasks = (record) => {
   const tasks = record.get("Tasks");
@@ -137,6 +253,25 @@ const getVolunteers = (volunteers) => {
   return volObject;
 };
 
+function handleButtonUpdate(body, updatedButton) {
+  const responseUrl = body.response_url;
+  const oldMessage = body.message;
+  const newBlocks = [];
+  for (let i = 0; i < oldMessage.blocks.length; i += 1) {
+    newBlocks.push(oldMessage.blocks[i]);
+  }
+  // this fucking works but doesnt retain original message
+  axios
+    .post(responseUrl, {
+      replace_original: true,
+      text: oldMessage.text,
+      type: "block_actions",
+      blocks: newBlocks,
+      attachments: [oldMessage.attachments[0], updatedButton],
+    })
+    .then((response) => console.log(JSON.parse(response.config.data)));
+}
+
 // This function actually sends the message to the slack channel
 const sendMessage = (record, volunteers) => {
   const text = "A new errand has been added!";
@@ -166,10 +301,13 @@ const sendMessage = (record, volunteers) => {
       {
         blocks: volunteerList,
       },
+      slackButtons[0],
     ],
   });
 };
 
 module.exports = {
   sendMessage,
+  getButtons,
+  handleButtonUpdate,
 };

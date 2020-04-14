@@ -31,6 +31,7 @@ const config = {
 
   // Slack
   SLACK_TOKEN: process.env.SLACK_XOXB,
+  SLACK_SECRET: process.env.SLACK_SECRET,
   SLACK_CHANNEL_ID: process.env.SLACK_CHANNEL_ID,
   SLACK_ALERT_CHANNEL_ID: process.env.SLACK_ALERT_CHANNEL_ID,
 };
