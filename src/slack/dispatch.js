@@ -260,15 +260,13 @@ function handleButtonUpdate(body, updatedButton) {
   for (let i = 0; i < oldMessage.blocks.length; i += 1) {
     newBlocks.push(oldMessage.blocks[i]);
   }
-  axios
-    .post(responseUrl, {
-      replace_original: true,
-      text: oldMessage.text,
-      type: "block_actions",
-      blocks: newBlocks,
-      attachments: [oldMessage.attachments[0], updatedButton],
-    })
-    .then((response) => console.log(JSON.parse(response.config.data)));
+  axios.post(responseUrl, {
+    replace_original: true,
+    text: oldMessage.text,
+    type: "block_actions",
+    blocks: newBlocks,
+    attachments: [oldMessage.attachments[0], updatedButton],
+  });
 }
 
 // This function actually sends the message to the slack channel
