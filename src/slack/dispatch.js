@@ -260,7 +260,6 @@ function handleButtonUpdate(body, updatedButton) {
   for (let i = 0; i < oldMessage.blocks.length; i += 1) {
     newBlocks.push(oldMessage.blocks[i]);
   }
-  // this fucking works but doesnt retain original message
   axios
     .post(responseUrl, {
       replace_original: true,
