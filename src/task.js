@@ -81,7 +81,13 @@ const possibleTasks = [
     "Navigating the health care/insurance websites",
   ]),
   // Set an unmatchable requirement since we don't know the nature of an "Other"
-  new Task("Other", ["unmatchable-requirement"]),
+  new Task("Other", [
+    "Meal delivery",
+    "Picking up groceries/medications",
+    "Pet-sitting/walking/feeding",
+    "Checking in on people",
+    "Donations of other kind"
+  ]),
 ];
 Task.possibleTasks = possibleTasks;
 const cache = {};
