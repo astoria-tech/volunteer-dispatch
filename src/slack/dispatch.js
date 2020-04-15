@@ -15,7 +15,7 @@ const formatTasks = (record) => {
       let msg = `${taskList}\n :small_orange_diamond: ${task}`;
       if (task === "Other") {
         msg +=
-          '\n\t\t:warning: These volunteer matches are guesses, since this is an "Other" request. :warning:';
+          '\n\t\t:warning: Because this is an "Other" request, these volunteer matches might not be the best options, depending on what the request is. :warning:';
       }
       return msg;
     }, "");
