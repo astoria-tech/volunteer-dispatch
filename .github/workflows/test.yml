@@ -1,8 +1,8 @@
 
-name: Linting
+name: Tests
 on: pull_request
 jobs:
-  test:
+  jest:
     runs-on: ubuntu-latest
     container:
       image: node:12
@@ -19,8 +19,8 @@ jobs:
             ${{ runner.os }}-build-${{ env.cache-name }}-
             ${{ runner.os }}-build-
             ${{ runner.os }}-
-      - name: Install Dependencies
+      - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: npm ci
-      - name: ESlint
+      - name: Jest
         run: npm run test
