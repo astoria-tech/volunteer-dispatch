@@ -80,7 +80,7 @@ const possibleTasks = [
     "Checking in on people",
     "Navigating the health care/insurance websites",
   ]),
-  // Set an unmatchable requirement since we don't know the nature of an "Other"
+  // Match most requirements since we don't know the nature of an "Other"
   new Task("Other", [
     "Meal delivery",
     "Picking up groceries/medications",
