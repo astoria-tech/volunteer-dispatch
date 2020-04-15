@@ -109,7 +109,9 @@ const getVolunteers = (volunteers) => {
 
   if (volunteers.length > 0) {
     // Heading for volunteers
-    volObject.push(getSection("*Here are the 10 closest volunteers*"));
+    volObject.push(
+      getSection(`*Here are the ${volunteers.length} closest volunteers*`)
+    );
 
     // Prepare the detailed volunteer info
     volunteers.forEach((volunteer) => {
