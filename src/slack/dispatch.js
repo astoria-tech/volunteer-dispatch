@@ -11,12 +11,14 @@ const formatTasks = (record) => {
   // Put each task on a new line
   let formattedTasks = "";
   if (tasks) {
-    formattedTasks = record
-      .get("Tasks")
-      .reduce(
-        (taskList, task) => `${taskList}\n :small_orange_diamond: ${task}`,
-        ""
-      );
+    formattedTasks = record.get("Tasks").reduce((taskList, task) => {
+      let msg = `${taskList}\n :small_orange_diamond: ${task}`;
+      if (task === "Other") {
+        msg +=
+          '\n\t\t:warning: Because this is an "Other" request, these volunteer matches might not be the best options, depending on what the request is. :warning:';
+      }
+      return msg;
+    }, "");
   }
 
   if (otherTasks) {
