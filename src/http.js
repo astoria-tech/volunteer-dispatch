@@ -46,6 +46,7 @@ const updateReminderField = async (id, date) => {
     .eachPage(async (record, nextPage) => {
       record[0].patchUpdate({
         "Reminder Date/Time": date.toString(),
+        "Reminder Posted": "",
       });
     });
 };

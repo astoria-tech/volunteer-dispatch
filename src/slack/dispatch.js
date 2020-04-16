@@ -270,9 +270,13 @@ function handleButtonUpdate(body, updatedButton) {
 }
 
 // This function actually sends the message to the slack channel
-const sendMessage = (record, volunteers) => {
-  const text = "A new errand has been added!";
-  const heading = getSection(`:exclamation: *${text}* :exclamation:`);
+const sendMessage = (
+  record,
+  volunteers,
+  initialText = ":exclamation: *A new errand has been added!* :exclamation:"
+) => {
+  const text = initialText;
+  const heading = getSection(text);
   const requester = getRequester(record);
   const tasks = getTasks(record);
   const subsidyRequested = subsidyIsRequested(record);

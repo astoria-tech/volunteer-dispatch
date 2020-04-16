@@ -5,7 +5,7 @@ const config = require("./config");
 const AirtableUtils = require("./airtable-utils");
 const http = require("./http");
 const { getCoords, distanceBetweenCoords } = require("./geo");
-const { logger } = require("./logger/");
+const { logger } = require("./logger");
 const Request = require("./model/request-record");
 const RequestService = require("./service/request-service");
 
@@ -156,11 +156,17 @@ async function checkForNewSubmissions() {
       const cleanRecords = records
         .filter((r) => {
           if (typeof r.get("Name") === "undefined") return false;
-          if (r.get("Posted to Slack?") === "yes") return false;
+          if (
+            r.get("Posted to Slack?") === "yes" &&
+            (typeof r.get("Reminder Date/Time") === "undefined" ||
+              Date.now() < r.get("Reminder Date/Time") ||
+              r.get("Reminder Posted") === "yes")
+          )
+            return false;
+
           return true;
         })
         .map((r) => new Request(r));
-
       // Look for records that have not been posted to slack yet
       for (const record of cleanRecords) {
         if (record.tasks.length > 1) {
@@ -176,8 +182,17 @@ async function checkForNewSubmissions() {
 
         // Send the message to Slack
         let messageSent = false;
+        let reminder = false;
+
         try {
-          await sendMessage(record, volunteers);
+          const reminderText =
+            ":alarm_clock: *Reminder for a previous request!* :alarm_clock:";
+          if (Date.now() > record.get("Reminder Date/Time")) {
+            await sendMessage(record, volunteers, reminderText);
+            reminder = true;
+          } else {
+            await sendMessage(record, volunteers);
+          }
           messageSent = true;
           logger.info("Posted to Slack!");
         } catch (error) {
@@ -185,13 +200,22 @@ async function checkForNewSubmissions() {
         }
 
         if (messageSent) {
-          await record.airtableRequest
-            .patchUpdate({
-              "Posted to Slack?": "yes",
-              Status: record.get("Status") || "Needs assigning", // don't overwrite the status
-            })
-            .then(logger.info("Updated Airtable record!"))
-            .catch((error) => logger.error(error));
+          if (reminder) {
+            await record.airtableRequest
+              .patchUpdate({
+                "Reminder Posted": "yes",
+              })
+              .then(logger.info("Updated Airtable record!"))
+              .catch((error) => logger.error(error));
+          } else {
+            await record.airtableRequest
+              .patchUpdate({
+                "Posted to Slack?": "yes",
+                Status: record.get("Status") || "Needs assigning", // don't overwrite the status
+              })
+              .then(logger.info("Updated Airtable record!"))
+              .catch((error) => logger.error(error));
+          }
         }
       }
 
