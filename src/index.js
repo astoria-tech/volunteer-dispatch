@@ -5,7 +5,7 @@ const config = require("./config");
 const AirtableUtils = require("./airtable-utils");
 const http = require("./http");
 const { getCoords, distanceBetweenCoords } = require("./geo");
-const { logger } = require("./logger/");
+const { logger } = require("./logger");
 const Request = require("./model/request-record");
 const RequestService = require("./service/request-service");
 
@@ -25,14 +25,9 @@ const base = new Airtable({ apiKey: config.AIRTABLE_API_KEY }).base(
 );
 const customAirtable = new AirtableUtils(base);
 const requestService = new RequestService(
-  base(config.AIRTABLE_REQUESTS_TABLE_NAME)
+  base(config.AIRTABLE_REQUESTS_TABLE_NAME),
+  customAirtable
 );
-
-function fullAddress(record) {
-  return `${record.get("Address")} ${record.get("City")}, ${
-    config.VOLUNTEER_DISPATCH_STATE
-  }`;
-}
 
 // Accepts errand address and checks volunteer spreadsheet for closest volunteers
 async function findVolunteers(request) {
@@ -41,18 +36,10 @@ async function findVolunteers(request) {
   const tasks = (request.get("Tasks") || []).map(Task.mapFromRawTask);
   let errandCoords;
   try {
-    errandCoords = await getCoords(fullAddress(request));
+    errandCoords = request.coordinates;
   } catch (e) {
     logger.error(
-      `Error getting coordinates for requester ${request.get(
-        "Name"
-      )} with error: ${JSON.stringify(e)}`
-    );
-    customAirtable.logErrorToTable(
-      config.AIRTABLE_REQUESTS_TABLE_NAME,
-      request,
-      e,
-      "getCoords"
+      `Unable to parse coordinates for request ${request.id} from ${request.name}`
     );
     return [];
   }
@@ -163,21 +150,32 @@ async function checkForNewSubmissions() {
 
       // Look for records that have not been posted to slack yet
       for (const record of cleanRecords) {
-        if (record.tasks.length > 1) {
+        let requestWithCoords;
+        try {
+          requestWithCoords = await requestService.resolveAndUpdateCoords(
+            record
+          );
+        } catch (e) {
+          logger.error(
+            `Error resolving and updating coordinates of request ${record.id} of ${record.name}`
+          );
+          continue;
+        }
+        if (requestWithCoords.tasks.length > 1) {
           // noinspection ES6MissingAwait
-          requestService.splitMultiTaskRequest(record);
+          requestService.splitMultiTaskRequest(requestWithCoords);
           continue;
         }
 
-        logger.info(`New help request for: ${record.get("Name")}`);
+        logger.info(`New help request for: ${requestWithCoords.get("Name")}`);
 
         // Find the closest volunteers
-        const volunteers = await findVolunteers(record);
+        const volunteers = await findVolunteers(requestWithCoords);
 
         // Send the message to Slack
         let messageSent = false;
         try {
-          await sendMessage(record, volunteers);
+          await sendMessage(requestWithCoords, volunteers);
           messageSent = true;
           logger.info("Posted to Slack!");
         } catch (error) {
@@ -185,7 +183,7 @@ async function checkForNewSubmissions() {
         }
 
         if (messageSent) {
-          await record.airtableRequest
+          await requestWithCoords.airtableRequest
             .patchUpdate({
               "Posted to Slack?": "yes",
               Status: record.get("Status") || "Needs assigning", // don't overwrite the status
@@ -219,7 +217,7 @@ async function start() {
   }
 }
 
-process.on("unhandledRejection", (reason, promise) => {
+process.on("unhandledRejection", (reason) => {
   logger.error({
     message: `Unhandled Rejection: ${reason.message}`,
     stack: reason.stack,

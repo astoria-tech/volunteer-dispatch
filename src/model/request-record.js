@@ -1,4 +1,5 @@
 const Task = require("../task");
+const config = require("../config");
 
 /**
  * Request for help.
@@ -39,6 +40,24 @@ class RequestRecord {
    */
   get rawFields() {
     return this.airtableRequest.fields;
+  }
+
+  /**
+   * Address of the requester. Includes street, city and state.
+   * @returns {string}
+   */
+  get fullAddress() {
+    return `${this.get("Address")} ${this.get("City")}, ${
+      config.VOLUNTEER_DISPATCH_STATE
+    }`;
+  }
+
+  /**
+   * Co-ordinates if they are available.
+   * @returns {Object}
+   */
+  get coordinates() {
+    return JSON.parse(this.get("_coordinates"));
   }
 }
 
