@@ -189,7 +189,10 @@ async function checkForNewSubmissions() {
         try {
           const reminderText =
             ":alarm_clock: *Reminder for a previous request!* :alarm_clock:";
-          if (Date.now() > record.get("Reminder Date/Time")) {
+          if (
+            Date.now() > record.get("Reminder Date/Time") &&
+            record.get("Posted to Slack?") === "yes"
+          ) {
             await sendMessage(record, volunteers, reminderText);
             reminder = true;
           } else {
