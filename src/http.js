@@ -15,6 +15,7 @@ const port = 3000;
 const base = new Airtable({ apiKey: config.AIRTABLE_API_KEY }).base(
   config.AIRTABLE_BASE_ID
 );
+// function that takes in date and time from slack buttons and returns date/time in ms
 const convertDateTime = (date, time) => {
   const dateArr = date.split("-");
   let timeInMils = 0;
@@ -36,7 +37,7 @@ const convertDateTime = (date, time) => {
   }
   return Date.parse(`${dateArr[1]} ${dateArr[2]} ${dateArr[0]}`) + timeInMils;
 };
-
+// function that updates airtable 'Reminder Date/Time', and 'Reminder Posted' fields when reminder is set
 const updateReminderField = async (id, date) => {
   await base(config.AIRTABLE_REQUESTS_TABLE_NAME)
     .select({
@@ -50,6 +51,7 @@ const updateReminderField = async (id, date) => {
       });
     });
 };
+
 app.use(
   bodyParser.urlencoded({
     extended: false,
@@ -58,6 +60,7 @@ app.use(
 
 app.get("/", (req, res) => res.send("ok"));
 
+// this route is handling slack update buttons
 app.post("/slack/actions/", (req, res) => {
   if (slackConf(req)) {
     const body = JSON.parse(req.body.payload);

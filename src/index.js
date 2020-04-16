@@ -144,7 +144,7 @@ async function findVolunteers(request) {
 }
 
 // Checks for updates on errand spreadsheet, finds closest volunteers from volunteer spreadsheet and
-// executes slack message if new row has been detected
+// executes slack message if new row has been detected or if the row's reminder date/time has passed
 async function checkForNewSubmissions() {
   base(config.AIRTABLE_REQUESTS_TABLE_NAME)
     .select({
@@ -156,6 +156,8 @@ async function checkForNewSubmissions() {
       const cleanRecords = records
         .filter((r) => {
           if (typeof r.get("Name") === "undefined") return false;
+          // checking if posted to slack ANS record has a reminder set, if the date/time of reminder has
+          // already passed, and if the reminder has already been posted
           if (
             r.get("Posted to Slack?") === "yes" &&
             (typeof r.get("Reminder Date/Time") === "undefined" ||

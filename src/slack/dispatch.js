@@ -5,13 +5,14 @@ const { getSection, bot, token } = require(".");
 
 const channel = config.SLACK_CHANNEL_ID;
 
+// function to get date and return in correct format for slack datepicker
 function getDate() {
   const date = new Date();
   return `${date.getUTCFullYear()}-${
     date.getUTCMonth() + 1
   }-${date.getUTCDate()}`;
 }
-
+// array of slack reminder buttons
 const slackButtons = [
   {
     blocks: [
@@ -115,7 +116,7 @@ const slackButtons = [
     ],
   },
 ];
-
+// function that returns
 const getButtons = (index) => {
   return slackButtons[index];
 };
@@ -252,7 +253,7 @@ const getVolunteers = (volunteers) => {
 
   return volObject;
 };
-
+// function that swaps out slack reminder buttons after they've been pressed
 function handleButtonUpdate(body, updatedButton) {
   const responseUrl = body.response_url;
   const oldMessage = body.message;

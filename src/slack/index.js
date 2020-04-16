@@ -16,7 +16,7 @@ const getSection = (text) => ({
     text,
   },
 });
-
+// function that confirms our slack button requests are actually from slack
 const slackConf = (req) => {
   const reqBody = qs.stringify(req.body, { format: "RFC1738" });
   const timeStamp = req.headers["x-slack-request-timestamp"];
