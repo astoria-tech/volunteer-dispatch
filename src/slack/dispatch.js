@@ -1,6 +1,7 @@
 require("dotenv").config();
 const config = require("../config");
 const { getSection, bot, token } = require(".");
+const { getDisplayNumber } = require("./message-utils");
 
 const channel = config.SLACK_CHANNEL_ID;
 
@@ -41,10 +42,13 @@ const getLanguage = (record) => {
 
 const getRequester = (record) => {
   const recordURL = `${config.AIRTABLE_REQUESTS_VIEW_URL}/${record.id}`;
+  const requesterNumber = record.get("Phone number");
+  const displayNumber = getDisplayNumber(requesterNumber);
+
   const textLines = [
     "*Requester:*",
     `<${recordURL}|${record.get("Name")}>`,
-    record.get("Phone number"),
+    displayNumber,
     record.get("Address"),
     getLanguage(record),
   ];
@@ -118,16 +122,20 @@ const getVolunteers = (volunteers) => {
     // Prepare the detailed volunteer info
     volunteers.forEach((volunteer) => {
       const volunteerURL = `${config.AIRTABLE_VOLUNTEERS_VIEW_URL}/${volunteer.record.id}`;
-      const volunteerText = `<${volunteerURL}|${volunteer.Name}> - ${
-        volunteer.Number
-      } - ${volunteer.Distance.toFixed(2)} Mi.`;
+      const volunteerLink = `<${volunteerURL}|${volunteer.Name}>`;
+      const displayNumber = getDisplayNumber(volunteer.Number);
+      const volunteerDistance = `${volunteer.Distance.toFixed(2)} Mi.`;
+
+      const volunteerText = `${volunteerLink} - ${displayNumber} - ${volunteerDistance}`;
 
       volObject.push(getSection(volunteerText));
     });
 
     // Add phone number list for copy/paste
     const msg = "Here are the volunteer phone numbers for easy copy/pasting:";
-    const phoneText = [msg].concat(volunteers.map((v) => v.Number)).join("\n");
+    const phoneText = [msg]
+      .concat(volunteers.map((volunteer) => getDisplayNumber(volunteer.Number)))
+      .join("\n");
 
     volObject.push(getSection(phoneText));
   } else {
