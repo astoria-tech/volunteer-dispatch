@@ -111,38 +111,36 @@ const getAnythingElse = (record) => {
 };
 
 const getVolunteers = (volunteers) => {
-  const volObject = [];
-
   if (volunteers.length > 0) {
-    // Heading for volunteers
-    volObject.push(
-      getSection(`*Here are the ${volunteers.length} closest volunteers*`)
-    );
+    const volunteerHeading = `*Here are the ${volunteers.length} closest volunteers:*`;
 
     // Prepare the detailed volunteer info
-    volunteers.forEach((volunteer) => {
-      const volunteerURL = `${config.AIRTABLE_VOLUNTEERS_VIEW_URL}/${volunteer.record.id}`;
-      const volunteerLink = `<${volunteerURL}|${volunteer.Name}>`;
-      const displayNumber = getDisplayNumber(volunteer.Number);
-      const volunteerDistance = `${volunteer.Distance.toFixed(2)} Mi.`;
+    const volunteerLines = volunteers
+      .map((volunteer) => {
+        const volunteerURL = `${config.AIRTABLE_VOLUNTEERS_VIEW_URL}/${volunteer.record.id}`;
+        const volunteerLink = `<${volunteerURL}|${volunteer.Name}>`;
+        const displayNumber = getDisplayNumber(volunteer.Number);
+        const volunteerDistance = `${volunteer.Distance.toFixed(2)} Mi.`;
 
-      const volunteerText = `${volunteerLink} - ${displayNumber} - ${volunteerDistance}`;
+        const volunteerLine = `:wave: ${volunteerLink} - ${displayNumber} - ${volunteerDistance}`;
 
-      volObject.push(getSection(volunteerText));
-    });
+        return volunteerLine;
+      })
+      .join("\n");
 
-    const msg = "_For easy copy/paste, see the reply to this message:_";
+    const volunteerClosing =
+      "_For easy copy/paste, see the reply to this message:_";
 
-    volObject.push(getSection(msg));
+    const volunteerSectionText = `${volunteerHeading}\n\n${volunteerLines}\n\n${volunteerClosing}`;
+
+    return getSection(volunteerSectionText);
   } else {
     // No volunteers found
     const noneFoundText =
       "*No volunteers match this request!*\n*Check the full Airtable record, there might be more info there.*";
 
-    volObject.push(getSection(noneFoundText));
+    return getSection(noneFoundText);
   }
-
-  return volObject;
 };
 
 const getCopyPasteNumbers = (volunteers) => {
@@ -178,7 +176,7 @@ const sendMessage = async (record, volunteers) => {
       subsidyRequested,
       anythingElse,
       space,
-      ...volunteerList,
+      volunteerList,
     ],
   });
 
