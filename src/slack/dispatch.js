@@ -131,13 +131,9 @@ const getVolunteers = (volunteers) => {
       volObject.push(getSection(volunteerText));
     });
 
-    // Add phone number list for copy/paste
-    const msg = "Here are the volunteer phone numbers for easy copy/pasting:";
-    const phoneText = [msg]
-      .concat(volunteers.map((volunteer) => getDisplayNumber(volunteer.Number)))
-      .join("\n");
+    const msg = "_For easy copy/paste, see the reply to this message:_";
 
-    volObject.push(getSection(phoneText));
+    volObject.push(getSection(msg));
   } else {
     // No volunteers found
     const noneFoundText =
@@ -149,8 +145,16 @@ const getVolunteers = (volunteers) => {
   return volObject;
 };
 
+const getCopyPasteNumbers = (volunteers) => {
+  const simplePhoneList = volunteers
+    .map((volunteer) => getDisplayNumber(volunteer.Number))
+    .join("\n");
+
+  return simplePhoneList;
+};
+
 // This function actually sends the message to the slack channel
-const sendMessage = (record, volunteers) => {
+const sendMessage = async (record, volunteers) => {
   const text = "A new errand has been added!";
   const heading = getSection(`:exclamation: *${text}* :exclamation:`);
   const requester = getRequester(record);
@@ -160,8 +164,9 @@ const sendMessage = (record, volunteers) => {
   const anythingElse = getAnythingElse(record);
   const space = getSection(" ");
   const volunteerList = getVolunteers(volunteers);
+  const copyPasteNumbers = getCopyPasteNumbers(volunteers);
 
-  return bot.chat.postMessage({
+  const res = await bot.chat.postMessage({
     token,
     channel,
     text,
@@ -173,12 +178,16 @@ const sendMessage = (record, volunteers) => {
       subsidyRequested,
       anythingElse,
       space,
+      ...volunteerList,
     ],
-    attachments: [
-      {
-        blocks: volunteerList,
-      },
-    ],
+  });
+
+  return await bot.chat.postMessage({
+    thread_ts: res.ts,
+    reply_broadcast: true,
+    token,
+    channel,
+    text: copyPasteNumbers,
   });
 };
 
