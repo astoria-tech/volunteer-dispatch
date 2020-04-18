@@ -130,7 +130,7 @@ const getVolunteers = (volunteers) => {
         const displayNumber = getDisplayNumber(volunteer.Number);
         const volunteerDistance = `${volunteer.Distance.toFixed(2)} Mi.`;
 
-        const volunteerLine = `:wave: ${volunteerLink} - ${displayNumber} - ${volunteerDistance}`;
+        const volunteerLine = `:wave: ${volunteerLink} - ${displayNumber} - ${volunteerDistance}\n`;
 
         return volunteerLine;
       })
