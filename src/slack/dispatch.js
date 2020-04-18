@@ -33,7 +33,7 @@ const getLanguage = (record) => {
   const languages = [record.get("Language"), record.get("Language - other")];
   const languageList = languages.filter((language) => language).join(", ");
 
-  const formattedLanguageList = `Speaks: ${
+  const formattedLanguageList = `${
     languageList.length ? languageList : "None specified"
   }`;
 
@@ -41,22 +41,30 @@ const getLanguage = (record) => {
 };
 
 const getRequester = (record) => {
+  const heading = "*Requester:*";
   const recordURL = `${config.AIRTABLE_REQUESTS_VIEW_URL}/${record.id}`;
+  const requesterName = record.get("Name");
   const requesterNumber = record.get("Phone number");
-  const displayNumber = getDisplayNumber(requesterNumber);
+  const requesterAddress = record.get("Address");
 
-  const textLines = [
-    "*Requester:*",
-    `<${recordURL}|${record.get("Name")}>`,
+  const displayNameLink = `<${recordURL}|:heart: ${requesterName}>`;
+  const displayNumber = getDisplayNumber(`:phone: ${requesterNumber}`);
+  const displayAddress = `:house: ${requesterAddress}`;
+  const displayLanguage = `:speaking_head_in_silhouette: ${getLanguage(
+    record
+  )}`;
+
+  const requesterInfo = [
+    heading,
+    displayNameLink,
     displayNumber,
-    record.get("Address"),
-    getLanguage(record),
+    displayAddress,
+    displayLanguage,
   ];
-  const text = textLines.join("\n");
 
-  const requesterObject = getSection(text);
+  const requesterSection = getSection(requesterInfo.join("\n"));
 
-  return requesterObject;
+  return requesterSection;
 };
 
 const getTasks = (record) => {
