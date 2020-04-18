@@ -22,7 +22,7 @@ const getDisplayNumber = (rawInput) => {
 
   const displayNumber = tappableNumber
     ? tappableNumber
-    : `${rawInput} _[User appears to have entered invalid number]_`;
+    : `${rawInput} _[Bot note: unparseable number.]_`;
 
   return displayNumber;
 };

@@ -1,7 +1,7 @@
 require("dotenv").config();
 const config = require("../config");
 const { getSection, bot, token } = require(".");
-const { getDisplayNumber } = require("./message-utils");
+const { getDisplayNumber } = require("./phone-number-utils");
 
 const channel = config.SLACK_CHANNEL_ID;
 
@@ -48,7 +48,7 @@ const getRequester = (record) => {
   const requesterAddress = record.get("Address");
 
   const displayNameLink = `<${recordURL}|:heart: ${requesterName}>`;
-  const displayNumber = getDisplayNumber(`:phone: ${requesterNumber}`);
+  const displayNumber = `:phone: ${getDisplayNumber(requesterNumber)}`;
   const displayAddress = `:house: ${requesterAddress}`;
   const displayLanguage = `:speaking_head_in_silhouette: ${getLanguage(
     record
