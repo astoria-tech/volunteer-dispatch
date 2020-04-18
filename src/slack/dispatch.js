@@ -119,36 +119,36 @@ const getAnythingElse = (record) => {
 };
 
 const getVolunteers = (volunteers) => {
-  if (volunteers.length > 0) {
-    const volunteerHeading = `*Here are the ${volunteers.length} closest volunteers:*`;
-
-    // Prepare the detailed volunteer info
-    const volunteerLines = volunteers
-      .map((volunteer) => {
-        const volunteerURL = `${config.AIRTABLE_VOLUNTEERS_VIEW_URL}/${volunteer.record.id}`;
-        const volunteerLink = `<${volunteerURL}|${volunteer.Name}>`;
-        const displayNumber = getDisplayNumber(volunteer.Number);
-        const volunteerDistance = `${volunteer.Distance.toFixed(2)} Mi.`;
-
-        const volunteerLine = `:wave: ${volunteerLink} - ${displayNumber} - ${volunteerDistance}\n`;
-
-        return volunteerLine;
-      })
-      .join("\n");
-
-    const volunteerClosing =
-      "_For easy copy/paste, see the reply to this message:_";
-
-    const volunteerSectionText = `${volunteerHeading}\n\n${volunteerLines}\n\n${volunteerClosing}`;
-
-    return getSection(volunteerSectionText);
-  } else {
+  if (volunteers.length === 0) {
     // No volunteers found
     const noneFoundText =
       "*No volunteers match this request!*\n*Check the full Airtable record, there might be more info there.*";
 
     return getSection(noneFoundText);
   }
+
+  // Prepare the detailed volunteer info
+  const volunteerHeading = `*Here are the ${volunteers.length} closest volunteers:*`;
+
+  const volunteerLines = volunteers
+    .map((volunteer) => {
+      const volunteerURL = `${config.AIRTABLE_VOLUNTEERS_VIEW_URL}/${volunteer.record.id}`;
+      const volunteerLink = `<${volunteerURL}|${volunteer.Name}>`;
+      const displayNumber = getDisplayNumber(volunteer.Number);
+      const volunteerDistance = `${volunteer.Distance.toFixed(2)} Mi.`;
+
+      const volunteerLine = `:wave: ${volunteerLink} - ${displayNumber} - ${volunteerDistance}\n`;
+
+      return volunteerLine;
+    })
+    .join("\n");
+
+  const volunteerClosing =
+    "_For easy copy/paste, see the reply to this message:_";
+
+  const volunteerSectionText = `${volunteerHeading}\n\n${volunteerLines}\n\n${volunteerClosing}`;
+
+  return getSection(volunteerSectionText);
 };
 
 const getCopyPasteNumbers = (volunteers) => {
@@ -188,7 +188,7 @@ const sendMessage = async (record, volunteers) => {
     ],
   });
 
-  return await bot.chat.postMessage({
+  return bot.chat.postMessage({
     thread_ts: res.ts,
     reply_broadcast: true,
     token,
