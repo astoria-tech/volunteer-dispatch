@@ -50,6 +50,10 @@ class Task {
         ))
     );
   }
+
+  equals(task) {
+    return this.rawTask === task.rawTask;
+  }
 }
 
 const doesVolunteerHaveACar = (volunteer) => {
@@ -62,36 +66,46 @@ const doesVolunteerHaveACar = (volunteer) => {
   return false;
 };
 
-const possibleTasks = [
-  new Task("Grocery shopping", ["Picking up groceries/medications"]),
-  new Task("Picking up a prescription", ["Picking up groceries/medications"]),
-  new Task(
-    "Transportation to/from a medical appointment",
-    [],
-    [doesVolunteerHaveACar]
-  ),
-  new Task("Dog walking", ["Pet-sitting/walking/feeding"]),
-  new Task("Loneliness", [
-    "Check-in on folks throughout the day (in-person or phone call)",
-    "Checking in on people",
-  ]),
-  new Task("Accessing verified health information", [
-    "Check-in on folks throughout the day (in-person or phone call)",
-    "Checking in on people",
-    "Navigating the health care/insurance websites",
-  ]),
-  // Match most requirements since we don't know the nature of an "Other"
-  new Task("Other", [
-    "Meal delivery",
-    "Picking up groceries/medications",
-    "Pet-sitting/walking/feeding",
-    "Checking in on people",
-    "Donations of other kind"
-  ]),
+Task.GROCERY_SHOPPING = new Task("Grocery shopping", [
+  "Picking up groceries/medications",
+]);
+Task.PRESCRIPTION_PICKUP = new Task("Picking up a prescription", [
+  "Picking up groceries/medications",
+]);
+Task.MEDICAL_APPT_TRANSPORTATION = new Task(
+  "Transportation to/from a medical appointment",
+  [],
+  [doesVolunteerHaveACar]
+);
+Task.DOG_WALKING = new Task("Dog walking", ["Pet-sitting/walking/feeding"]);
+Task.LONELINESS = new Task("Loneliness", [
+  "Check-in on folks throughout the day (in-person or phone call)",
+  "Checking in on people",
+]);
+Task.ACCESS_HEALTH_INFO = new Task("Accessing verified health information", [
+  "Check-in on folks throughout the day (in-person or phone call)",
+  "Checking in on people",
+  "Navigating the health care/insurance websites",
+]);
+// Match most requirements since we don't know the nature of an "Other"
+Task.OTHER = new Task("Other", [
+  "Meal delivery",
+  "Picking up groceries/medications",
+  "Pet-sitting/walking/feeding",
+  "Checking in on people",
+  "Donations of other kind"
+]);
+Task.possibleTasks = [
+  Task.GROCERY_SHOPPING,
+  Task.PRESCRIPTION_PICKUP,
+  Task.MEDICAL_APPT_TRANSPORTATION,
+  Task.DOG_WALKING,
+  Task.LONELINESS,
+  Task.ACCESS_HEALTH_INFO,
+  Task.OTHER,
 ];
-Task.possibleTasks = possibleTasks;
 const cache = {};
-possibleTasks.forEach((errand) => {
+Task.possibleTasks.forEach((errand) => {
   cache[errand.rawTask] = errand;
 });
 Task.mapFromRawTask = (rawTask) => cache[rawTask];

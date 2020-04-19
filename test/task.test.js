@@ -78,4 +78,18 @@ describe("Task", () => {
       expect(task.canBeFulfilledByVolunteer(volunteer)).toBeTruthy();
     });
   });
+  describe("equals", () => {
+    it.each`
+      task                                | raw
+      ${Task.GROCERY_SHOPPING}            | ${"Grocery shopping"}
+      ${Task.PRESCRIPTION_PICKUP}         | ${"Picking up a prescription"}
+      ${Task.MEDICAL_APPT_TRANSPORTATION} | ${"Transportation to/from a medical appointment"}
+      ${Task.DOG_WALKING}                 | ${"Dog walking"}
+      ${Task.LONELINESS}                  | ${"Loneliness"}
+      ${Task.ACCESS_HEALTH_INFO}          | ${"Accessing verified health information"}
+      ${Task.OTHER}                       | ${"Other"}
+    `("should return true if rawTasks match", ({ task, raw }) => {
+      expect(task.equals(new Task(raw, [], []))).toBeTruthy();
+    });
+  });
 });
