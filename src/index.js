@@ -5,7 +5,7 @@ const config = require("./config");
 const AirtableUtils = require("./airtable-utils");
 const http = require("./http");
 const { getCoords, distanceBetweenCoords } = require("./geo");
-const { logger } = require("./logger/");
+const { logger } = require("./logger");
 const Request = require("./model/request-record");
 const RequestService = require("./service/request-service");
 
@@ -32,6 +32,20 @@ function fullAddress(record) {
   return `${record.get("Address")} ${record.get("City")}, ${
     config.VOLUNTEER_DISPATCH_STATE
   }`;
+}
+
+/**
+ * @param volunteerAndDistance An array with volunteer record on the 0th index and its distance from requester on the 1st index
+ * @returns {{Number: *, record: *, Distance: *, Name: *}}
+ */
+function volunteerWithCustomFields(volunteerAndDistance) {
+  const [volunteer, distance] = volunteerAndDistance;
+  return {
+    Name: volunteer.get("Full Name"),
+    Number: volunteer.get("Please provide your contact phone number:"),
+    Distance: distance,
+    record: volunteer,
+  };
 }
 
 // Accepts errand address and checks volunteer spreadsheet for closest volunteers
@@ -125,15 +139,7 @@ async function findVolunteers(request) {
   const closestVolunteers = volunteerDistances
     .sort((a, b) => a[1] - b[1])
     .slice(0, 10)
-    .map((volunteerAndDistance) => {
-      const [volunteer, distance] = volunteerAndDistance;
-      return {
-        Name: volunteer.get("Full Name"),
-        Number: volunteer.get("Please provide your contact phone number:"),
-        Distance: distance,
-        record: volunteer,
-      };
-    });
+    .map(volunteerWithCustomFields);
 
   logger.info("Closest:");
   closestVolunteers.forEach((v) => {
