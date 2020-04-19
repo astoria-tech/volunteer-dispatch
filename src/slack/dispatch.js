@@ -135,7 +135,10 @@ const getVolunteers = (volunteers) => {
       const volunteerURL = `${config.AIRTABLE_VOLUNTEERS_VIEW_URL}/${volunteer.record.id}`;
       const volunteerLink = `<${volunteerURL}|${volunteer.Name}>`;
       const displayNumber = getDisplayNumber(volunteer.Number);
-      const volunteerDistance = `${volunteer.Distance.toFixed(2)} Mi.`;
+      const volunteerDistance =
+        typeof volunteer.Distance === "number"
+          ? `${volunteer.Distance.toFixed(2)} Mi.`
+          : "";
 
       const volunteerLine = `:wave: ${volunteerLink} - ${displayNumber} - ${volunteerDistance}\n`;
 
