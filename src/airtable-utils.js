@@ -42,6 +42,7 @@ class AirtableUtils {
       "Cloned from": [request.id],
     };
     delete fields["Created time"];
+    delete fields["Record ID"];
     delete fields.Error;
     return { fields };
   }

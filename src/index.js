@@ -61,7 +61,7 @@ async function findVolunteers(request) {
 
   // Figure out which volunteers can fulfill at least one of the tasks
   await base(config.AIRTABLE_VOLUNTEERS_TABLE_NAME)
-    .select({ view: "Grid view" })
+    .select({ view: config.AIRTABLE_VOLUNTEERS_VIEW_NAME })
     .eachPage(async (volunteers, nextPage) => {
       const suitableVolunteers = volunteers.filter((volunteer) =>
         tasks.some((task) => task.canBeFulfilledByVolunteer(volunteer))
@@ -148,7 +148,7 @@ async function findVolunteers(request) {
 async function checkForNewSubmissions() {
   base(config.AIRTABLE_REQUESTS_TABLE_NAME)
     .select({
-      view: "Grid view",
+      view: config.AIRTABLE_REQUESTS_VIEW_NAME,
       filterByFormula: "NOT({Was split?} = 'yes')",
     })
     .eachPage(async (records, nextPage) => {
