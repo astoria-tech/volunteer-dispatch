@@ -59,6 +59,15 @@ class RequestRecord {
   get coordinates() {
     return JSON.parse(this.get("_coordinates"));
   }
+
+  /**
+   * Address used to resolve coordinates.
+   * @returns {string}
+   * @see coordinates
+   */
+  get coordinatesAddress() {
+    return this.get("_coordinates_address");
+  }
 }
 
 module.exports = RequestRecord;

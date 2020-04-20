@@ -26,7 +26,12 @@ class RequestService {
     preconditions.shouldBeObject(request);
     preconditions.shouldBeString(request.fullAddress);
     try {
-      if (request.coordinates) {
+      if (
+        request.coordinates &&
+        (typeof request.coordinatesAddress === "undefined" ||
+          request.coordinatesAddress.trim().length === 0 ||
+          request.coordinatesAddress === request.fullAddress)
+      ) {
         return request;
       }
     } catch (e) {
@@ -56,6 +61,7 @@ class RequestService {
     try {
       updatedRecord = await this.base.update(request.id, {
         _coordinates: JSON.stringify(errandCoords),
+        _coordinates_address: request.fullAddress,
       });
     } catch (e) {
       // catch error so we can log it with logger and in airtable
