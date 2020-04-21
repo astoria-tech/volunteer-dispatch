@@ -160,12 +160,15 @@ async function checkForNewSubmissions() {
           // already passed, and if the reminder has already been posted
           if (
             r.get("Posted to Slack?") === "yes" &&
-            (typeof r.get("Reminder Date/Time") === "undefined" ||
-              Date.now() < r.get("Reminder Date/Time") ||
+            typeof r.get("Reminder Date/Time") === "undefined"
+          )
+            return false;
+          if (
+            r.get("Posted to Slack?") === "yes" &&
+            (Date.now() < r.get("Reminder Date/Time") ||
               r.get("Reminder Posted") === "yes")
           )
             return false;
-
           return true;
         })
         .map((r) => new Request(r));
