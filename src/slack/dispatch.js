@@ -190,7 +190,7 @@ const sendMessage = async (record, volunteers) => {
 
   return bot.chat.postMessage({
     thread_ts: res.ts,
-    reply_broadcast: true,
+    reply_broadcast: false,
     token,
     channel,
     text: copyPasteNumbers,
