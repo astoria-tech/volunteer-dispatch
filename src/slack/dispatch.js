@@ -138,7 +138,7 @@ const getVolunteers = (volunteers) => {
       const volunteerDistance =
         typeof volunteer.Distance === "number"
           ? `${volunteer.Distance.toFixed(2)} Mi.`
-          : "";
+          : "Distance N/A";
 
       const volunteerLine = `:wave: ${volunteerLink} - ${displayNumber} - ${volunteerDistance}\n`;
 
