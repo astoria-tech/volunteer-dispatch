@@ -24,6 +24,7 @@
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "geolib": "^3.2.1",
+    "google-libphonenumber": "^3.2.8",
     "node-geocoder": "^3.25.1",
     "preconditions": "^2.2.3",
     "slack": "^11.0.2",

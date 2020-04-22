@@ -1,6 +1,7 @@
 require("dotenv").config();
 const config = require("../config");
 const { getSection, bot, token } = require(".");
+const { getDisplayNumber } = require("./phone-number-utils");
 
 const channel = config.SLACK_CHANNEL_ID;
 
@@ -32,7 +33,7 @@ const getLanguage = (record) => {
   const languages = [record.get("Language"), record.get("Language - other")];
   const languageList = languages.filter((language) => language).join(", ");
 
-  const formattedLanguageList = `Speaks: ${
+  const formattedLanguageList = `${
     languageList.length ? languageList : "None specified"
   }`;
 
@@ -40,19 +41,30 @@ const getLanguage = (record) => {
 };
 
 const getRequester = (record) => {
+  const heading = "*Requester:*";
   const recordURL = `${config.AIRTABLE_REQUESTS_VIEW_URL}/${record.id}`;
-  const textLines = [
-    "*Requester:*",
-    `<${recordURL}|${record.get("Name")}>`,
-    record.get("Phone number"),
-    record.get("Address"),
-    getLanguage(record),
+  const requesterName = record.get("Name");
+  const requesterNumber = record.get("Phone number");
+  const requesterAddress = record.get("Address");
+
+  const displayNameLink = `<${recordURL}|:heart: ${requesterName}>`;
+  const displayNumber = `:phone: ${getDisplayNumber(requesterNumber)}`;
+  const displayAddress = `:house: ${requesterAddress}`;
+  const displayLanguage = `:speaking_head_in_silhouette: ${getLanguage(
+    record
+  )}`;
+
+  const requesterInfo = [
+    heading,
+    displayNameLink,
+    displayNumber,
+    displayAddress,
+    displayLanguage,
   ];
-  const text = textLines.join("\n");
 
-  const requesterObject = getSection(text);
+  const requesterSection = getSection(requesterInfo.join("\n"));
 
-  return requesterObject;
+  return requesterSection;
 };
 
 const getTasks = (record) => {
@@ -107,42 +119,48 @@ const getAnythingElse = (record) => {
 };
 
 const getVolunteers = (volunteers) => {
-  const volObject = [];
-
-  if (volunteers.length > 0) {
-    // Heading for volunteers
-    volObject.push(
-      getSection(`*Here are the ${volunteers.length} closest volunteers*`)
-    );
-
-    // Prepare the detailed volunteer info
-    volunteers.forEach((volunteer) => {
-      const volunteerURL = `${config.AIRTABLE_VOLUNTEERS_VIEW_URL}/${volunteer.record.id}`;
-      const volunteerText = `<${volunteerURL}|${volunteer.Name}> - ${
-        volunteer.Number
-      } - ${volunteer.Distance.toFixed(2)} Mi.`;
-
-      volObject.push(getSection(volunteerText));
-    });
-
-    // Add phone number list for copy/paste
-    const msg = "Here are the volunteer phone numbers for easy copy/pasting:";
-    const phoneText = [msg].concat(volunteers.map((v) => v.Number)).join("\n");
-
-    volObject.push(getSection(phoneText));
-  } else {
+  if (volunteers.length === 0) {
     // No volunteers found
     const noneFoundText =
       "*No volunteers match this request!*\n*Check the full Airtable record, there might be more info there.*";
 
-    volObject.push(getSection(noneFoundText));
+    return getSection(noneFoundText);
   }
 
-  return volObject;
+  // Prepare the detailed volunteer info
+  const volunteerHeading = `*Here are the ${volunteers.length} closest volunteers:*`;
+
+  const volunteerLines = volunteers
+    .map((volunteer) => {
+      const volunteerURL = `${config.AIRTABLE_VOLUNTEERS_VIEW_URL}/${volunteer.record.id}`;
+      const volunteerLink = `<${volunteerURL}|${volunteer.Name}>`;
+      const displayNumber = getDisplayNumber(volunteer.Number);
+      const volunteerDistance = `${volunteer.Distance.toFixed(2)} Mi.`;
+
+      const volunteerLine = `:wave: ${volunteerLink} - ${displayNumber} - ${volunteerDistance}\n`;
+
+      return volunteerLine;
+    })
+    .join("\n");
+
+  const volunteerClosing =
+    "_For easy copy/paste, see the reply to this message:_";
+
+  const volunteerSectionText = `${volunteerHeading}\n\n${volunteerLines}\n\n${volunteerClosing}`;
+
+  return getSection(volunteerSectionText);
+};
+
+const getCopyPasteNumbers = (volunteers) => {
+  const simplePhoneList = volunteers
+    .map((volunteer) => getDisplayNumber(volunteer.Number))
+    .join("\n");
+
+  return simplePhoneList;
 };
 
 // This function actually sends the message to the slack channel
-const sendMessage = (record, volunteers) => {
+const sendMessage = async (record, volunteers) => {
   const text = "A new errand has been added!";
   const heading = getSection(`:exclamation: *${text}* :exclamation:`);
   const requester = getRequester(record);
@@ -152,8 +170,9 @@ const sendMessage = (record, volunteers) => {
   const anythingElse = getAnythingElse(record);
   const space = getSection(" ");
   const volunteerList = getVolunteers(volunteers);
+  const copyPasteNumbers = getCopyPasteNumbers(volunteers);
 
-  return bot.chat.postMessage({
+  const res = await bot.chat.postMessage({
     token,
     channel,
     text,
@@ -165,12 +184,16 @@ const sendMessage = (record, volunteers) => {
       subsidyRequested,
       anythingElse,
       space,
+      volunteerList,
     ],
-    attachments: [
-      {
-        blocks: volunteerList,
-      },
-    ],
+  });
+
+  return bot.chat.postMessage({
+    thread_ts: res.ts,
+    reply_broadcast: false,
+    token,
+    channel,
+    text: copyPasteNumbers,
   });
 };
 
