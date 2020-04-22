@@ -39,7 +39,8 @@ function fullAddress(record) {
 }
 
 /**
- * @param volunteerAndDistance An array with volunteer record on the 0th index and its distance from requester on the 1st index
+ * @param volunteerAndDistance An array with volunteer record on the 0th index and its distance
+ * from requester on the 1st index
  * @returns {{Number: *, record: *, Distance: *, Name: *}}
  */
 function volunteerWithCustomFields(volunteerAndDistance) {
