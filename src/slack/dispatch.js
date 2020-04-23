@@ -159,7 +159,7 @@ const getCopyPasteNumbers = (volunteers) => {
     .map((volunteer) => getDisplayNumber(volunteer.Number))
     .join("\n");
 
-  return simplePhoneList;
+  return simplePhoneList || "No numbers to display!";
 };
 
 // This function actually sends the message to the slack channel

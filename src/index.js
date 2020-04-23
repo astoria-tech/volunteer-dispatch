@@ -56,7 +56,7 @@ function volunteerWithCustomFields(volunteerAndDistance) {
 // Accepts errand address and checks volunteer spreadsheet for closest volunteers
 async function findVolunteers(request) {
   const { tasks } = request;
-  if (tasks[0].equals(Task.LONELINESS)) {
+  if (tasks && tasks.length > 0 && tasks[0].equals(Task.LONELINESS)) {
     return (await volunteerService.findVolunteersForLoneliness())
       .map((v) => [v, "N/A"])
       .map(volunteerWithCustomFields);
