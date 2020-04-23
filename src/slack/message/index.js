@@ -17,6 +17,11 @@ const getHeading = () => {
   return headingSection;
 };
 
+const pluralize = (num, str) => {
+  const sMaybe = num === 1 ? "" : "s";
+  return `${num} ${str}${sMaybe}`;
+};
+
 const getLanguage = (record) => {
   const languages = [record.get("Language"), record.get("Language - other")];
   const languageList = languages.filter((language) => language).join(", ");
@@ -143,7 +148,7 @@ const getVolunteerHeading = (volunteers) => {
   }
 };
 
-const getVolunteers = (volunteers) => {
+const getVolunteers = (volunteers, taskCounts) => {
   if (!volunteers.length) return;
 
   const volunteerSections = volunteers.map((volunteer) => {
@@ -154,8 +159,11 @@ const getVolunteers = (volunteers) => {
       typeof volunteer.Distance === "number"
         ? `${volunteer.Distance.toFixed(2)} Mi.`
         : "Distance N/A";
+    const taskCount = taskCounts.has(volunteer.Id)
+      ? pluralize(taskCounts.get(volunteer.Id), "assigned task")
+      : pluralize(0, "assigned task");
 
-    const volunteerLine = `:wave: ${volunteerLink}\n ${displayNumber} - ${volunteerDistance}\n`;
+    const volunteerLine = `:wave: ${volunteerLink}\n ${displayNumber} - ${volunteerDistance} - ${taskCount}\n`;
     const volunteerSection = getSection(volunteerLine);
 
     return volunteerSection;

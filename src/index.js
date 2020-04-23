@@ -33,12 +33,6 @@ const volunteerService = new VolunteerService(
   base(config.AIRTABLE_VOLUNTEERS_TABLE_NAME)
 );
 
-function fullAddress(record) {
-  return `${record.get("Address")} ${record.get("City")}, ${
-    config.VOLUNTEER_DISPATCH_STATE
-  }`;
-}
-
 /**
  * @param volunteerAndDistance An array with volunteer record on the 0th index and its distance
  * from requester on the 1st index
@@ -51,6 +45,7 @@ function volunteerWithCustomFields(volunteerAndDistance) {
     Number: volunteer.get("Please provide your contact phone number:"),
     Distance: distance,
     record: volunteer,
+    Id: volunteer.id,
   };
 }
 
@@ -157,20 +152,17 @@ async function checkForNewSubmissions() {
   base(config.AIRTABLE_REQUESTS_TABLE_NAME)
     .select({
       view: config.AIRTABLE_REQUESTS_VIEW_NAME,
-      filterByFormula: "NOT({Was split?} = 'yes')",
+      filterByFormula:
+        "AND({Was split?} != 'yes', {Name} != '', {Posted to Slack?} != 'yes')",
     })
     .eachPage(async (records, nextPage) => {
-      // Remove records we don't want to process from the array.
-      const cleanRecords = records
-        .filter((r) => {
-          if (typeof r.get("Name") === "undefined") return false;
-          if (r.get("Posted to Slack?") === "yes") return false;
-          return true;
-        })
-        .map((r) => new Request(r));
+      const mappedRecords = records.map((r) => new Request(r));
+
+      // Get the amount of tasks assigned to each volunteer
+      const volunteerTaskCounts = await requestService.getVolunteerTaskCounts();
 
       // Look for records that have not been posted to slack yet
-      for (const record of cleanRecords) {
+      for (const record of mappedRecords) {
         let requestWithCoords;
         try {
           requestWithCoords = await requestService.resolveAndUpdateCoords(
@@ -196,7 +188,11 @@ async function checkForNewSubmissions() {
         // Send the message to Slack
         let messageSent = false;
         try {
-          await sendDispatch(requestWithCoords, volunteers);
+          await sendDispatch(
+            requestWithCoords,
+            volunteers,
+            volunteerTaskCounts
+          );
           messageSent = true;
           logger.info("Posted to Slack!");
         } catch (error) {
