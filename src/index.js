@@ -5,9 +5,10 @@ const config = require("./config");
 const AirtableUtils = require("./airtable-utils");
 const http = require("./http");
 const { getCoords, distanceBetweenCoords } = require("./geo");
-const { logger } = require("./logger/");
+const { logger } = require("./logger");
 const Request = require("./model/request-record");
 const RequestService = require("./service/request-service");
+const VolunteerService = require("./service/volunteer-service");
 
 const { sendMessage } = require("./slack/dispatch");
 require("dotenv").config();
@@ -27,6 +28,9 @@ const customAirtable = new AirtableUtils(base);
 const requestService = new RequestService(
   base(config.AIRTABLE_REQUESTS_TABLE_NAME)
 );
+const volunteerService = new VolunteerService(
+  base(config.AIRTABLE_VOLUNTEERS_TABLE_NAME)
+);
 
 function fullAddress(record) {
   return `${record.get("Address")} ${record.get("City")}, ${
@@ -34,11 +38,30 @@ function fullAddress(record) {
   }`;
 }
 
+/**
+ * @param volunteerAndDistance An array with volunteer record on the 0th index and its distance
+ * from requester on the 1st index
+ * @returns {{Number: *, record: *, Distance: *, Name: *}}
+ */
+function volunteerWithCustomFields(volunteerAndDistance) {
+  const [volunteer, distance] = volunteerAndDistance;
+  return {
+    Name: volunteer.get("Full Name"),
+    Number: volunteer.get("Please provide your contact phone number:"),
+    Distance: distance,
+    record: volunteer,
+  };
+}
+
 // Accepts errand address and checks volunteer spreadsheet for closest volunteers
 async function findVolunteers(request) {
-  const volunteerDistances = [];
+  const { tasks } = request;
+  if (tasks[0].equals(Task.LONELINESS)) {
+    return (await volunteerService.findVolunteersForLoneliness())
+      .map((v) => [v, "N/A"])
+      .map(volunteerWithCustomFields);
+  }
 
-  const tasks = (request.get("Tasks") || []).map(Task.mapFromRawTask);
   let errandCoords;
   try {
     errandCoords = await getCoords(fullAddress(request));
@@ -56,9 +79,9 @@ async function findVolunteers(request) {
     );
     return [];
   }
-
   logger.info(`Tasks: ${tasks.map((task) => task.rawTask).join(", ")}`);
 
+  const volunteerDistances = [];
   // Figure out which volunteers can fulfill at least one of the tasks
   await base(config.AIRTABLE_VOLUNTEERS_TABLE_NAME)
     .select({ view: config.AIRTABLE_VOLUNTEERS_VIEW_NAME })
@@ -125,15 +148,7 @@ async function findVolunteers(request) {
   const closestVolunteers = volunteerDistances
     .sort((a, b) => a[1] - b[1])
     .slice(0, 10)
-    .map((volunteerAndDistance) => {
-      const [volunteer, distance] = volunteerAndDistance;
-      return {
-        Name: volunteer.get("Full Name"),
-        Number: volunteer.get("Please provide your contact phone number:"),
-        Distance: distance,
-        record: volunteer,
-      };
-    });
+    .map(volunteerWithCustomFields);
 
   logger.info("Closest:");
   closestVolunteers.forEach((v) => {
