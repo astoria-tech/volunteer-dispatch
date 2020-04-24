@@ -8,45 +8,53 @@ const { logger } = require("./logger");
 const { slackConf } = require("./slack/index");
 const { getButtons, handleButtonUpdate } = require("./slack/dispatch");
 
-const reminderObj = { id: null, date: null, time: null };
-const reminderArray = [];
 const app = express();
 const port = 3000;
 const base = new Airtable({ apiKey: config.AIRTABLE_API_KEY }).base(
   config.AIRTABLE_BASE_ID
 );
 // function that takes in date and time from slack buttons and returns date/time in ms
-const convertDateTime = (date, time) => {
+const convertDate = (date) => {
   const dateArr = date.split("-");
+  return Date.parse(`${dateArr[1]} ${dateArr[2]} ${dateArr[0]}`) + 28800000;
+};
+const convertTime = (time) => {
   let timeInMils = 0;
   switch (time) {
     case "8am":
-      timeInMils = 28800000;
+      timeInMils = 0;
       break;
     case "12pm":
-      timeInMils = 43200000;
+      timeInMils = 14400000;
       break;
     case "4pm":
-      timeInMils = 57600000;
+      timeInMils = 28800000;
       break;
     case "8pm":
-      timeInMils = 72000000;
+      timeInMils = 43200000;
       break;
     default:
       break;
   }
-  return Date.parse(`${dateArr[1]} ${dateArr[2]} ${dateArr[0]}`) + timeInMils;
+  return timeInMils;
 };
 // function that updates airtable 'Reminder Date/Time', and 'Reminder Posted' fields when reminder is set
-const updateReminderField = async (id, date) => {
+const updateReminderDateTime = async (id, dateTime) => {
   await base(config.AIRTABLE_REQUESTS_TABLE_NAME)
     .select({
       view: "Grid view",
       filterByFormula: `({Record ID} = '${id}')`,
     })
     .eachPage(async (record, nextPage) => {
+      const oldDateTime = record[0].get("Reminder Date/Time");
+      let newDateTime = 0;
+      if (!oldDateTime) {
+        newDateTime = dateTime;
+      } else {
+        newDateTime = parseInt(oldDateTime) + dateTime;
+      }
       record[0].patchUpdate({
-        "Reminder Date/Time": date.toString(),
+        "Reminder Date/Time": newDateTime.toString(),
         "Reminder Posted": "",
       });
     });
@@ -70,31 +78,15 @@ app.post("/slack/actions/", (req, res) => {
     let updateObj;
     switch (body.actions[0].block_id) {
       case "followup":
-        reminderObj.id = id;
-        reminderObj.date = null;
-        reminderObj.time = null;
-        reminderArray.push({ ...reminderObj });
         updateObj = getButtons(1);
         break;
       case "calendar":
-        for (let i = 0; i < reminderArray.length; i += 1) {
-          if (reminderArray[i].id === id) {
-            reminderArray[i].date = body.actions[0].selected_date;
-          }
-        }
+        updateReminderDateTime(id, convertDate(body.actions[0].selected_date));
+
         updateObj = getButtons(2);
         break;
       case "time":
-        for (let i = 0; i < reminderArray.length; i += 1) {
-          if (reminderArray[i].id === id) {
-            reminderArray[i].time = body.actions[0].value;
-            updateReminderField(
-              reminderArray[i].id,
-              convertDateTime(reminderArray[i].date, reminderArray[i].time)
-            );
-            reminderArray.splice(i, 1);
-          }
-        }
+        updateReminderDateTime(id, convertTime(body.actions[0].value));
         updateObj = getButtons(3);
         break;
       default:
