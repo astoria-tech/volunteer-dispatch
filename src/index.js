@@ -9,7 +9,7 @@ const { logger } = require("./logger/");
 const Request = require("./model/request-record");
 const RequestService = require("./service/request-service");
 
-const { sendMessage } = require("./slack/dispatch");
+const { sendDispatch } = require("./slack/sendDispatch");
 require("dotenv").config();
 
 /* System notes:
@@ -177,7 +177,7 @@ async function checkForNewSubmissions() {
         // Send the message to Slack
         let messageSent = false;
         try {
-          await sendMessage(record, volunteers);
+          await sendDispatch(record, volunteers);
           messageSent = true;
           logger.info("Posted to Slack!");
         } catch (error) {

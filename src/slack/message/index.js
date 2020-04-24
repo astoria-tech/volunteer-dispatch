@@ -1,9 +1,21 @@
 require("dotenv").config();
-const config = require("../config");
-const { getSection, bot, token } = require(".");
+const config = require("../../config");
 const { getDisplayNumber } = require("./phone-number-utils");
 
-const channel = config.SLACK_CHANNEL_ID;
+const getSection = (text) => ({
+  type: "section",
+  text: {
+    type: "mrkdwn",
+    text,
+  },
+});
+
+const getHeading = () => {
+  const text = "A new errand has been added";
+  const headingSection = getSection(`:exclamation: *${text}* :exclamation:`);
+
+  return headingSection;
+};
 
 const formatTasks = (record) => {
   const tasks = record.get("Tasks");
@@ -74,7 +86,7 @@ const getTasks = (record) => {
   return tasksObject;
 };
 
-const subsidyIsRequested = (record) => {
+const getSubsidyRequest = (record) => {
   const subsidy = record.get(
     "Please note, we are a volunteer-run organization, but may be able to help offset some of the cost of hard goods. Do you need a subsidy for your assistance?"
   )
@@ -166,54 +178,16 @@ const getCopyPasteNumbers = (volunteers) => {
   return simplePhoneList;
 };
 
-// This function actually sends the message to the slack channel
-const sendMessage = async (record, volunteers) => {
-  const text = "A new errand has been added!";
-  const heading = getSection(`:exclamation: *${text}* :exclamation:`);
-  const requester = getRequester(record);
-  const tasks = getTasks(record);
-  const requestedTimeframe = getTimeframe(record);
-
-  const res = await bot.chat.postMessage({
-    token,
-    channel,
-    text,
-    blocks: [heading, requester, tasks, requestedTimeframe],
-  });
-
-  const subsidyRequested = subsidyIsRequested(record);
-  const anythingElse = getAnythingElse(record);
-
-  await bot.chat.postMessage({
-    thread_ts: res.ts,
-    token,
-    channel,
-    text,
-    blocks: [subsidyRequested, anythingElse],
-  });
-
-  const volunteerHeading = getVolunteerHeading(volunteers);
-  const volunteerList = getVolunteers(volunteers);
-  const volunteerClosing = getVolunteerClosing(volunteers);
-
-  await bot.chat.postMessage({
-    thread_ts: res.ts,
-    token,
-    channel,
-    text,
-    blocks: [volunteerHeading, ...volunteerList, volunteerClosing],
-  });
-
-  const copyPasteNumbers = getCopyPasteNumbers(volunteers);
-
-  return bot.chat.postMessage({
-    thread_ts: res.ts,
-    token,
-    channel,
-    text: copyPasteNumbers,
-  });
-};
-
 module.exports = {
-  sendMessage,
+  getHeading,
+  getRequester,
+  getTasks,
+  getTimeframe,
+  getSubsidyRequest,
+  getAnythingElse,
+  getVolunteerHeading,
+  getVolunteers,
+  getVolunteerClosing,
+  getCopyPasteNumbers,
+  getSection,
 };

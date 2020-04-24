@@ -1,5 +1,5 @@
 const Transport = require("winston-transport");
-const { sendAlert } = require("../slack/error");
+const { sendError } = require("../slack/sendError");
 
 //
 // Inherit from `winston-transport` so you can take advantage
@@ -22,7 +22,7 @@ module.exports = class SlackErrorTransport extends Transport {
     });
 
     // Perform the writing to the remote service
-    await sendAlert(info);
+    await sendError(info);
 
     callback();
   }
