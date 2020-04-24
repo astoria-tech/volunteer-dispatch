@@ -118,37 +118,44 @@ const getAnythingElse = (record) => {
   return anythingElseObject;
 };
 
-const getVolunteers = (volunteers) => {
+const getVolunteerHeading = (volunteers) => {
   if (volunteers.length === 0) {
     // No volunteers found
     const noneFoundText =
       "*No volunteers match this request!*\n*Check the full Airtable record, there might be more info there.*";
 
     return getSection(noneFoundText);
+  } else {
+    const volunteerHeading = `*Here are the ${volunteers.length} closest volunteers:*`;
+    return getSection(volunteerHeading);
   }
+};
 
-  // Prepare the detailed volunteer info
-  const volunteerHeading = `*Here are the ${volunteers.length} closest volunteers:*`;
+const getVolunteers = (volunteers) => {
+  if (!volunteers.length) return;
 
-  const volunteerLines = volunteers
-    .map((volunteer) => {
-      const volunteerURL = `${config.AIRTABLE_VOLUNTEERS_VIEW_URL}/${volunteer.record.id}`;
-      const volunteerLink = `<${volunteerURL}|${volunteer.Name}>`;
-      const displayNumber = getDisplayNumber(volunteer.Number);
-      const volunteerDistance = `${volunteer.Distance.toFixed(2)} Mi.`;
+  const volunteerSections = volunteers.map((volunteer) => {
+    const volunteerURL = `${config.AIRTABLE_VOLUNTEERS_VIEW_URL}/${volunteer.record.id}`;
+    const volunteerLink = `<${volunteerURL}|${volunteer.Name}>`;
+    const displayNumber = getDisplayNumber(volunteer.Number);
+    const volunteerDistance = `${volunteer.Distance.toFixed(2)} Mi.`;
 
-      const volunteerLine = `:wave: ${volunteerLink} - ${displayNumber} - ${volunteerDistance}\n`;
+    const volunteerLine = `:wave: ${volunteerLink}\n ${displayNumber} - ${volunteerDistance}\n`;
+    const volunteerSection = getSection(volunteerLine);
 
-      return volunteerLine;
-    })
-    .join("\n");
+    return volunteerSection;
+  });
+
+  return volunteerSections;
+};
+
+const getVolunteerClosing = (volunteers) => {
+  if (!volunteers.length) return;
 
   const volunteerClosing =
     "_For easy copy/paste, see the reply to this message:_";
 
-  const volunteerSectionText = `${volunteerHeading}\n\n${volunteerLines}\n\n${volunteerClosing}`;
-
-  return getSection(volunteerSectionText);
+  return getSection(volunteerClosing);
 };
 
 const getCopyPasteNumbers = (volunteers) => {
@@ -165,32 +172,42 @@ const sendMessage = async (record, volunteers) => {
   const heading = getSection(`:exclamation: *${text}* :exclamation:`);
   const requester = getRequester(record);
   const tasks = getTasks(record);
-  const subsidyRequested = subsidyIsRequested(record);
   const requestedTimeframe = getTimeframe(record);
-  const anythingElse = getAnythingElse(record);
-  const space = getSection(" ");
-  const volunteerList = getVolunteers(volunteers);
-  const copyPasteNumbers = getCopyPasteNumbers(volunteers);
 
   const res = await bot.chat.postMessage({
     token,
     channel,
     text,
-    blocks: [
-      heading,
-      requester,
-      tasks,
-      requestedTimeframe,
-      subsidyRequested,
-      anythingElse,
-      space,
-      volunteerList,
-    ],
+    blocks: [heading, requester, tasks, requestedTimeframe],
   });
+
+  const subsidyRequested = subsidyIsRequested(record);
+  const anythingElse = getAnythingElse(record);
+
+  await bot.chat.postMessage({
+    thread_ts: res.ts,
+    token,
+    channel,
+    text,
+    blocks: [subsidyRequested, anythingElse],
+  });
+
+  const volunteerHeading = getVolunteerHeading(volunteers);
+  const volunteerList = getVolunteers(volunteers);
+  const volunteerClosing = getVolunteerClosing(volunteers);
+
+  await bot.chat.postMessage({
+    thread_ts: res.ts,
+    token,
+    channel,
+    text,
+    blocks: [volunteerHeading, ...volunteerList, volunteerClosing],
+  });
+
+  const copyPasteNumbers = getCopyPasteNumbers(volunteers);
 
   return bot.chat.postMessage({
     thread_ts: res.ts,
-    reply_broadcast: false,
     token,
     channel,
     text: copyPasteNumbers,
