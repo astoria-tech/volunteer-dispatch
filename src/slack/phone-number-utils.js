@@ -18,6 +18,8 @@ const getTappablePhoneNumber = (rawInput) => {
 };
 
 const getDisplayNumber = (rawInput) => {
+  if (!rawInput) return "None provided";
+
   const tappableNumber = getTappablePhoneNumber(rawInput);
 
   const displayNumber =
