@@ -1,7 +1,7 @@
 require("dotenv").config();
 const config = require("../config");
 const { bot, token } = require("./bot");
-const { getSection } = require("./message/");
+const { getSection } = require("./message");
 
 const channel = config.SLACK_ALERT_CHANNEL_ID;
 
