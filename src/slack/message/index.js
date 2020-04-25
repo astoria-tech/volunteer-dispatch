@@ -17,30 +17,6 @@ const getHeading = () => {
   return headingSection;
 };
 
-const formatTasks = (record) => {
-  const tasks = record.get("Tasks");
-  const otherTasks = record.get("Task - other");
-
-  // Put each task on a new line
-  let formattedTasks = "";
-  if (tasks) {
-    formattedTasks = record.get("Tasks").reduce((taskList, task) => {
-      let msg = `${taskList}\n :small_orange_diamond: ${task}`;
-      if (task === "Other") {
-        msg +=
-          '\n\t\t:warning: Because this is an "Other" request, these volunteer matches might not be the best options, depending on what the request is. :warning:';
-      }
-      return msg;
-    }, "");
-  }
-
-  if (otherTasks) {
-    formattedTasks += `\n :small_orange_diamond: ${otherTasks}`;
-  }
-
-  return formattedTasks;
-};
-
 const getLanguage = (record) => {
   const languages = [record.get("Language"), record.get("Language - other")];
   const languageList = languages.filter((language) => language).join(", ");
@@ -77,6 +53,30 @@ const getRequester = (record) => {
   const requesterSection = getSection(requesterInfo.join("\n"));
 
   return requesterSection;
+};
+
+const formatTasks = (record) => {
+  const tasks = record.get("Tasks");
+  const otherTasks = record.get("Task - other");
+
+  // Put each task on a new line
+  let formattedTasks = "";
+  if (tasks) {
+    formattedTasks = record.get("Tasks").reduce((taskList, task) => {
+      let msg = `${taskList}\n :small_orange_diamond: ${task}`;
+      if (task === "Other") {
+        msg +=
+          '\n\t\t:warning: Because this is an "Other" request, these volunteer matches might not be the best options, depending on what the request is. :warning:';
+      }
+      return msg;
+    }, "");
+  }
+
+  if (otherTasks) {
+    formattedTasks += `\n :small_orange_diamond: ${otherTasks}`;
+  }
+
+  return formattedTasks;
 };
 
 const getTasks = (record) => {
