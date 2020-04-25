@@ -28,6 +28,7 @@
     "google-libphonenumber": "^3.2.8",
     "node-geocoder": "^3.25.1",
     "preconditions": "^2.2.3",
+    "random-js": "^2.1.0",
     "slack": "^11.0.2",
     "winston": "^3.2.1",
     "winston-transport": "^4.3.0"

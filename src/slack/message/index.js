@@ -150,7 +150,10 @@ const getVolunteers = (volunteers) => {
     const volunteerURL = `${config.AIRTABLE_VOLUNTEERS_VIEW_URL}/${volunteer.record.id}`;
     const volunteerLink = `<${volunteerURL}|${volunteer.Name}>`;
     const displayNumber = getDisplayNumber(volunteer.Number);
-    const volunteerDistance = `${volunteer.Distance.toFixed(2)} Mi.`;
+    const volunteerDistance =
+      typeof volunteer.Distance === "number"
+        ? `${volunteer.Distance.toFixed(2)} Mi.`
+        : "Distance N/A";
 
     const volunteerLine = `:wave: ${volunteerLink}\n ${displayNumber} - ${volunteerDistance}\n`;
     const volunteerSection = getSection(volunteerLine);
@@ -175,7 +178,7 @@ const getCopyPasteNumbers = (volunteers) => {
     .map((volunteer) => getDisplayNumber(volunteer.Number))
     .join("\n");
 
-  return simplePhoneList;
+  return simplePhoneList || "No numbers to display!";
 };
 
 module.exports = {
