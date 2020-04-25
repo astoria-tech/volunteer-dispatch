@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
+    "test:slack": "jest test/slack/*",
     "start": "nodemon src/index.js",
     "lint": "eslint src/**/*.js test/**/*.js",
     "lint:fix": "eslint src/**/*.js test/**/*.js --fix"
