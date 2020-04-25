@@ -12,11 +12,24 @@ const slackSecret = config.SLACK_SIGNING_SECRET;
 const base = new Airtable({ apiKey: config.AIRTABLE_API_KEY }).base(
   config.AIRTABLE_BASE_ID
 );
-// function that takes in date and time from slack buttons and returns date/time in ms
+
+/**
+ * Function that takes in date and time from slack buttons and returns date/time in ms
+ *
+ * @param {string} date Date and time from slack.
+ * @returns {Date} The date and time in milliseconds.
+ */
 const convertDate = (date) => {
   const dateArr = date.split("-");
   return Date.parse(`${dateArr[1]} ${dateArr[2]} ${dateArr[0]}`) + 28800000;
 };
+
+/**
+ * Convert specific time strings to unix timestamps.
+ *
+ * @param {string} time The time to process. Can be 8am, 12pm, 4pm, or 8pm.
+ * @returns {Date} Time in miliseconds.
+ */
 const convertTime = (time) => {
   let timeInMils = 0;
   switch (time) {
@@ -38,7 +51,12 @@ const convertTime = (time) => {
   return timeInMils;
 };
 
-// function that confirms our slack button requests are actually from slack
+/**
+ * Function that confirms our slack button requests are actually from slack.
+ *
+ * @param {object} req The request object.
+ * @returns {boolean} True if from slack, false otherwise.
+ */
 const slackConf = (req) => {
   const reqBody = qs.stringify(req.body, { format: "RFC1738" });
   const timeStamp = req.headers["x-slack-request-timestamp"];
@@ -63,8 +81,14 @@ const slackConf = (req) => {
   return false;
 };
 
-// function that updates airtable 'Reminder Date/Time',
-// and 'Reminder Posted' fields when reminder is set
+/**
+ * Function that updates airtable 'Reminder Date/Time',
+ * and 'Reminder Posted' fields when reminder is set
+ *
+ * @param {number} id The Airtable ID.
+ * @param {string} dateTime The time to set to.
+ * @returns {void}
+ */
 const updateReminderDateTime = async (id, dateTime) => {
   await base(config.AIRTABLE_REQUESTS_TABLE_NAME)
     .select({
@@ -94,7 +118,11 @@ const updateReminderDateTime = async (id, dateTime) => {
     });
 };
 
-// function to get date and return in correct format for slack datepicker
+/**
+ * Function to get date and return in correct format for slack datepicker.
+ *
+ * @returns {string} formatted date for slack.
+ */
 function getDate() {
   const date = new Date();
   return `${date.getUTCFullYear()}-${
@@ -192,7 +220,12 @@ const confText = {
   },
 };
 
-// function that swaps out slack reminder buttons after they've been pressed
+/**
+ * Function that swaps out slack reminder buttons after they've been pressed
+ *
+ * @param {object} body The contents of what's sent to slack.
+ * @returns {void}
+ */
 function handleButtonUpdate(body) {
   const url = body.message.blocks[1].text.text;
   const id = url.substr(url.indexOf("rec"), 17);

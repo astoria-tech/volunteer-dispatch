@@ -11,8 +11,9 @@ class RequestRecord {
 
   /**
    * Get other field from airtable.
-   * @param field Field to get from airtable record
-   * @returns {*}
+   *
+   * @param {object} field to get from airtable record
+   * @type {*} The Airtable field.
    */
   get(field) {
     return this.airtableRequest.get(field);
@@ -20,6 +21,7 @@ class RequestRecord {
 
   /**
    * ID of the record
+   *
    * @type {string}
    */
   get id() {
@@ -28,6 +30,7 @@ class RequestRecord {
 
   /**
    * Tasks requester needs help with
+   *
    * @type {Task[]}
    */
   get tasks() {
@@ -36,15 +39,17 @@ class RequestRecord {
 
   /**
    * "fields" property from the underlying airtable record.
-   * @type {Object}
+   *
+   * @type {object}
    */
   get rawFields() {
     return this.airtableRequest.fields;
   }
 
   /**
-   * Address of the requester. Includes street, city and state.
-   * @returns {string}
+   * Address of the requester.
+   *
+   * @type {string} The requester address, including street, city and state.
    */
   get fullAddress() {
     return `${this.get("Address")} ${this.get("City")}, ${
@@ -54,7 +59,8 @@ class RequestRecord {
 
   /**
    * Co-ordinates if they are available.
-   * @returns {Object}
+   *
+   * @type {object} Geo co-ordinates.
    */
   get coordinates() {
     return JSON.parse(this.get("_coordinates"));
@@ -62,8 +68,9 @@ class RequestRecord {
 
   /**
    * Address used to resolve coordinates.
-   * @returns {string}
+   *
    * @see coordinates
+   * @type {string} Address co-ordinates.
    */
   get coordinatesAddress() {
     return this.get("_coordinates_address");

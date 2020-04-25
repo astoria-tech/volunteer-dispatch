@@ -9,7 +9,12 @@ let prevErrorMessage = "";
 let prevStackTrace = "";
 let threadTs = "";
 
-// For use by SlackErrorTranport in winston logger
+/**
+ * For use by SlackErrorTranport in winston logger.
+ *
+ * @param {object} error The error object.
+ * @returns {void}
+ */
 const sendError = async (error) => {
   // Exit if no slack alert channel is provided
   if (!channel) return;
