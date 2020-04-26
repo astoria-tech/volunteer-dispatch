@@ -63,14 +63,12 @@ async function findVolunteers(request) {
   await base(config.AIRTABLE_VOLUNTEERS_TABLE_NAME)
     .select({ view: config.AIRTABLE_VOLUNTEERS_VIEW_NAME })
     .eachPage(async (volunteers, nextPage) => {
-
       const suitableVolunteers = volunteers.filter((volunteer) =>
         tasks.some((task) => task.canBeFulfilledByVolunteer(volunteer))
       );
-      console.log("Request Langauge", request.get("Language"))
+
       // Calculate the distance to each volunteer
       for (const volunteer of suitableVolunteers) {
-        // console.log(volunteer.get("Please list what other languages you speak, if any, and level of fluency. "))
         const volAddress =
           volunteer.get(
             "Full Street address (You can leave out your apartment/unit.)"
@@ -123,55 +121,18 @@ async function findVolunteers(request) {
       nextPage();
     });
 
-  
   // Sort the volunteers by distance and grab the closest 10
-  const requestLanguage = request.get("Language")
   const closestVolunteers = volunteerDistances
-    .sort((a, b) => {
-      let aLanguage, aProficiency, bLanguage, bProficiency;
-
-      const aLanguages = a[0].get("Please list what other languages you speak, if any, and level of fluency. ")
-      const bLanguages = b[0].get("Please list what other languages you speak, if any, and level of fluency. ")
-      // console.log(aLanguages)
-      // console.log(bLanguages)
-      if (aLanguages) {
-         for (let language of aLanguages) {
-        const [lang, prof] = language.split(" - ");
-        if (lang === requestLanguage) {
-          aLanguage = lang
-          aProficiency = prof
-        }
+    .filter((volunteerAndDistance) => {
+      const volunteer = volunteerAndDistance[0]
+      const volLanguages = volunteer.get("Please list what other languages you speak, if any, and level of fluency. ")
+      if (volLanguages) {
+        return volLanguages.some(languageAndFluency =>
+          languageAndFluency.split(" - ")[0] === request.get("Language")
+        )
       }
-      }
-     
-      if (bLanguages) {
-        for (let language of bLanguages) {
-        const [lang, prof] = language.split(" - ");
-        if (lang === requestLanguage) {
-          bLanguage = lang
-          bProficiency = prof
-        }
-      }
-      }
-      
-
-      if (aLanguage === requestLanguage && bLanguage !== requestLanguage) {
-        return -1
-      } else if (bLanguage === requestLanguage && aLanguage !== requestLanguage) {
-        return 1
-      } else if (bLanguage === requestLanguage && aLanguage === requestLanguage) {
-        if (bProficiency === "fluent" && aProficiency !== "fluent") {
-          return -1
-        } else if (aProficiency === "fluent" && bProficiency !== "fluent") {
-          return 1
-        } else {
-          return a[1] - b[1]
-        }
-      } else {
-        return a[1] - b[1]
-      }
-
     })
+    .sort((a, b) => a[1] - b[1])
     .slice(0, 10)
     .map((volunteerAndDistance) => {
       const [volunteer, distance] = volunteerAndDistance;
@@ -180,13 +141,13 @@ async function findVolunteers(request) {
         Number: volunteer.get("Please provide your contact phone number:"),
         Distance: distance,
         record: volunteer,
-        Language: volunteer.get("Please list what other languages you speak, if any, and level of fluency. ")
+        Language: request.get("Language")
       };
     });
 
   logger.info("Closest:");
   closestVolunteers.forEach((v) => {
-    logger.info(`${v.Name} ${v.Distance.toFixed(2)} Mi${v.Language ? ", Speaks " + v.Language : ""}`);
+    logger.info(`${v.Name} ${v.Distance.toFixed(2)} Mi`);
   });
 
   return closestVolunteers;
