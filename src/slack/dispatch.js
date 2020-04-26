@@ -120,7 +120,7 @@ const getVolunteers = (volunteers) => {
       const volunteerURL = `${config.AIRTABLE_VOLUNTEERS_VIEW_URL}/${volunteer.record.id}`;
       const volunteerText = `<${volunteerURL}|${volunteer.Name}> - ${
         volunteer.Number
-      } - ${volunteer.Distance.toFixed(2)} Mi.`;
+        } - ${volunteer.Distance.toFixed(2)} Mi.${volunteer.Language ? " - Speaks" + volunteer.Language : ""}`;
 
       volObject.push(getSection(volunteerText));
     });
