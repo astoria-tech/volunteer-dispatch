@@ -1,32 +1,20 @@
 require("dotenv").config();
-const config = require("../config");
-const { getSection, bot, token } = require(".");
+const config = require("../../config");
 const { getDisplayNumber } = require("./phone-number-utils");
 
-const channel = config.SLACK_CHANNEL_ID;
+const getSection = (text) => ({
+  type: "section",
+  text: {
+    type: "mrkdwn",
+    text,
+  },
+});
 
-const formatTasks = (record) => {
-  const tasks = record.get("Tasks");
-  const otherTasks = record.get("Task - other");
+const getHeading = () => {
+  const text = "A new errand has been added";
+  const headingSection = getSection(`:exclamation: *${text}* :exclamation:`);
 
-  // Put each task on a new line
-  let formattedTasks = "";
-  if (tasks) {
-    formattedTasks = record.get("Tasks").reduce((taskList, task) => {
-      let msg = `${taskList}\n :small_orange_diamond: ${task}`;
-      if (task === "Other") {
-        msg +=
-          '\n\t\t:warning: Because this is an "Other" request, these volunteer matches might not be the best options, depending on what the request is. :warning:';
-      }
-      return msg;
-    }, "");
-  }
-
-  if (otherTasks) {
-    formattedTasks += `\n :small_orange_diamond: ${otherTasks}`;
-  }
-
-  return formattedTasks;
+  return headingSection;
 };
 
 const getLanguage = (record) => {
@@ -67,6 +55,30 @@ const getRequester = (record) => {
   return requesterSection;
 };
 
+const formatTasks = (record) => {
+  const tasks = record.get("Tasks");
+  const otherTasks = record.get("Task - other");
+
+  // Put each task on a new line
+  let formattedTasks = "";
+  if (tasks) {
+    formattedTasks = record.get("Tasks").reduce((taskList, task) => {
+      let msg = `${taskList}\n :small_orange_diamond: ${task}`;
+      if (task === "Other") {
+        msg +=
+          '\n\t\t:warning: Because this is an "Other" request, these volunteer matches might not be the best options, depending on what the request is. :warning:';
+      }
+      return msg;
+    }, "");
+  }
+
+  if (otherTasks) {
+    formattedTasks += `\n :small_orange_diamond: ${otherTasks}`;
+  }
+
+  return formattedTasks;
+};
+
 const getTasks = (record) => {
   const tasks = formatTasks(record);
   const tasksObject = getSection(`*Needs assistance with:*${tasks}`);
@@ -74,7 +86,7 @@ const getTasks = (record) => {
   return tasksObject;
 };
 
-const subsidyIsRequested = (record) => {
+const getSubsidyRequest = (record) => {
   const subsidy = record.get(
     "Please note, we are a volunteer-run organization, but may be able to help offset some of the cost of hard goods. Do you need a subsidy for your assistance?"
   )
@@ -118,40 +130,47 @@ const getAnythingElse = (record) => {
   return anythingElseObject;
 };
 
-const getVolunteers = (volunteers) => {
+const getVolunteerHeading = (volunteers) => {
   if (volunteers.length === 0) {
     // No volunteers found
     const noneFoundText =
       "*No volunteers match this request!*\n*Check the full Airtable record, there might be more info there.*";
 
     return getSection(noneFoundText);
+  } else {
+    const volunteerHeading = `*Here are the ${volunteers.length} closest volunteers:*`;
+    return getSection(volunteerHeading);
   }
+};
 
-  // Prepare the detailed volunteer info
-  const volunteerHeading = `*Here are the ${volunteers.length} closest volunteers:*`;
+const getVolunteers = (volunteers) => {
+  if (!volunteers.length) return;
 
-  const volunteerLines = volunteers
-    .map((volunteer) => {
-      const volunteerURL = `${config.AIRTABLE_VOLUNTEERS_VIEW_URL}/${volunteer.record.id}`;
-      const volunteerLink = `<${volunteerURL}|${volunteer.Name}>`;
-      const displayNumber = getDisplayNumber(volunteer.Number);
-      const volunteerDistance =
-        typeof volunteer.Distance === "number"
-          ? `${volunteer.Distance.toFixed(2)} Mi.`
-          : "Distance N/A";
+  const volunteerSections = volunteers.map((volunteer) => {
+    const volunteerURL = `${config.AIRTABLE_VOLUNTEERS_VIEW_URL}/${volunteer.record.id}`;
+    const volunteerLink = `<${volunteerURL}|${volunteer.Name}>`;
+    const displayNumber = getDisplayNumber(volunteer.Number);
+    const volunteerDistance =
+      typeof volunteer.Distance === "number"
+        ? `${volunteer.Distance.toFixed(2)} Mi.`
+        : "Distance N/A";
 
-      const volunteerLine = `:wave: ${volunteerLink} - ${displayNumber} - ${volunteerDistance}\n`;
+    const volunteerLine = `:wave: ${volunteerLink}\n ${displayNumber} - ${volunteerDistance}\n`;
+    const volunteerSection = getSection(volunteerLine);
 
-      return volunteerLine;
-    })
-    .join("\n");
+    return volunteerSection;
+  });
+
+  return volunteerSections;
+};
+
+const getVolunteerClosing = (volunteers) => {
+  if (!volunteers.length) return;
 
   const volunteerClosing =
     "_For easy copy/paste, see the reply to this message:_";
 
-  const volunteerSectionText = `${volunteerHeading}\n\n${volunteerLines}\n\n${volunteerClosing}`;
-
-  return getSection(volunteerSectionText);
+  return getSection(volunteerClosing);
 };
 
 const getCopyPasteNumbers = (volunteers) => {
@@ -162,44 +181,16 @@ const getCopyPasteNumbers = (volunteers) => {
   return simplePhoneList || "No numbers to display!";
 };
 
-// This function actually sends the message to the slack channel
-const sendMessage = async (record, volunteers) => {
-  const text = "A new errand has been added!";
-  const heading = getSection(`:exclamation: *${text}* :exclamation:`);
-  const requester = getRequester(record);
-  const tasks = getTasks(record);
-  const subsidyRequested = subsidyIsRequested(record);
-  const requestedTimeframe = getTimeframe(record);
-  const anythingElse = getAnythingElse(record);
-  const space = getSection(" ");
-  const volunteerList = getVolunteers(volunteers);
-  const copyPasteNumbers = getCopyPasteNumbers(volunteers);
-
-  const res = await bot.chat.postMessage({
-    token,
-    channel,
-    text,
-    blocks: [
-      heading,
-      requester,
-      tasks,
-      requestedTimeframe,
-      subsidyRequested,
-      anythingElse,
-      space,
-      volunteerList,
-    ],
-  });
-
-  return bot.chat.postMessage({
-    thread_ts: res.ts,
-    reply_broadcast: false,
-    token,
-    channel,
-    text: copyPasteNumbers,
-  });
-};
-
 module.exports = {
-  sendMessage,
+  getHeading,
+  getRequester,
+  getTasks,
+  getTimeframe,
+  getSubsidyRequest,
+  getAnythingElse,
+  getVolunteerHeading,
+  getVolunteers,
+  getVolunteerClosing,
+  getCopyPasteNumbers,
+  getSection,
 };
