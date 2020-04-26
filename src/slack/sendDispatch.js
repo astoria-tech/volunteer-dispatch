@@ -7,6 +7,8 @@ const channel = config.SLACK_CHANNEL_ID;
 
 // This function actually sends the message to the slack channel
 const sendDispatch = async (record, volunteers) => {
+  if (!record) throw new Error("No record passed to sendMessage().");
+
   const text = "A new errand has been added";
 
   const heading = message.getHeading(text);
