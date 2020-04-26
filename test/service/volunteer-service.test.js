@@ -1,6 +1,7 @@
 const { when } = require("jest-when");
 
 const { Random, nodeCrypto } = require("random-js");
+const config = require("../../src/config");
 const VolunteerService = require("../../src/service/volunteer-service");
 
 const mockSample = jest.fn().mockImplementation((p) => p);
@@ -31,7 +32,7 @@ describe("VolunteerService", () => {
       base = { create: jest.fn(), update: jest.fn(), select: selectMock };
       eachPageMock = jest.fn();
       when(selectMock)
-        .calledWith({ view: "Grid view" })
+        .calledWith({ view: config.AIRTABLE_VOLUNTEERS_VIEW_NAME })
         .mockReturnValue({ eachPage: eachPageMock });
       service = new VolunteerService(base);
     });

@@ -1,6 +1,7 @@
 const preconditions = require("preconditions").singleton();
 const { Random, nodeCrypto } = require("random-js");
 
+const config = require("../config");
 const Task = require("../task");
 
 /**
@@ -35,7 +36,7 @@ class VolunteerService {
   async findVolunteersForLoneliness() {
     const lonelinessVolunteers = [];
     await this.base
-      .select({ view: "Grid view" })
+      .select({ view: config.AIRTABLE_VOLUNTEERS_VIEW_NAME })
       .eachPage(this.appendVolunteersForLoneliness(lonelinessVolunteers));
     const sampleSize =
       lonelinessVolunteers.length > 10 ? 10 : lonelinessVolunteers.length;

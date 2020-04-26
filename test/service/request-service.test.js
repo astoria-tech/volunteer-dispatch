@@ -1,5 +1,6 @@
 const { when } = require("jest-when");
 
+jest.mock("../../src/geo");
 jest.mock("../../src/airtable-utils");
 const AirtableUtils = require("../../src/airtable-utils");
 const RequestRecord = require("../../src/model/request-record");
