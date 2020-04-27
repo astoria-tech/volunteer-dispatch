@@ -90,6 +90,7 @@ const updateReminderDateTime = async (id, dateTime) => {
           "Reminder Posted": "",
         });
       }
+      nextPage();
     });
 };
 
