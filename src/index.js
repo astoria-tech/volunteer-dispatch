@@ -8,8 +8,9 @@ const { getCoords, distanceBetweenCoords } = require("./geo");
 const { logger } = require("./logger");
 const Request = require("./model/request-record");
 const RequestService = require("./service/request-service");
+const VolunteerService = require("./service/volunteer-service");
 
-const { sendMessage } = require("./slack/dispatch");
+const { sendDispatch } = require("./slack/sendDispatch");
 require("dotenv").config();
 
 /* System notes:
@@ -25,43 +26,53 @@ const base = new Airtable({ apiKey: config.AIRTABLE_API_KEY }).base(
 );
 const customAirtable = new AirtableUtils(base);
 const requestService = new RequestService(
-  base(config.AIRTABLE_REQUESTS_TABLE_NAME)
+  base(config.AIRTABLE_REQUESTS_TABLE_NAME),
+  customAirtable
+);
+const volunteerService = new VolunteerService(
+  base(config.AIRTABLE_VOLUNTEERS_TABLE_NAME)
 );
 
-function fullAddress(record) {
-  return `${record.get("Address")} ${record.get("City")}, ${
-    config.VOLUNTEER_DISPATCH_STATE
-  }`;
+/**
+ * @param volunteerAndDistance An array with volunteer record on the 0th index and its distance
+ * from requester on the 1st index
+ * @returns {{Number: *, record: *, Distance: *, Name: *}}
+ */
+function volunteerWithCustomFields(volunteerAndDistance) {
+  const [volunteer, distance] = volunteerAndDistance;
+  return {
+    Name: volunteer.get("Full Name"),
+    Number: volunteer.get("Please provide your contact phone number:"),
+    Distance: distance,
+    record: volunteer,
+    Id: volunteer.id,
+  };
 }
 
 // Accepts errand address and checks volunteer spreadsheet for closest volunteers
 async function findVolunteers(request) {
-  const volunteerDistances = [];
+  const { tasks } = request;
+  if (tasks && tasks.length > 0 && tasks[0].equals(Task.LONELINESS)) {
+    return (await volunteerService.findVolunteersForLoneliness())
+      .map((v) => [v, "N/A"])
+      .map(volunteerWithCustomFields);
+  }
 
-  const tasks = (request.get("Tasks") || []).map(Task.mapFromRawTask);
   let errandCoords;
   try {
-    errandCoords = await getCoords(fullAddress(request));
+    errandCoords = request.coordinates;
   } catch (e) {
     logger.error(
-      `Error getting coordinates for requester ${request.get(
-        "Name"
-      )} with error: ${JSON.stringify(e)}`
-    );
-    customAirtable.logErrorToTable(
-      config.AIRTABLE_REQUESTS_TABLE_NAME,
-      request,
-      e,
-      "getCoords"
+      `Unable to parse coordinates for request ${request.id} from ${request.name}`
     );
     return [];
   }
-
   logger.info(`Tasks: ${tasks.map((task) => task.rawTask).join(", ")}`);
 
+  const volunteerDistances = [];
   // Figure out which volunteers can fulfill at least one of the tasks
   await base(config.AIRTABLE_VOLUNTEERS_TABLE_NAME)
-    .select({ view: "Grid view" })
+    .select({ view: config.AIRTABLE_VOLUNTEERS_VIEW_NAME })
     .eachPage(async (volunteers, nextPage) => {
       const suitableVolunteers = volunteers.filter((volunteer) =>
         tasks.some((task) => task.canBeFulfilledByVolunteer(volunteer))
@@ -125,15 +136,7 @@ async function findVolunteers(request) {
   const closestVolunteers = volunteerDistances
     .sort((a, b) => a[1] - b[1])
     .slice(0, 10)
-    .map((volunteerAndDistance) => {
-      const [volunteer, distance] = volunteerAndDistance;
-      return {
-        Name: volunteer.get("Full Name"),
-        Number: volunteer.get("Please provide your contact phone number:"),
-        Distance: distance,
-        record: volunteer,
-      };
-    });
+    .map(volunteerWithCustomFields);
 
   logger.info("Closest:");
   closestVolunteers.forEach((v) => {
@@ -148,59 +151,78 @@ async function findVolunteers(request) {
 async function checkForNewSubmissions() {
   base(config.AIRTABLE_REQUESTS_TABLE_NAME)
     .select({
-      view: "Grid view",
-      filterByFormula: "NOT({Was split?} = 'yes')",
+      view: config.AIRTABLE_REQUESTS_VIEW_NAME,
+      filterByFormula: `
+        AND(
+          {Was split?} != 'yes', 
+          {Name} != '', 
+          OR(      
+            {Posted to Slack?} != 'yes',
+            AND(
+              {Posted to Slack?} = 'yes',
+              {Reminder Posted} != 'yes',      
+              AND(
+                {Reminder Date/Time} != '',
+                {Reminder Date/Time} < ${Date.now()}
+              )
+            )
+          )
+        )`,
     })
     .eachPage(async (records, nextPage) => {
-      // Remove records we don't want to process from the array.
-      const cleanRecords = records
-        .filter((r) => {
-          if (typeof r.get("Name") === "undefined") return false;
-          // checking if posted to slack ANS record has a reminder set, if the date/time of reminder has
-          // already passed, and if the reminder has already been posted
-          if (
-            r.get("Posted to Slack?") === "yes" &&
-            typeof r.get("Reminder Date/Time") === "undefined"
-          )
-            return false;
-          if (
-            r.get("Posted to Slack?") === "yes" &&
-            (Date.now() < r.get("Reminder Date/Time") ||
-              r.get("Reminder Posted") === "yes")
-          )
-            return false;
-          return true;
-        })
-        .map((r) => new Request(r));
+      const mappedRecords = records.map((r) => new Request(r));
+
+      // Get the amount of tasks assigned to each volunteer
+      const volunteerTaskCounts = await requestService.getVolunteerTaskCounts();
+
       // Look for records that have not been posted to slack yet
-      for (const record of cleanRecords) {
-        if (record.tasks.length > 1) {
+      for (const record of mappedRecords) {
+        let requestWithCoords;
+        try {
+          requestWithCoords = await requestService.resolveAndUpdateCoords(
+            record
+          );
+        } catch (e) {
+          logger.error(
+            `Error resolving and updating coordinates of request ${record.id} of ${record.name}`
+          );
+          continue;
+        }
+        if (requestWithCoords.tasks.length > 1) {
           // noinspection ES6MissingAwait
-          requestService.splitMultiTaskRequest(record);
+          requestService.splitMultiTaskRequest(requestWithCoords);
           continue;
         }
 
-        logger.info(`New help request for: ${record.get("Name")}`);
+        logger.info(`New help request for: ${requestWithCoords.get("Name")}`);
 
         // Find the closest volunteers
-        const volunteers = await findVolunteers(record);
+        const volunteers = await findVolunteers(requestWithCoords);
 
         // Send the message to Slack
         let messageSent = false;
         let reminder = false;
 
         try {
-          const reminderText =
-            ":alarm_clock: *Reminder for a previous request!* :alarm_clock:";
           if (
             Date.now() > record.get("Reminder Date/Time") &&
             record.get("Posted to Slack?") === "yes"
           ) {
-            await sendMessage(record, volunteers, reminderText);
+            await sendDispatch(
+              requestWithCoords,
+              volunteers,
+              volunteerTaskCounts,
+              true
+            );
             reminder = true;
           } else {
-            await sendMessage(record, volunteers);
+            await sendDispatch(
+              requestWithCoords,
+              volunteers,
+              volunteerTaskCounts
+            );
           }
+
           messageSent = true;
           logger.info("Posted to Slack!");
         } catch (error) {
@@ -209,14 +231,14 @@ async function checkForNewSubmissions() {
 
         if (messageSent) {
           if (reminder) {
-            await record.airtableRequest
+            await requestWithCoords.airtableRequest
               .patchUpdate({
                 "Reminder Posted": "yes",
               })
               .then(logger.info("Updated Airtable record!"))
               .catch((error) => logger.error(error));
           } else {
-            await record.airtableRequest
+            await requestWithCoords.airtableRequest
               .patchUpdate({
                 "Posted to Slack?": "yes",
                 Status: record.get("Status") || "Needs assigning", // don't overwrite the status
@@ -251,7 +273,7 @@ async function start() {
   }
 }
 
-process.on("unhandledRejection", (reason, promise) => {
+process.on("unhandledRejection", (reason) => {
   logger.error({
     message: `Unhandled Rejection: ${reason.message}`,
     stack: reason.stack,

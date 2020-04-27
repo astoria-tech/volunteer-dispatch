@@ -27,7 +27,7 @@ Get the integration points setup:
 - a free MapQuest dev account - https://developer.mapquest.com/plan_purchase/steps/business_edition/business_edition_free/register
 - a dedicated private Slack channel for the bot to post to
 
-And grab the API keys from each (and channel ID for Slack), and put them into the following enviornment variables:
+And grab the API keys from each (and channel ID for Slack), and put them into the following environment variables:
 
 - `AIRTABLE_API_KEY`
 - `AIRTABLE_BASE_ID` - go to the [Airtable API page](https://airtable.com/api), click your Volunteer Dispatch base, and the ID is there

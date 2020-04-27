@@ -26,10 +26,12 @@ class AirtableUtils {
   }
 
   /**
-   * Clones fields of the provided request record, while replacing the "Tasks" field with the given task.
+   * Clones fields of the provided request record, while replacing the "Tasks"
+   * field with the given task.
    * @param request {RequestRecord} Request whose fields you want to clone
    * @param task {Task} Task to be set
-   * @returns {{fields: {Tasks: string[], "Cloned from": string[]}}} along with properties from the original request
+   * @returns {{fields: {Tasks: string[], "Cloned from": string[]}}} along with
+   * properties from the original request
    */
   static cloneRequestFieldsWithGivenTask(request, task) {
     preconditions.shouldBeObject(request);
@@ -42,6 +44,7 @@ class AirtableUtils {
       "Cloned from": [request.id],
     };
     delete fields["Created time"];
+    delete fields["Record ID"];
     delete fields.Error;
     return { fields };
   }

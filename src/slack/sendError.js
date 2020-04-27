@@ -1,6 +1,7 @@
 require("dotenv").config();
 const config = require("../config");
-const { getSection, bot, token } = require(".");
+const { bot, token } = require("./bot");
+const { getSection } = require("./message");
 
 const channel = config.SLACK_ALERT_CHANNEL_ID;
 
@@ -9,7 +10,7 @@ let prevStackTrace = "";
 let threadTs = "";
 
 // For use by SlackErrorTranport in winston logger
-const sendAlert = async (error) => {
+const sendError = async (error) => {
   // Exit if no slack alert channel is provided
   if (!channel) return;
 
@@ -68,5 +69,5 @@ const sendAlert = async (error) => {
 };
 
 module.exports = {
-  sendAlert,
+  sendError,
 };
