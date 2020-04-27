@@ -6,7 +6,7 @@ const message = require("./message");
 const channel = config.SLACK_CHANNEL_ID;
 
 // This function actually sends the message to the slack channel
-const sendDispatch = async (record, volunteers) => {
+const sendDispatch = async (record, volunteers, taskCounts) => {
   if (!record) throw new Error("No record passed to sendMessage().");
 
   const text = "A new errand has been added";
@@ -35,7 +35,7 @@ const sendDispatch = async (record, volunteers) => {
   });
 
   const volunteerHeading = message.getVolunteerHeading(volunteers);
-  const volunteerList = message.getVolunteers(volunteers);
+  const volunteerList = message.getVolunteers(volunteers, taskCounts);
   const volunteerClosing = message.getVolunteerClosing(volunteers);
 
   await bot.chat.postMessage({

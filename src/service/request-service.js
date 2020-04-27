@@ -122,6 +122,34 @@ class RequestService {
       }
     }
   }
+
+  /**
+   * Get the number of tasks assigned to each volunteer.
+   * @param {object} base - the airtable object
+   * @return {Map.<string, number>} - a map of volunteer keys and task count values.
+   */
+  async getVolunteerTaskCounts() {
+    const volunteerCounts = new Map();
+    await this.base
+      .select({
+        view: config.AIRTABLE_REQUESTS_VIEW_NAME,
+        filterByFormula:
+          "AND({Was split?} != 'yes', {Status} != 'Completed', {Assigned Volunteer} != '')",
+      })
+      .eachPage(async (records, nextPage) => {
+        records.forEach((record) => {
+          const volunteerReference = record.get("Assigned Volunteer")[0];
+          if (volunteerCounts.has(volunteerReference)) {
+            const amount = volunteerCounts.get(volunteerReference);
+            volunteerCounts.set(volunteerReference, amount + 1);
+          } else {
+            volunteerCounts.set(volunteerReference, 1);
+          }
+        });
+        nextPage();
+      });
+    return volunteerCounts;
+  }
 }
 
 module.exports = RequestService;
