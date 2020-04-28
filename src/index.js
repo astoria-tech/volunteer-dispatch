@@ -150,9 +150,7 @@ async function findVolunteers(request) {
     })
     .sort((a, b) => a[1] - b[1])
     .slice(0, 10)
-    .map((volunteerAndDistance) =>
-      volunteerWithCustomFields(volunteerAndDistance, request)
-    );
+    .map(volunteerAndDistance => volunteerWithCustomFields(volunteerAndDistance, request));
 
   logger.info("Closest:");
   closestVolunteers.forEach((v) => {
