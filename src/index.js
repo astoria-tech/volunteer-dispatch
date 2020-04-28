@@ -134,7 +134,7 @@ async function findVolunteers(request) {
       nextPage();
     });
 
-  // Sort the volunteers by distance and grab the closest 10
+  // Filter the volunteers by language, then sort by distance and grab the closest 10
   const closestVolunteers = volunteerDistances
     .filter((volunteerAndDistance) => {
       const volunteer = volunteerAndDistance[0];
