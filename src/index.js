@@ -36,9 +36,10 @@ const volunteerService = new VolunteerService(
 /**
  * @param volunteerAndDistance An array with volunteer record on the 0th index and its distance
  * from requester on the 1st index
- * @returns {{Number: *, record: *, Distance: *, Name: *}}
+ * @param request A Request record
+ * @returns {{Number: *, record: *, Distance: *, Name: *, Language: *}}
  */
-function volunteerWithCustomFields(volunteerAndDistance) {
+function volunteerWithCustomFields(volunteerAndDistance, request) {
   const [volunteer, distance] = volunteerAndDistance;
   return {
     Name: volunteer.get("Full Name"),
@@ -46,6 +47,7 @@ function volunteerWithCustomFields(volunteerAndDistance) {
     Distance: distance,
     record: volunteer,
     Id: volunteer.id,
+    Language: request.get("Language")
   };
 }
 
@@ -55,7 +57,7 @@ async function findVolunteers(request) {
   if (tasks && tasks.length > 0 && tasks[0].equals(Task.LONELINESS)) {
     return (await volunteerService.findVolunteersForLoneliness())
       .map((v) => [v, "N/A"])
-      .map(volunteerWithCustomFields);
+      .map(volunteerAndDistance => volunteerWithCustomFields(volunteerAndDistance, request));
   }
 
   let errandCoords;
@@ -134,9 +136,23 @@ async function findVolunteers(request) {
 
   // Sort the volunteers by distance and grab the closest 10
   const closestVolunteers = volunteerDistances
+    .filter((volunteerAndDistance) => {
+      const volunteer = volunteerAndDistance[0];
+      const volLanguages = volunteer.get(
+        "Please list what other languages you speak, if any, and level of fluency. "
+      );
+      if (volLanguages) {
+        return volLanguages.some(
+          (languageAndFluency) =>
+            languageAndFluency.split(" - ")[0] === request.get("Language")
+        );
+      }
+    })
     .sort((a, b) => a[1] - b[1])
     .slice(0, 10)
-    .map(volunteerWithCustomFields);
+    .map((volunteerAndDistance) =>
+      volunteerWithCustomFields(volunteerAndDistance, request)
+    );
 
   logger.info("Closest:");
   closestVolunteers.forEach((v) => {
