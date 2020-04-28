@@ -14,7 +14,7 @@
     "type": "git",
     "url": "git+https://github.com/astoria-tech/slack-volunteer-seeker.git"
   },
-  "author": "Kyle Tomanelli",
+  "author": "Astoria Tech",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/astoria-tech/slack-volunteer-seeker/issues"
@@ -22,6 +22,8 @@
   "homepage": "https://github.com/astoria-tech/slack-volunteer-seeker#readme",
   "dependencies": {
     "airtable": "^0.8.1",
+    "axios": "^0.19.2",
+    "body-parser": "^1.19.0",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "geolib": "^3.2.1",
@@ -29,6 +31,7 @@
     "node-geocoder": "^3.25.1",
     "preconditions": "^2.2.3",
     "random-js": "^2.1.0",
+    "qs": "^6.9.3",
     "slack": "^11.0.2",
     "winston": "^3.2.1",
     "winston-transport": "^4.3.0"

@@ -1,4 +1,5 @@
 require("dotenv").config();
+
 const Slack = require("slack");
 const config = require("../config");
 
