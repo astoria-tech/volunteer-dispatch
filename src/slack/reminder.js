@@ -7,7 +7,7 @@ const qs = require("qs");
 
 const config = require("../config");
 
-const slackSecret = config.SLACK_SECRET;
+const slackSecret = config.SLACK_SIGNING_SECRET;
 
 const base = new Airtable({ apiKey: config.AIRTABLE_API_KEY }).base(
   config.AIRTABLE_BASE_ID
