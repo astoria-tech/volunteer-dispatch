@@ -159,11 +159,12 @@ const getVolunteers = (volunteers, taskCounts) => {
       typeof volunteer.Distance === "number"
         ? `${volunteer.Distance.toFixed(2)} Mi.`
         : "Distance N/A";
+    const volunteerLanguage = volunteer.Language
     const taskCount = taskCounts.has(volunteer.Id)
       ? pluralize(taskCounts.get(volunteer.Id), "assigned task")
       : pluralize(0, "assigned task");
 
-    const volunteerLine = `:wave: ${volunteerLink}\n ${displayNumber} - ${volunteerDistance} - ${taskCount}\n`;
+    const volunteerLine = `:wave: ${volunteerLink}\n ${displayNumber} - ${volunteerDistance} - :speaking_head_in_silhouette: ${volunteerLanguage}\n ${taskCount}\n`;
     const volunteerSection = getSection(volunteerLine);
 
     return volunteerSection;
