@@ -4,6 +4,8 @@ A bot which locates the closest volunteers to check-in on & run errands for vuln
 
 _Made by [Astoria Tech](https://github.com/astoria-tech) volunteers, for use by the [Astoria Mutual Aid Network](https://astoriamutualaid.com)._
 
+![](assets/dispatcher-bot.png)
+
 ## How it works
 
 Astoria Mutual Aid Network’s volunteer dispatch works as follows:
