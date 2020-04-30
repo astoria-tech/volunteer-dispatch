@@ -161,13 +161,27 @@ async function findVolunteers(request) {
 }
 
 // Checks for updates on errand spreadsheet, finds closest volunteers from volunteer spreadsheet and
-// executes slack message if new row has been detected
+// executes slack message if new row has been detected or if the row's reminder date/time has passed
 async function checkForNewSubmissions() {
   base(config.AIRTABLE_REQUESTS_TABLE_NAME)
     .select({
       view: config.AIRTABLE_REQUESTS_VIEW_NAME,
-      filterByFormula:
-        "AND({Was split?} != 'yes', {Name} != '', {Posted to Slack?} != 'yes')",
+      filterByFormula: `
+        AND(
+          {Was split?} != 'yes', 
+          {Name} != '', 
+          OR(      
+            {Posted to Slack?} != 'yes',
+            AND(
+              {Posted to Slack?} = 'yes',
+              {Reminder Posted} != 'yes',      
+              AND(
+                {Reminder Date/Time} != '',
+                {Reminder Date/Time} < ${Date.now()}
+              )
+            )
+          )
+        )`,
     })
     .eachPage(async (records, nextPage) => {
       const mappedRecords = records.map((r) => new Request(r));
@@ -201,12 +215,28 @@ async function checkForNewSubmissions() {
 
         // Send the message to Slack
         let messageSent = false;
+        let reminder = false;
+
         try {
-          await sendDispatch(
-            requestWithCoords,
-            volunteers,
-            volunteerTaskCounts
-          );
+          if (
+            Date.now() > record.get("Reminder Date/Time") &&
+            record.get("Posted to Slack?") === "yes"
+          ) {
+            await sendDispatch(
+              requestWithCoords,
+              volunteers,
+              volunteerTaskCounts,
+              true
+            );
+            reminder = true;
+          } else {
+            await sendDispatch(
+              requestWithCoords,
+              volunteers,
+              volunteerTaskCounts
+            );
+          }
+
           messageSent = true;
           logger.info("Posted to Slack!");
         } catch (error) {
@@ -214,13 +244,22 @@ async function checkForNewSubmissions() {
         }
 
         if (messageSent) {
-          await requestWithCoords.airtableRequest
-            .patchUpdate({
-              "Posted to Slack?": "yes",
-              Status: record.get("Status") || "Needs assigning", // don't overwrite the status
-            })
-            .then(logger.info("Updated Airtable record!"))
-            .catch((error) => logger.error(error));
+          if (reminder) {
+            await requestWithCoords.airtableRequest
+              .patchUpdate({
+                "Reminder Posted": "yes",
+              })
+              .then(logger.info("Updated Airtable record!"))
+              .catch((error) => logger.error(error));
+          } else {
+            await requestWithCoords.airtableRequest
+              .patchUpdate({
+                "Posted to Slack?": "yes",
+                Status: record.get("Status") || "Needs assigning", // don't overwrite the status
+              })
+              .then(logger.info("Updated Airtable record!"))
+              .catch((error) => logger.error(error));
+          }
         }
       }
 

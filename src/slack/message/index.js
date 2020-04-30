@@ -1,3 +1,4 @@
+/* eslint-disable consistent-return */
 require("dotenv").config();
 const config = require("../../config");
 const { getDisplayNumber } = require("./phone-number-utils");
@@ -10,9 +11,10 @@ const getSection = (text) => ({
   },
 });
 
-const getHeading = () => {
-  const text = "A new errand has been added";
-  const headingSection = getSection(`:exclamation: *${text}* :exclamation:`);
+const getHeading = (text, reminderBoolean) => {
+  let headingSection = getSection(`:exclamation: *${text}* :exclamation:`);
+  if (reminderBoolean)
+    headingSection = getSection(`:alarm_clock: *${text}* :alarm_clock:`);
 
   return headingSection;
 };
@@ -142,10 +144,9 @@ const getVolunteerHeading = (volunteers) => {
       "*No volunteers match this request!*\n*Check the full Airtable record, there might be more info there.*";
 
     return getSection(noneFoundText);
-  } else {
-    const volunteerHeading = `*Here are the ${volunteers.length} closest volunteers:*`;
-    return getSection(volunteerHeading);
   }
+  const volunteerHeading = `*Here are the ${volunteers.length} closest volunteers:*`;
+  return getSection(volunteerHeading);
 };
 
 const getVolunteers = (volunteers, taskCounts) => {
@@ -159,12 +160,14 @@ const getVolunteers = (volunteers, taskCounts) => {
       typeof volunteer.Distance === "number"
         ? `${volunteer.Distance.toFixed(2)} Mi.`
         : "Distance N/A";
-    const volunteerLanguage = volunteer.Language
+    const volunteerLanguage = volunteer.Language;
     const taskCount = taskCounts.has(volunteer.Id)
       ? pluralize(taskCounts.get(volunteer.Id), "assigned task")
       : pluralize(0, "assigned task");
 
-    const volunteerLine = `:wave: ${volunteerLink}\n ${displayNumber} - ${volunteerDistance} - :speaking_head_in_silhouette: ${volunteerLanguage}\n ${taskCount}\n`;
+    const volunteerLine = `:wave: ${volunteerLink}\n 
+      ${displayNumber} - ${volunteerDistance} - :speaking_head_in_silhouette: ${volunteerLanguage}\n
+      ${taskCount}\n`;
     const volunteerSection = getSection(volunteerLine);
 
     return volunteerSection;
