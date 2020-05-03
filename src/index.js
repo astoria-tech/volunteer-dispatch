@@ -72,7 +72,10 @@ async function findVolunteers(request) {
   const volunteerDistances = [];
   // Figure out which volunteers can fulfill at least one of the tasks
   await base(config.AIRTABLE_VOLUNTEERS_TABLE_NAME)
-    .select({ view: config.AIRTABLE_VOLUNTEERS_VIEW_NAME })
+    .select({
+      view: config.AIRTABLE_VOLUNTEERS_VIEW_NAME,
+      filterByFormula: '{Account Disabled} = ""',
+    })
     .eachPage(async (volunteers, nextPage) => {
       const suitableVolunteers = volunteers.filter((volunteer) =>
         tasks.some((task) => task.canBeFulfilledByVolunteer(volunteer))
