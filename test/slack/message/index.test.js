@@ -1,4 +1,7 @@
+/* eslint-disable no-underscore-dangle */
+/* Reason: rewire injects a .__get__ method that is necessary */
 const rewire = require("rewire");
+
 const message = rewire("../../../src/slack/message/");
 
 class MockRequestRecord {
@@ -20,7 +23,8 @@ class MockRequestRecord {
   }
 
   set(field, value) {
-    return (this.fields[field] = value);
+    this.fields[field] = value;
+    return this.fields[field];
   }
 }
 
@@ -91,10 +95,19 @@ const mockVolunteers = [
 ];
 
 const validateSection = (section) => {
-  expect(section).toHaveProperty("type", "section");
-  expect(section).toHaveProperty("text");
-  expect(section).toHaveProperty("text.type", "mrkdwn");
-  expect(section).toHaveProperty("text.text");
+  let result = true;
+
+  if (!Object.prototype.hasOwnProperty.call(section, "type")) result = false;
+  if (!Object.prototype.hasOwnProperty.call(section, "text")) result = false;
+  if (!Object.prototype.hasOwnProperty.call(section.text, "type"))
+    result = false;
+  if (!Object.prototype.hasOwnProperty.call(section.text, "text"))
+    result = false;
+
+  if (section.type && !section.type === "section") result = false;
+  if (section.text.type && !section.text.type === "mrkdwn") result = false;
+
+  return result;
 };
 
 test("Get a basic section", () => {
@@ -117,7 +130,7 @@ describe("The primary message", () => {
     options.text = message.getText(options);
     const headingSection = message.getHeading(options);
 
-    validateSection(headingSection);
+    expect(validateSection(headingSection)).toBe(true);
   });
 
   test("The message heading is different if the message is a reminder", () => {
@@ -190,7 +203,7 @@ describe("The primary message", () => {
       const requester = new MockRequestRecord();
       const requesterSection = message.getRequester(requester);
 
-      validateSection(requesterSection);
+      expect(validateSection(requesterSection)).toBe(true);
     });
   });
 
@@ -246,19 +259,22 @@ describe("The primary message", () => {
       const getFormattedTasks = message.__get__("formatTasks");
       const bullet = ":small_orange_diamond:";
       const warning =
-        '\t\t:warning: Because this is an "Other" request, these volunteer matches might not be the best options, depending on what the request is. :warning:';
+        '\n\t\t:warning: Because this is an "Other" request, these volunteer matches might not be the best options, depending on what the request is. :warning:';
 
       const formattedTasks = getFormattedTasks(requester);
 
-      expect(formattedTasks).toBe(
-        `\n ${bullet} ${taskList[0]}\n ${bullet} ${taskList[1]}\n${warning}\n ${bullet} Moving house`
-      );
+      const bullet1 = `\n ${bullet} ${taskList[0]}`;
+      const bullet2 = `\n ${bullet} ${taskList[1]}`;
+      const bullet3 = `\n ${bullet} Moving house`;
+
+      expect(formattedTasks).toBe(`${bullet1}${bullet2}${warning}${bullet3}`);
     });
 
     test("Tasks should be a section", () => {
       const requester = new MockRequestRecord();
+      const tasksSection = message.getTasks(requester);
 
-      validateSection(message.getTasks(requester));
+      expect(validateSection(tasksSection)).toBe(true);
     });
   });
 
@@ -282,8 +298,9 @@ describe("The primary message", () => {
 
     test("Timeframe should be a section", () => {
       const requester = new MockRequestRecord();
+      const timeframeSection = message.getTimeframe(requester);
 
-      validateSection(message.getTimeframe(requester));
+      expect(validateSection(timeframeSection)).toBe(true);
     });
   });
 });
@@ -314,8 +331,9 @@ describe("The second request info message", () => {
 
     test("Subsidy request should be a section", () => {
       const requester = new MockRequestRecord();
+      const subsidySection = message.getSubsidyRequest(requester);
 
-      validateSection(message.getSubsidyRequest(requester));
+      expect(validateSection(subsidySection)).toBe(true);
     });
   });
 
@@ -352,8 +370,9 @@ describe("The second request info message", () => {
 
     test("'Anything else' notes should be a section", () => {
       const requester = new MockRequestRecord();
+      const anythingElseSection = message.getAnythingElse(requester);
 
-      validateSection(message.getAnythingElse(requester));
+      expect(validateSection(anythingElseSection)).toBe(true);
     });
   });
 });
@@ -379,7 +398,11 @@ describe("The volunteers message", () => {
     });
 
     test("Volunteer heading should be a section", () => {
-      validateSection(message.getVolunteerHeading(mockVolunteers));
+      const volunteerHeadingSection = message.getVolunteerHeading(
+        mockVolunteers
+      );
+
+      expect(validateSection(volunteerHeadingSection)).toBe(true);
     });
   });
 
@@ -397,7 +420,9 @@ describe("The volunteers message", () => {
         mockTaskCount
       );
 
-      volunteerSections.map((section) => validateSection(section));
+      volunteerSections.map((section) =>
+        expect(validateSection(section)).toBe(true)
+      );
     });
   });
 });

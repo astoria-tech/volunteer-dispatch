@@ -22,48 +22,42 @@ const sendPrimaryRequestInfo = async (record, text, reminder) => {
   return res;
 };
 
-const sendSecondaryRequestInfo = async (record, text, thread_ts) => {
+const sendSecondaryRequestInfo = async (record, text, threadTs) => {
   const subsidyRequested = message.getSubsidyRequest(record);
   const anythingElse = message.getAnythingElse(record);
 
-  await bot.chat.postMessage({
-    thread_ts,
+  return bot.chat.postMessage({
+    thread_ts: threadTs,
     token,
     channel,
     text,
     blocks: [subsidyRequested, anythingElse],
   });
-
-  return;
 };
 
-const sendVolunteerInfo = async (volunteers, taskCounts, text, thread_ts) => {
+const sendVolunteerInfo = async (volunteers, taskCounts, text, threadTs) => {
   const volunteerHeading = message.getVolunteerHeading(volunteers);
   const volunteerList = message.getVolunteers(volunteers, taskCounts);
   const volunteerClosing = message.getVolunteerClosing(volunteers);
 
-  await bot.chat.postMessage({
-    thread_ts,
+  return bot.chat.postMessage({
+    thread_ts: threadTs,
     token,
     channel,
     text,
     blocks: [volunteerHeading, ...volunteerList, volunteerClosing],
   });
-
-  return;
 };
 
-const sendCopyPasteNumbers = async (volunteers, thread_ts) => {
+const sendCopyPasteNumbers = async (volunteers, threadTs) => {
   const copyPasteNumbers = message.getCopyPasteNumbers(volunteers);
 
-  await bot.chat.postMessage({
-    thread_ts,
+  return bot.chat.postMessage({
+    thread_ts: threadTs,
     token,
     channel,
     text: copyPasteNumbers,
   });
-
-  return;
 };
 
 const sendDispatch = async (
@@ -79,8 +73,6 @@ const sendDispatch = async (
   await sendSecondaryRequestInfo(record, text, ts);
   await sendVolunteerInfo(volunteers, taskCounts, text, ts);
   await sendCopyPasteNumbers(volunteers, ts);
-
-  return;
 };
 
 module.exports = {

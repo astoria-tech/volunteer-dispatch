@@ -20,9 +20,9 @@ const getText = (options) => {
 const getHeading = (options) => {
   if (options.reminder) {
     return getSection(`:alarm_clock: *${options.text}* :alarm_clock:`);
-  } else {
-    return getSection(`:exclamation: *${options.text}* :exclamation:`);
   }
+
+  return getSection(`:exclamation: *${options.text}* :exclamation:`);
 };
 
 const pluralize = (num, str) => {
