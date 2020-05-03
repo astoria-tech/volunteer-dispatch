@@ -11,12 +11,18 @@ const getSection = (text) => ({
   },
 });
 
-const getHeading = (text, reminderBoolean) => {
-  let headingSection = getSection(`:exclamation: *${text}* :exclamation:`);
-  if (reminderBoolean)
-    headingSection = getSection(`:alarm_clock: *${text}* :alarm_clock:`);
+const getText = (options) => {
+  return options.reminder
+    ? "Reminder for a previous request"
+    : "A new errand has been added";
+};
 
-  return headingSection;
+const getHeading = (options) => {
+  if (options.reminder) {
+    return getSection(`:alarm_clock: *${options.text}* :alarm_clock:`);
+  } else {
+    return getSection(`:exclamation: *${options.text}* :exclamation:`);
+  }
 };
 
 const pluralize = (num, str) => {
@@ -144,7 +150,7 @@ const getAnythingElse = (record) => {
 };
 
 const getVolunteerHeading = (volunteers) => {
-  if (!volunteers || volunteers.length === 0) {
+  if (!volunteers || !volunteers.length) {
     // No volunteers found
     const noneFoundText =
       "*No volunteers match this request!*\n*Check the full Airtable record, there might be more info there.*";
@@ -176,7 +182,7 @@ const getVolunteers = (volunteers, taskCounts) => {
       : pluralize(0, "assigned task");
 
     const volunteerLine = `:wave: ${volunteerLink}\n 
-    ${displayNumber} - ${volunteerDistance} - ${taskCount}\n`;
+    ${displayNumber} - ${volunteerDistance} - ${taskCount}`;
     const volunteerSection = getSection(volunteerLine);
 
     return volunteerSection;
@@ -186,7 +192,7 @@ const getVolunteers = (volunteers, taskCounts) => {
 };
 
 const getVolunteerClosing = (volunteers) => {
-  if (!volunteers.length) {
+  if (!volunteers || !volunteers.length) {
     const noneFoundText =
       "*No volunteers match this request!*\n*Check the full Airtable record, there might be more info there.*";
 
@@ -200,14 +206,17 @@ const getVolunteerClosing = (volunteers) => {
 };
 
 const getCopyPasteNumbers = (volunteers) => {
+  if (!volunteers || !volunteers.length) return "No numbers to display";
+
   const simplePhoneList = volunteers
     .map((volunteer) => getDisplayNumber(volunteer.Number))
     .join("\n");
 
-  return simplePhoneList || "No numbers to display";
+  return simplePhoneList;
 };
 
 module.exports = {
+  getText,
   getHeading,
   getRequester,
   getTasks,

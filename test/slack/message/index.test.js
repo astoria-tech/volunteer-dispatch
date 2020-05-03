@@ -113,9 +113,29 @@ test("Get a basic section", () => {
 
 describe("The primary message", () => {
   test("The message heading should be a section", () => {
-    const headingSection = message.getHeading();
+    const options = { reminder: false };
+    options.text = message.getText(options);
+    const headingSection = message.getHeading(options);
 
     validateSection(headingSection);
+  });
+
+  test("The message heading is different if the message is a reminder", () => {
+    const options = { reminder: false };
+    options.text = message.getText(options);
+    let headingSection = message.getHeading(options);
+
+    expect(headingSection.text.text).toEqual(
+      expect.stringContaining("A new errand has been added")
+    );
+
+    options.reminder = true;
+    options.text = message.getText(options);
+    headingSection = message.getHeading(options);
+
+    expect(headingSection.text.text).toEqual(
+      expect.stringContaining("Reminder for a previous request")
+    );
   });
 
   describe("Requester info", () => {
