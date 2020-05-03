@@ -93,7 +93,7 @@ Task.OTHER = new Task("Other", [
   "Picking up groceries/medications",
   "Pet-sitting/walking/feeding",
   "Checking in on people",
-  "Donations of other kind"
+  "Donations of other kind",
 ]);
 Task.possibleTasks = [
   Task.GROCERY_SHOPPING,
