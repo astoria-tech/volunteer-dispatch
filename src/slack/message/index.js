@@ -29,7 +29,7 @@ const getLanguage = (record) => {
   const languageList = languages.filter((language) => language).join(", ");
 
   const formattedLanguageList = `${
-    languageList.length ? languageList : "None specified"
+    languageList.length ? languageList : "None provided"
   }`;
 
   return formattedLanguageList;
@@ -42,9 +42,11 @@ const getRequester = (record) => {
   const requesterNumber = record.get("Phone number");
   const requesterAddress = record.get("Address");
 
-  const displayNameLink = `<${recordURL}|:heart: ${requesterName}>`;
+  const displayNameLink = `<${recordURL}|:heart: ${
+    requesterName || "No name provided"
+  }>`;
   const displayNumber = `:phone: ${getDisplayNumber(requesterNumber)}`;
-  const displayAddress = `:house: ${requesterAddress}`;
+  const displayAddress = `:house: ${requesterAddress || "None provided"}`;
   const displayLanguage = `:speaking_head_in_silhouette: ${getLanguage(
     record
   )}`;
@@ -65,6 +67,8 @@ const getRequester = (record) => {
 const formatTasks = (record) => {
   const tasks = record.get("Tasks");
   const otherTasks = record.get("Task - other");
+
+  if (!tasks && !otherTasks) return "None provided";
 
   // Put each task on a new line
   let formattedTasks = "";
@@ -88,9 +92,9 @@ const formatTasks = (record) => {
 
 const getTasks = (record) => {
   const tasks = formatTasks(record);
-  const tasksObject = getSection(`*Needs assistance with:*${tasks}`);
+  const tasksSection = getSection(`*Needs assistance with:* ${tasks}`);
 
-  return tasksObject;
+  return tasksSection;
 };
 
 const getSubsidyRequest = (record) => {
@@ -100,16 +104,18 @@ const getSubsidyRequest = (record) => {
     ? ":white_check_mark:"
     : ":no_entry_sign:";
 
-  const subsidyObject = getSection(`*Subsidy requested:* ${subsidy}`);
+  const subsidySection = getSection(`*Subsidy requested:* ${subsidy}`);
 
-  return subsidyObject;
+  return subsidySection;
 };
 
 const getTimeframe = (record) => {
   const timeframe = record.get("Timeframe");
-  const timeframeObject = getSection(`*Requested timeframe:* ${timeframe}`);
+  const timeframeSection = getSection(
+    `*Requested timeframe:* ${timeframe || "None provided"}`
+  );
 
-  return timeframeObject;
+  return timeframeSection;
 };
 
 const truncateLongResponses = (response, recordId) => {
@@ -130,15 +136,15 @@ const getAnythingElse = (record) => {
   const anythingElse = record.get("Anything else") || "";
   const truncatedResponse = truncateLongResponses(anythingElse, record.id);
 
-  const anythingElseObject = getSection(
-    `*Other notes from requester:* \n${truncatedResponse || "None"}`
+  const anythingElseSection = getSection(
+    `*Other notes from requester:* \n${truncatedResponse || "None provided"}`
   );
 
-  return anythingElseObject;
+  return anythingElseSection;
 };
 
 const getVolunteerHeading = (volunteers) => {
-  if (volunteers.length === 0) {
+  if (!volunteers || volunteers.length === 0) {
     // No volunteers found
     const noneFoundText =
       "*No volunteers match this request!*\n*Check the full Airtable record, there might be more info there.*";
@@ -150,7 +156,12 @@ const getVolunteerHeading = (volunteers) => {
 };
 
 const getVolunteers = (volunteers, taskCounts) => {
-  if (!volunteers.length) return;
+  if (!volunteers || !volunteers.length || !taskCounts) {
+    const noneFoundText =
+      "*No volunteers match this request!*\n*Check the full Airtable record, there might be more info there.*";
+
+    return [getSection(noneFoundText)];
+  }
 
   const volunteerSections = volunteers.map((volunteer) => {
     const volunteerURL = `${config.AIRTABLE_VOLUNTEERS_VIEW_URL}/${volunteer.record.id}`;
@@ -175,7 +186,12 @@ const getVolunteers = (volunteers, taskCounts) => {
 };
 
 const getVolunteerClosing = (volunteers) => {
-  if (!volunteers.length) return;
+  if (!volunteers.length) {
+    const noneFoundText =
+      "*No volunteers match this request!*\n*Check the full Airtable record, there might be more info there.*";
+
+    return getSection(noneFoundText);
+  }
 
   const volunteerClosing =
     "_For easy copy/paste, see the reply to this message:_";
@@ -188,7 +204,7 @@ const getCopyPasteNumbers = (volunteers) => {
     .map((volunteer) => getDisplayNumber(volunteer.Number))
     .join("\n");
 
-  return simplePhoneList || "No numbers to display!";
+  return simplePhoneList || "No numbers to display";
 };
 
 module.exports = {
