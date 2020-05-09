@@ -83,7 +83,6 @@ async function findVolunteers(request) {
 
       // Calculate the distance to each volunteer
       for (const volunteer of suitableVolunteers) {
-        console.log(volunteer.get("Account Disabled"));
         const volAddress =
           volunteer.get(
             "Full Street address (You can leave out your apartment/unit.)"
