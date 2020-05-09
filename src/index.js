@@ -74,7 +74,7 @@ async function findVolunteers(request) {
   await base(config.AIRTABLE_VOLUNTEERS_TABLE_NAME)
     .select({
       view: config.AIRTABLE_VOLUNTEERS_VIEW_NAME,
-      filterByFormula: '{Account Disabled} = ""',
+      filterByFormula: "{Account Disabled} != TRUE()",
     })
     .eachPage(async (volunteers, nextPage) => {
       const suitableVolunteers = volunteers.filter((volunteer) =>
@@ -83,6 +83,7 @@ async function findVolunteers(request) {
 
       // Calculate the distance to each volunteer
       for (const volunteer of suitableVolunteers) {
+        console.log(volunteer.get("Account Disabled"));
         const volAddress =
           volunteer.get(
             "Full Street address (You can leave out your apartment/unit.)"
