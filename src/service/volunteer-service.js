@@ -36,7 +36,10 @@ class VolunteerService {
   async findVolunteersForLoneliness() {
     const lonelinessVolunteers = [];
     await this.base
-      .select({ view: config.AIRTABLE_VOLUNTEERS_VIEW_NAME })
+      .select({
+        view: config.AIRTABLE_VOLUNTEERS_VIEW_NAME,
+        filterByFormula: "{Account Disabled} != TRUE()",
+      })
       .eachPage(this.appendVolunteersForLoneliness(lonelinessVolunteers));
     const sampleSize =
       lonelinessVolunteers.length > 10 ? 10 : lonelinessVolunteers.length;

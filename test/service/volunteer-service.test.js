@@ -32,7 +32,10 @@ describe("VolunteerService", () => {
       base = { create: jest.fn(), update: jest.fn(), select: selectMock };
       eachPageMock = jest.fn();
       when(selectMock)
-        .calledWith({ view: config.AIRTABLE_VOLUNTEERS_VIEW_NAME })
+        .calledWith({
+          view: config.AIRTABLE_VOLUNTEERS_VIEW_NAME,
+          filterByFormula: "{Account Disabled} != TRUE()",
+        })
         .mockReturnValue({ eachPage: eachPageMock });
       service = new VolunteerService(base);
     });
