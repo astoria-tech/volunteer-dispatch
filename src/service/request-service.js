@@ -7,7 +7,7 @@ const config = require("../config");
 const RequestRecord = require("../model/request-record");
 
 /**
- * APIs that deal with Request
+ * APIs that deals with Request
  */
 class RequestService {
   constructor(base, airtableUtils) {
@@ -18,7 +18,8 @@ class RequestService {
 
   /**
    * Resolve and update coordinates for requester's address
-   * @param request {RequestRecord} Request requiring coordinates
+   *
+   * @param {object} request Request requiring coordinates
    * @returns {Promise<RequestRecord>} request records updated with coordinates
    * @throws error when unable to resolve coordinates or update them in airtable
    */
@@ -85,7 +86,9 @@ class RequestService {
 
   /**
    * Sets "Was split?" to "yes" in Airtable
-   * @param request {RequestRecord} Original request record to be marked as split
+   *
+   * @param {object} request Original request record to be marked as split
+   * @returns {void}
    */
   markRequestAsSplit(request) {
     this.base.update(request.id, { "Was split?": "yes" }, (err) => {
@@ -101,8 +104,9 @@ class RequestService {
   /**
    * Splits a task with multiple requests into one request per task.
    * New records are created in Airtable.
-   * @param request {RequestRecord} Original request record with multiple tasks
-   * @returns {Promise<void>}
+   *
+   * @param {object} request Original request record with multiple tasks
+   * @returns {void}
    */
   async splitMultiTaskRequest(request) {
     preconditions.shouldBeObject(request);
@@ -125,8 +129,8 @@ class RequestService {
 
   /**
    * Get the number of tasks assigned to each volunteer.
-   * @param {object} base - the airtable object
-   * @return {Map.<string, number>} - a map of volunteer keys and task count values.
+   *
+   * @returns {Map.<string, number>} A map of volunteer keys and task count values.
    */
   async getVolunteerTaskCounts() {
     const volunteerCounts = new Map();

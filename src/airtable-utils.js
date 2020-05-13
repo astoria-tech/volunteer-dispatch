@@ -6,6 +6,15 @@ class AirtableUtils {
     this.base = base;
   }
 
+  /**
+   * Logs errors to Airtable.
+   *
+   * @param {string} table - name of the table to log to.
+   * @param {object} request - the request to check.
+   * @param {object} error - the error to log.
+   * @param {string} operation - the
+   * @returns {void}
+   */
   logErrorToTable(table, request, error, operation) {
     let errorToInsertInAirtable = `${Date.now()} - ${JSON.stringify(error)}`;
     if (operation) {
@@ -28,8 +37,9 @@ class AirtableUtils {
   /**
    * Clones fields of the provided request record, while replacing the "Tasks"
    * field with the given task.
-   * @param request {RequestRecord} Request whose fields you want to clone
-   * @param task {Task} Task to be set
+   *
+   * @param {object} request Request whose fields you want to clone
+   * @param {object} task Task to be set
    * @returns {{fields: {Tasks: string[], "Cloned from": string[]}}} along with
    * properties from the original request
    */
