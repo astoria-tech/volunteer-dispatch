@@ -125,16 +125,16 @@ const formatTasks = (record) => {
   if (tasks) {
     const formattedTasks = record.get("Tasks").reduce((taskList, task) => {
       if (task !== "Other") {
-        let msg = `${taskList}\n:small_orange_diamond: ${task}`;
-
-        return msg;
-      } else {
-        let msg = `${taskList}\n:warning: _"Other" request: `;
-        msg += "volunteers might not be the best match_";
-        msg += `\n:small_orange_diamond: ${otherTasks}`;
+        const msg = `${taskList}\n:small_orange_diamond: ${task}`;
 
         return msg;
       }
+
+      let msg = `${taskList}\n:warning: _"Other" request: `;
+      msg += "volunteers might not be the best match_";
+      msg += `\n:small_orange_diamond: ${otherTasks}`;
+
+      return msg;
     }, "");
 
     return formattedTasks;
