@@ -25,6 +25,12 @@ const getHeading = (options) => {
   return getSection(`:exclamation: *${options.text}* :exclamation:`);
 };
 
+const getTaskOrder = (record) => {
+  if (record.get("Task Order")) {
+    return getSection(`:bellhop_bell: This is *Task ${record.get("Task Order")}* of the Request`);
+  }
+}
+
 const pluralize = (num, str) => {
   const sMaybe = num === 1 ? "" : "s";
   return `${num} ${str}${sMaybe}`;
@@ -218,6 +224,7 @@ const getCopyPasteNumbers = (volunteers) => {
 module.exports = {
   getText,
   getHeading,
+  getTaskOrder,
   getRequester,
   getTasks,
   getTimeframe,
