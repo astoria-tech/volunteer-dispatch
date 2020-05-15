@@ -34,9 +34,11 @@ const volunteerService = new VolunteerService(
 );
 
 /**
- * @param volunteerAndDistance An array with volunteer record on the 0th index and its distance
- * from requester on the 1st index
- * @returns {{Number: *, record: *, Distance: *, Name: *}}
+ * Fetch volunteers and return custom fields.
+ *
+ * @param {Array} volunteerAndDistance An array with volunteer record on the 0th index and its
+ * distance from requester on the 1st index
+ * @returns {{Number: *, record: *, Distance: *, Name: *}} Custom volunteer fields.
  */
 function volunteerWithCustomFields(volunteerAndDistance) {
   const [volunteer, distance] = volunteerAndDistance;
@@ -50,6 +52,13 @@ function volunteerWithCustomFields(volunteerAndDistance) {
 }
 
 // Accepts errand address and checks volunteer spreadsheet for closest volunteers
+/**
+ * Find volunteers.
+ *
+ * @param {object} request The Airtable request object.
+ * @returns {Array} An array of objects of the closest volunteers to the request,
+ * or an empty array if none are found.
+ */
 async function findVolunteers(request) {
   const { tasks } = request;
   if (tasks && tasks.length > 0 && tasks[0].equals(Task.LONELINESS)) {
@@ -149,8 +158,13 @@ async function findVolunteers(request) {
   return closestVolunteers;
 }
 
-// Checks for updates on errand spreadsheet, finds closest volunteers from volunteer spreadsheet and
-// executes slack message if new row has been detected or if the row's reminder date/time has passed
+/**
+ * Checks for updates on errand spreadsheet, finds closest volunteers from volunteer
+ * spreadsheet and executes slack message if new row has been detected or if the row's reminder
+ * date/time has passed
+ *
+ * @returns {void}
+ */
 async function checkForNewSubmissions() {
   base(config.AIRTABLE_REQUESTS_TABLE_NAME)
     .select({
@@ -256,6 +270,11 @@ async function checkForNewSubmissions() {
     });
 }
 
+/**
+ * Start the chat bot service.
+ *
+ * @returns {void}
+ */
 async function start() {
   try {
     // Run once right away, and run again every 15 seconds

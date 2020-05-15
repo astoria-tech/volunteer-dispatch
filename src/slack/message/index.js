@@ -3,6 +3,12 @@ require("dotenv").config();
 const config = require("../../config");
 const { getDisplayNumber } = require("./phone-number-utils");
 
+/**
+ * Format section message for slack
+ *
+ * @param {string} text - message to print
+ * @returns {object} - formatting object for slack
+ */
 const getSection = (text) => ({
   type: "section",
   text: {
@@ -11,12 +17,26 @@ const getSection = (text) => ({
   },
 });
 
+/**
+ * Get text for reminders or new errand
+ *
+ * @param {object} options The options containing the reminder.
+ * @returns {string} Text based on the reminder.
+ */
 const getText = (options) => {
   return options.reminder
     ? "Reminder for a previous request"
     : "A new errand has been added";
 };
 
+/**
+ * Format heading section for slack
+ *
+ * @param {object} options The configuration options.
+ * @param {string} options.text The message to format.
+ * @param {boolean} options.reminder Whether this message is a reminder or not.
+ * @returns {string} The formatted heading.
+ */
 const getHeading = (options) => {
   if (options.reminder) {
     return getSection(`:alarm_clock: *${options.text}* :alarm_clock:`);
@@ -27,15 +47,30 @@ const getHeading = (options) => {
 
 const getTaskOrder = (record) => {
   if (record.get("Task Order")) {
-    return getSection(`:bellhop_bell: This is *Task ${record.get("Task Order")}* of the Request`);
+    return getSection(
+      `:bellhop_bell: This is *Task ${record.get("Task Order")}* of the Request`
+    );
   }
-}
+};
 
+/**
+ * Pluralize strings.
+ *
+ * @param {number} num The number associated with the string.
+ * @param {string} str The message to pluralize.
+ * @returns {string} The pluralized string.
+ */
 const pluralize = (num, str) => {
   const sMaybe = num === 1 ? "" : "s";
   return `${num} ${str}${sMaybe}`;
 };
 
+/**
+ * Format languages for slack display
+ *
+ * @param {object} record - the requested task to get the language from
+ * @returns {string} - the formatted languages to display in slack
+ */
 const getLanguage = (record) => {
   const languages = [record.get("Language"), record.get("Language - other")];
   const languageList = languages.filter((language) => language).join(", ");
@@ -47,6 +82,12 @@ const getLanguage = (record) => {
   return formattedLanguageList;
 };
 
+/**
+ * Format the task requester for display in slack
+ *
+ * @param {object} record - the requested task to get the requester from
+ * @returns {object} - formatted requester
+ */
 const getRequester = (record) => {
   const heading = "*Requester:*";
   const recordURL = `${config.AIRTABLE_REQUESTS_VIEW_URL}/${record.id}`;
@@ -76,6 +117,12 @@ const getRequester = (record) => {
   return requesterSection;
 };
 
+/**
+ * Format a task to display in slack
+ *
+ * @param {object} record - the requested task to format
+ * @returns {string} - the requested task formatted for slack
+ */
 const formatTasks = (record) => {
   const tasks = record.get("Tasks");
   const otherTasks = record.get("Task - other");
@@ -102,6 +149,12 @@ const formatTasks = (record) => {
   return formattedTasks;
 };
 
+/**
+ * Get tasks from records
+ *
+ * @param {object} record - the requested task to format tasks from
+ * @returns {object} - Slack formatting object
+ */
 const getTasks = (record) => {
   const tasks = formatTasks(record);
   const tasksSection = getSection(`*Needs assistance with:* ${tasks}`);
@@ -109,6 +162,12 @@ const getTasks = (record) => {
   return tasksSection;
 };
 
+/**
+ * Get subsidy
+ *
+ * @param {object} record The record to process for subsidies.
+ * @returns {object} The object with the subsidy request.
+ */
 const getSubsidyRequest = (record) => {
   const subsidy = record.get(
     "Please note, we are a volunteer-run organization, but may be able to help offset some of the cost of hard goods. Do you need a subsidy for your assistance?"
@@ -121,6 +180,12 @@ const getSubsidyRequest = (record) => {
   return subsidySection;
 };
 
+/**
+ * Get timeframe of the request.
+ *
+ * @param {object} record The Airtable record to process.
+ * @returns {object} The timeframe object.
+ */
 const getTimeframe = (record) => {
   const timeframe = record.get("Timeframe");
   const timeframeSection = getSection(
@@ -130,6 +195,13 @@ const getTimeframe = (record) => {
   return timeframeSection;
 };
 
+/**
+ * Truncate responses to 2000 characters. Hides the overflow in a collapsed field.
+ *
+ * @param {string} response The response to truncate.
+ * @param {number} recordId The ID of the Airtable record.
+ * @returns {string} The truncated response.
+ */
 const truncateLongResponses = (response, recordId) => {
   const charLimit = 2000;
   let truncatedResponse;
@@ -144,6 +216,12 @@ const truncateLongResponses = (response, recordId) => {
   return truncatedResponse || response;
 };
 
+/**
+ * Format other records. A catchall for items not covered in other functions.
+ *
+ * @param {object} record The Airtalbe record to process.
+ * @returns {object} The requested record formatted for slack.
+ */
 const getAnythingElse = (record) => {
   const anythingElse = record.get("Anything else") || "";
   const truncatedResponse = truncateLongResponses(anythingElse, record.id);
@@ -155,6 +233,12 @@ const getAnythingElse = (record) => {
   return anythingElseSection;
 };
 
+/**
+ * Format volunteer heading for slack.
+ *
+ * @param {Array} volunteers The volunteers to format the heading for.
+ * @returns {object} The formatted volunteer heading section object.
+ */
 const getVolunteerHeading = (volunteers) => {
   if (!volunteers || !volunteers.length) {
     // No volunteers found
@@ -167,6 +251,13 @@ const getVolunteerHeading = (volunteers) => {
   return getSection(volunteerHeading);
 };
 
+/**
+ * Format volunteer section for slack.
+ *
+ * @param {Array} volunteers The volunteers to format the heading for.
+ * @param {Map} taskCounts A map of volunteers to the amount of their assigned tasks.
+ * @returns {Array} The formatted volunteer section object.
+ */
 const getVolunteers = (volunteers, taskCounts) => {
   if (!volunteers || !volunteers.length || !taskCounts) {
     const noneFoundText =
@@ -197,6 +288,12 @@ const getVolunteers = (volunteers, taskCounts) => {
   return volunteerSections;
 };
 
+/**
+ * Format volunteer closing section for slack.
+ *
+ * @param {Array} volunteers The volunteers to format the heading for.
+ * @returns {object} The formatted volunteer closing section object.
+ */
 const getVolunteerClosing = (volunteers) => {
   if (!volunteers || !volunteers.length) {
     const noneFoundText =
@@ -211,6 +308,12 @@ const getVolunteerClosing = (volunteers) => {
   return getSection(volunteerClosing);
 };
 
+/**
+ * Format volunteer copy/paste phone numbers.
+ *
+ * @param {Array} volunteers The volunteers to format the heading for.
+ * @returns {string} The formatted volunteer phone numbers.
+ */
 const getCopyPasteNumbers = (volunteers) => {
   if (!volunteers || !volunteers.length) return "No numbers to display";
 

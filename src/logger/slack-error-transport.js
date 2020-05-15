@@ -1,10 +1,10 @@
 const Transport = require("winston-transport");
 const { sendError } = require("../slack/sendError");
 
-//
-// Inherit from `winston-transport` so you can take advantage
-// of the base functionality and `.exceptions.handle()`.
-//
+/**
+ * Inherit from `winston-transport` so you can take advantage
+ * of the base functionality and `.exceptions.handle()`.
+ */
 module.exports = class SlackErrorTransport extends Transport {
   // constructor(opts) {
   //   super(opts);
@@ -16,6 +16,13 @@ module.exports = class SlackErrorTransport extends Transport {
   //   //
   // }
 
+  /**
+   * Log info.
+   *
+   * @param {string} info The information to log.
+   * @param {Function} callback The function to call after logging.
+   * @returns {void}
+   */
   async log(info, callback) {
     setImmediate(() => {
       this.emit("logged", info);

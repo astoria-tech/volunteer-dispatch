@@ -4,13 +4,13 @@ class Task {
   /**
    * Task that folks can request help for.
    *
-   * @param rawTask String representing a possible value in the "Tasks" field
-   * in "Requests" Airtable
-   * @param supportRequirements Array of strings. Volunteers can specify how they can support. This
-   *  is stored in the "I can provide the following support (non-binding)" field on the
-   *  "Volunteers" Airtable
-   * @param arbitraryRequirements Array of functions that return a boolean value if this errand has
-   *  other arbitrary requirements.
+   * @param {string} rawTask representing a possible value in the "Tasks" field
+   *  in "Requests" Airtable
+   * @param {Array} supportRequirements Array of strings. Volunteers can specify how they
+   *  can support. This is stored in the "I can provide the following support (non-binding)"
+   *  field on the "Volunteers" Airtable
+   * @param {Array} arbitraryRequirements Array of functions that return a boolean value if
+   *  this errand has other arbitrary requirements.
    */
   constructor(rawTask, supportRequirements, arbitraryRequirements = []) {
     preconditions.shouldBeString(rawTask).shouldNotBeEmpty(rawTask);
@@ -27,10 +27,10 @@ class Task {
    *
    * This method is better housed in a volunteer matching utility or service class.
    * I am keeping it here for now because I did not want to introduce a new
-   *  service/util layer this early in the project. We might need it eventually, though.
+   * service/util layer this early in the project. We might need it eventually, though.
    *
-   * @param volunteer Airtable record about volunteer
-   * @returns {boolean}
+   * @param {object} volunteer Airtable record about volunteer
+   * @returns {boolean} True if volunteer can fulfillt task.
    */
   canBeFulfilledByVolunteer(volunteer) {
     preconditions.shouldBeObject(volunteer);

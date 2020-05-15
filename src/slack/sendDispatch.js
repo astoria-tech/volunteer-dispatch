@@ -6,6 +6,14 @@ const { followUpButton } = require("./reminder");
 
 const channel = config.SLACK_CHANNEL_ID;
 
+/**
+ * Send the primary request info.
+ *
+ * @param {object} record The request record object.
+ * @param {string} text The message to send to slack.
+ * @param {boolean} reminder The reminder object.
+ * @returns {object} The slack post object sent.
+ */
 const sendPrimaryRequestInfo = async (record, text, reminder) => {
   const heading = message.getHeading({ reminder, text });
   const taskOrder = message.getTaskOrder(record);
@@ -25,6 +33,14 @@ const sendPrimaryRequestInfo = async (record, text, reminder) => {
   return res;
 };
 
+/**
+ * Send secondary request info.
+ *
+ * @param {object} record The request record object.
+ * @param {string} text The message to send to slack.
+ * @param {string} threadTs The message threads object returned from slack.
+ * @returns {object} The slack chat message object sent.
+ */
 const sendSecondaryRequestInfo = async (record, text, threadTs) => {
   const subsidyRequested = message.getSubsidyRequest(record);
   const anythingElse = message.getAnythingElse(record);
@@ -38,6 +54,15 @@ const sendSecondaryRequestInfo = async (record, text, threadTs) => {
   });
 };
 
+/**
+ * Send volunteer info.
+ *
+ * @param {Array} volunteers The list of identified volunteers.
+ * @param {Map} taskCounts Map of volunteers to the amount of assigned tasks.
+ * @param {string} text The message to send to slack.
+ * @param {string} threadTs The threaded message object returned from slack.
+ * @returns {object} The slack chat message object sent.
+ */
 const sendVolunteerInfo = async (volunteers, taskCounts, text, threadTs) => {
   const volunteerHeading = message.getVolunteerHeading(volunteers);
   const volunteerList = message.getVolunteers(volunteers, taskCounts);
@@ -52,6 +77,13 @@ const sendVolunteerInfo = async (volunteers, taskCounts, text, threadTs) => {
   });
 };
 
+/**
+ * Send copy and paste numbers.
+ *
+ * @param {Array} volunteers The list of selected volunteers.
+ * @param {string} threadTs The threaded message object returned from slack.
+ * @returns {object} The slack chat message object sent.
+ */
 const sendCopyPasteNumbers = async (volunteers, threadTs) => {
   const copyPasteNumbers = message.getCopyPasteNumbers(volunteers);
 
@@ -63,6 +95,16 @@ const sendCopyPasteNumbers = async (volunteers, threadTs) => {
   });
 };
 
+/**
+ * This function actually sends the message to the slack channel.
+ *
+ * @param {object} record The Airtable record to use.
+ * @param {Array} volunteers The volunteer list selected.
+ * @param {Map} taskCounts Volunteers mapped to the amount of tasks they're already assigned.
+ * @param {boolean} [reminder] Whether this is a reminder task. Defaults to false.
+ * @throws {Error} If no record is provided.
+ * @returns {void}
+ */
 const sendDispatch = async (
   record,
   volunteers,
