@@ -45,6 +45,12 @@ const getHeading = (options) => {
   return getSection(`:exclamation: *${options.text}* :exclamation:`);
 };
 
+/**
+ * Format task order for split tasks.
+ *
+ * @param {object} record The split task to get order from.
+ * @returns {string} The formatted task order to display after message header.
+ */
 const getTaskOrder = (record) => {
   if (record.get("Task Order")) {
     return getSection(
