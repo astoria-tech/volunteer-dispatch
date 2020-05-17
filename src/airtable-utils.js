@@ -53,6 +53,7 @@ class AirtableUtils {
     preconditions.shouldBeString(order);
     const fields = {
       ...request.rawFields,
+      "Original Tasks": request.rawFields.Tasks,
       Tasks: [task.rawTask],
       "Cloned from": [request.id],
       "Task Order": order,

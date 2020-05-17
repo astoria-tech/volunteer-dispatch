@@ -85,23 +85,6 @@ class RequestService {
   }
 
   /**
-   * Sets "Was split?" to "yes" in Airtable
-   *
-   * @param {object} request Original request record to be marked as split
-   * @returns {void}
-   */
-  markRequestAsSplit(request) {
-    this.base.update(request.id, { "Was split?": "yes" }, (err) => {
-      if (err) {
-        logger.error(
-          `Error updating 'Was split?' column in request ${request.id}`,
-          err
-        );
-      }
-    });
-  }
-
-  /**
    * Splits a task with multiple requests into one request per task.
    * New records are created in Airtable.
    *
@@ -111,8 +94,23 @@ class RequestService {
   async splitMultiTaskRequest(request) {
     preconditions.shouldBeObject(request);
     preconditions.checkArgument(request.tasks.length > 1);
-    const newRecordsPerTask = request.tasks.map((task, idx) => {
-      const order = `${idx + 1} of ${request.tasks.length}`;
+    // Update the original request to only contain the first Task, to prevent
+    // duplicates from cloning records for each task.
+    try {
+      await this.base.update(request.id, {
+        Tasks: [request.rawFields.Tasks[0]],
+        "Original Tasks": request.rawFields.Tasks,
+        "Task Order": `1 of ${request.tasks.length}`,
+      });
+    } catch (e) {
+      logger.error(
+        `Error updating 'Tasks' column in request ${request.id}: `,
+        e
+      );
+      throw e;
+    }
+    const newRecordsPerTask = request.tasks.slice(1).map((task, idx) => {
+      const order = `${idx + 2} of ${request.tasks.length}`;
       return AirtableUtils.cloneRequestFieldsWithGivenTask(
         request,
         task,
@@ -121,7 +119,6 @@ class RequestService {
     });
     try {
       await this.base.create(newRecordsPerTask);
-      this.markRequestAsSplit(request);
     } catch (e) {
       if (e) {
         logger.error(
@@ -143,7 +140,7 @@ class RequestService {
       .select({
         view: config.AIRTABLE_REQUESTS_VIEW_NAME,
         filterByFormula:
-          "AND({Was split?} != 'yes', {Status} != 'Completed', {Assigned Volunteer} != '')",
+          "AND({Status} != 'Completed', {Assigned Volunteer} != '')",
       })
       .eachPage(async (records, nextPage) => {
         records.forEach((record) => {
