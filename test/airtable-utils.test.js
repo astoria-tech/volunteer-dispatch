@@ -1,7 +1,7 @@
 /* eslint-disable max-len */
 /* To allow test case table to pass linting */
 
-const AirtableUtils = require("../src/airtable-utils");
+const AirtableUtils = require("../src/utils/airtable-utils");
 const RequestRecord = require("../src/model/request-record");
 const Task = require("../src/task");
 

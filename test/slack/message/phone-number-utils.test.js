@@ -1,6 +1,6 @@
 const {
   getDisplayNumber,
-} = require("../../../src/slack/message/phone-number-utils");
+} = require("../../../src/utils/phone-number-utils");
 
 test("Return kebab-case number when passed number is formatted with parens", () => {
   expect(getDisplayNumber("(212) 222-2222")).toBe("212-222-2222");

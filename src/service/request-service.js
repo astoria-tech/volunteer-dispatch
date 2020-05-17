@@ -1,19 +1,28 @@
 const preconditions = require("preconditions").singleton();
 
-const AirtableUtils = require("../airtable-utils");
+const AirtableUtils = require("../utils/airtable-utils");
 const { logger } = require("../logger");
 const { getCoords } = require("../geo");
 const config = require("../config");
 const RequestRecord = require("../model/request-record");
+const UserService = require("./user-service.js");
 
 /**
  * APIs that deals with Request
  */
 class RequestService {
-  constructor(base, airtableUtils) {
+  /**
+   * Constructs an instance of RequestService
+   *
+   * @param {object} base Airtable's "base" object for the Requests table
+   * @param {AirtableUtils} airtableUtils instance of AirtableUtils
+   * @param {UserService} userService instance of UserService
+   */
+  constructor(base, airtableUtils, userService) {
     preconditions.shouldBeObject(base);
     this.base = base;
     this.airtableUtils = airtableUtils;
+    this.userService = userService;
   }
 
   /**
@@ -155,6 +164,48 @@ class RequestService {
         nextPage();
       });
     return volunteerCounts;
+  }
+
+  /**
+   * Links a user to the request.
+   * We try to identify the User by the requester's phone number first, followed by name.
+   * A new user is created if they don't already exist in the system.
+   *
+   * @param {object|RequestRecord} request that needs to be linked to a user
+   * @returns {Promise<void>} Does not return any value.
+   */
+  async linkUserWithRequest(request) {
+    preconditions.shouldBeObject(request);
+    // noinspection JSCheckFunctionSignatures
+    preconditions.checkArgument(
+      request.phoneNumber || request.requesterName,
+      "Either phone number or requester's name should be present"
+    );
+    let userRecord = null;
+    if (request.phoneNumber) {
+      userRecord = await this.userService.findUserByPhoneNumber(
+        request.phoneNumber
+      );
+    }
+    if (userRecord === null && request.requesterName) {
+      userRecord = await this.userService.findUserByFullName(
+        request.requesterName
+      );
+    }
+    if (userRecord === null) {
+      userRecord = await this.userService.createUser(
+        request.requesterName,
+        request.phoneNumber
+      );
+    }
+    this.base.update(request.id, { Requester: [userRecord.id] }, (err) => {
+      if (err) {
+        logger.error(
+          `Error updating 'Requester' column in request ${request.id}`,
+          err
+        );
+      }
+    });
   }
 }
 

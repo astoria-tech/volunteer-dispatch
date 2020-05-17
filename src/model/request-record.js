@@ -75,6 +75,37 @@ class RequestRecord {
   get coordinatesAddress() {
     return this.get("_coordinates_address");
   }
+
+  /**
+   * ID to a record in the Users table.
+   *
+   * @type {string|null}
+   */
+  get requesterId() {
+    const requesters = this.get("Requester");
+    if (requesters) {
+      return requesters[0];
+    }
+    return null;
+  }
+
+  /**
+   * Full name of the requester
+   *
+   * @type {string}
+   */
+  get requesterName() {
+    return this.get("Name");
+  }
+
+  /**
+   * Phone number of the requester
+   *
+   * @type {string}
+   */
+  get phoneNumber() {
+    return this.get("Phone number");
+  }
 }
 
 module.exports = RequestRecord;
