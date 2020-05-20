@@ -112,8 +112,12 @@ class RequestService {
     preconditions.shouldBeObject(request);
     preconditions.checkArgument(request.tasks.length > 1);
     const newRecordsPerTask = request.tasks.map((task, idx) => {
-      const order = `${idx + 1} of ${request.tasks.length}`
-      return AirtableUtils.cloneRequestFieldsWithGivenTask(request, task, order)
+      const order = `${idx + 1} of ${request.tasks.length}`;
+      return AirtableUtils.cloneRequestFieldsWithGivenTask(
+        request,
+        task,
+        order
+      );
     });
     try {
       await this.base.create(newRecordsPerTask);
