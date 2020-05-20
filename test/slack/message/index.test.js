@@ -15,6 +15,7 @@ class MockRequestRecord {
       Address: "25-82 36th Street",
       Status: "Needs assigning",
       Tasks: ["Dog walking"],
+      "Task Order": "2 of 3",
     };
   }
 
@@ -149,6 +150,24 @@ describe("The primary message", () => {
     expect(headingSection.text.text).toEqual(
       expect.stringContaining("Reminder for a previous request")
     );
+  });
+
+  describe("Task order", () => {
+    test("If task is split from a multi-task request, display task order", () => {
+      const requester = new MockRequestRecord();
+      const taskOrderSection = message.getTaskOrder(requester);
+
+      expect(taskOrderSection.text.text).toEqual(
+        expect.stringContaining(requester.get("Task Order"))
+      );
+    });
+
+    test("The task order info should be a section", () => {
+      const requester = new MockRequestRecord();
+      const taskOrderSection = message.getTaskOrder(requester);
+
+      expect(validateSection(taskOrderSection)).toBe(true);
+    });
   });
 
   describe("Requester info", () => {
