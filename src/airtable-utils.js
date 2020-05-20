@@ -50,6 +50,7 @@ class AirtableUtils {
     preconditions.shouldBeDefined(request.id);
     preconditions.shouldBeObject(request.rawFields);
     preconditions.shouldBeObject(task);
+    preconditions.shouldBeString(order);
     const fields = {
       ...request.rawFields,
       Tasks: [task.rawTask],
