@@ -35,7 +35,7 @@ const getText = (options) => {
  * @param {object} options The configuration options.
  * @param {string} options.text The message to format.
  * @param {boolean} options.reminder Whether this message is a reminder or not.
- * @returns {string} The formatted heading.
+ * @returns {object} The formatted heading.
  */
 const getHeading = (options) => {
   if (options.reminder) {
@@ -49,7 +49,7 @@ const getHeading = (options) => {
  * Format task order for split tasks.
  *
  * @param {object} record The split task to get order from.
- * @returns {string} The formatted task order to display after message header.
+ * @returns {object} The formatted task order to display after message header.
  */
 const getTaskOrder = (record) => {
   if (record.get("Task Order")) {
