@@ -122,23 +122,23 @@ const formatTasks = (record) => {
   if (!tasks && !otherTasks) return "None provided";
 
   // Put each task on a new line
-  let formattedTasks = "";
   if (tasks) {
-    formattedTasks = record.get("Tasks").reduce((taskList, task) => {
-      let msg = `${taskList}\n :small_orange_diamond: ${task}`;
-      if (task === "Other") {
-        msg +=
-          '\n\t\t:warning: Because this is an "Other" request, these volunteer matches might not be the best options, depending on what the request is. :warning:';
+    const formattedTasks = record.get("Tasks").reduce((taskList, task) => {
+      if (task !== "Other") {
+        const msg = `${taskList}\n:small_orange_diamond: ${task}`;
+
+        return msg;
       }
+
+      let msg = `${taskList}\n:warning: _"Other" request: `;
+      msg += "volunteers might not be the best match_";
+      msg += `\n:small_orange_diamond: ${otherTasks}`;
+
       return msg;
     }, "");
-  }
 
-  if (otherTasks) {
-    formattedTasks += `\n :small_orange_diamond: ${otherTasks}`;
+    return formattedTasks;
   }
-
-  return formattedTasks;
 };
 
 /**

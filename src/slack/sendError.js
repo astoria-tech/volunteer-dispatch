@@ -23,19 +23,25 @@ const sendError = async (error) => {
   if (error.message !== prevErrorMessage && error.stack !== prevStackTrace) {
     const errorMessage = getSection(`:fire: *${error.message}* :fire:\n\n`);
     const space = getSection(" ");
-    const stackTrace = getSection(error.stack);
 
-    const res = await bot.chat.postMessage({
+    const messageConfig = {
       token,
       channel,
       text: "Uh oh! Something's wrong.",
       blocks: [errorMessage, space],
-      attachments: [
+    };
+
+    if (error.stack) {
+      const stackTrace = getSection(error.stack);
+
+      messageConfig.attachments = [
         {
           blocks: [stackTrace],
         },
-      ],
-    });
+      ];
+    }
+
+    const res = await bot.chat.postMessage(messageConfig);
 
     // Set previous message info for comparison
     prevErrorMessage = error.message;
@@ -57,19 +63,25 @@ const sendError = async (error) => {
     // A block just in case an error isn't handled by the above
     const errorMessage = getSection(`:fire: *${error.message}* :fire:\n\n`);
     const space = getSection(" ");
-    const stackTrace = getSection(error.stack);
 
-    await bot.chat.postMessage({
+    const messageConfig = {
       token,
       channel,
       text: "Uh oh! Something's wrong.",
       blocks: [errorMessage, space],
-      attachments: [
+    };
+
+    if (error.stack) {
+      const stackTrace = getSection(error.stack);
+
+      messageConfig.attachments = [
         {
           blocks: [stackTrace],
         },
-      ],
-    });
+      ];
+    }
+
+    await bot.chat.postMessage(messageConfig);
   }
 };
 
