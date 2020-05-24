@@ -5,7 +5,7 @@ const { logger } = require("../logger");
 const { getCoords } = require("../geo");
 const config = require("../config");
 const RequestRecord = require("../model/request-record");
-const UserService = require("./user-service.js");
+const RequesterService = require("./requester-service");
 
 /**
  * APIs that deals with Request
@@ -16,13 +16,13 @@ class RequestService {
    *
    * @param {object} base Airtable's "base" object for the Requests table
    * @param {AirtableUtils} airtableUtils instance of AirtableUtils
-   * @param {UserService} userService instance of UserService
+   * @param {RequesterService} requesterService instance of UserService
    */
-  constructor(base, airtableUtils, userService) {
+  constructor(base, airtableUtils, requesterService) {
     preconditions.shouldBeObject(base);
     this.base = base;
     this.airtableUtils = airtableUtils;
-    this.userService = userService;
+    this.requesterService = requesterService;
   }
 
   /**
@@ -183,17 +183,17 @@ class RequestService {
     );
     let userRecord = null;
     if (request.phoneNumber) {
-      userRecord = await this.userService.findUserByPhoneNumber(
+      userRecord = await this.requesterService.findUserByPhoneNumber(
         request.phoneNumber
       );
     }
     if (userRecord === null && request.requesterName) {
-      userRecord = await this.userService.findUserByFullName(
+      userRecord = await this.requesterService.findUserByFullName(
         request.requesterName
       );
     }
     if (userRecord === null) {
-      userRecord = await this.userService.createUser(
+      userRecord = await this.requesterService.createUser(
         request.requesterName,
         request.phoneNumber
       );

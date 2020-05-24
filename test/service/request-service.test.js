@@ -2,12 +2,12 @@ const { when, resetAllWhenMocks } = require("jest-when");
 
 jest.mock("../../src/geo");
 jest.mock("../../src/utils/airtable-utils");
-jest.mock("../../src/service/user-service");
+jest.mock("../../src/service/requester-service");
 const AirtableUtils = require("../../src/utils/airtable-utils");
 const RequestRecord = require("../../src/model/request-record");
 const Task = require("../../src/task");
 const RequestService = require("../../src/service/request-service");
-const UserService = require("../../src/service/user-service");
+const RequesterService = require("../../src/service/requester-service");
 const UserRecord = require("../../src/model/user-record");
 
 describe("RequestService", () => {
@@ -24,8 +24,8 @@ describe("RequestService", () => {
       fields: {},
     };
     const airtableUtils = new AirtableUtils(base);
-    UserService.mockClear();
-    userService = new UserService(base);
+    RequesterService.mockClear();
+    userService = new RequesterService(base);
     service = new RequestService(base, airtableUtils, userService);
     resetAllWhenMocks();
   });

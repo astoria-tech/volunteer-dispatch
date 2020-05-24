@@ -1,4 +1,4 @@
-const UserService = require("../../src/service/user-service");
+const RequesterService = require("../../src/service/requester-service");
 const phoneNumberUtils = require("../../src/utils/phone-number-utils");
 
 jest.mock("../../src/utils/phone-number-utils");
@@ -26,7 +26,7 @@ const records = [
   },
 ];
 
-describe("UserService", () => {
+describe("RequesterService", () => {
   let service;
   let base;
   let mockSelect;
@@ -38,7 +38,7 @@ describe("UserService", () => {
     base = {
       select: mockSelect,
     };
-    service = new UserService(base);
+    service = new RequesterService(base);
     phoneNumberUtils.getDisplayNumber.mockReturnValue(phoneNumber);
   });
   describe("findUserByPhoneNumber", () => {

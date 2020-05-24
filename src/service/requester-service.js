@@ -27,9 +27,9 @@ function extractUserRecordIfAvailable(paramForSearching, records) {
 }
 
 /**
- * APIs that deal with Users
+ * APIs that deal with Requesters
  */
-class UserService {
+class RequesterService {
   constructor(base) {
     preconditions.shouldBeObject(base);
     this.base = base;
@@ -87,4 +87,4 @@ class UserService {
   }
 }
 
-module.exports = UserService;
+module.exports = RequesterService;

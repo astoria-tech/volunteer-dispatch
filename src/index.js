@@ -7,7 +7,7 @@ const http = require("./http");
 const { getCoords, distanceBetweenCoords } = require("./geo");
 const { logger } = require("./logger");
 const Request = require("./model/request-record");
-const UserService = require("./service/user-service");
+const RequesterService = require("./service/requester-service");
 const RequestService = require("./service/request-service");
 const VolunteerService = require("./service/volunteer-service");
 
@@ -26,11 +26,13 @@ const base = new Airtable({ apiKey: config.AIRTABLE_API_KEY }).base(
   config.AIRTABLE_BASE_ID
 );
 const customAirtable = new AirtableUtils(base);
-const userService = new UserService(base(config.AIRTABLE_USERS_TABLE_NAME));
+const requesterService = new RequesterService(
+  base(config.AIRTABLE_REQUESTERS_TABLE_NAME)
+);
 const requestService = new RequestService(
   base(config.AIRTABLE_REQUESTS_TABLE_NAME),
   customAirtable,
-  userService
+  requesterService
 );
 const volunteerService = new VolunteerService(
   base(config.AIRTABLE_VOLUNTEERS_TABLE_NAME)
