@@ -16,15 +16,19 @@ const channel = config.SLACK_CHANNEL_ID;
  */
 const sendPrimaryRequestInfo = async (record, text, reminder) => {
   const heading = message.getHeading({ reminder, text });
+  const taskOrder = message.getTaskOrder(record);
   const requester = message.getRequester(record);
   const tasks = message.getTasks(record);
   const requestedTimeframe = message.getTimeframe(record);
+  const blocks = taskOrder
+    ? [heading, taskOrder, requester, tasks, requestedTimeframe, followUpButton]
+    : [heading, requester, tasks, requestedTimeframe, followUpButton];
 
   const res = await bot.chat.postMessage({
     token,
     channel,
     text,
-    blocks: [heading, requester, tasks, requestedTimeframe, followUpButton],
+    blocks,
   });
 
   return res;

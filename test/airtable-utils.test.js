@@ -1,20 +1,26 @@
+/* eslint-disable max-len */
+/* To allow test case table to pass linting */
+
 const AirtableUtils = require("../src/airtable-utils");
 const RequestRecord = require("../src/model/request-record");
 const Task = require("../src/task");
 
 describe("AirtableUtils", () => {
   describe("cloneRequestFieldsWithGivenTask", () => {
+    const taskOrder = "1 of 3";
     it.each`
-      request                                              | task         | expectedError
-      ${undefined}                                         | ${undefined} | ${"Variable should be of type Object."}
-      ${{ id: "kjhs8090" }}                                | ${undefined} | ${"Variable should be of type Object."}
-      ${{}}                                                | ${undefined} | ${"Variable should be defined."}
-      ${new RequestRecord({ id: "kjhs8090", fields: {} })} | ${undefined} | ${"Variable should be of type Object."}
+      request                                              | task         | order        | expectedError
+      ${undefined}                                         | ${undefined} | ${taskOrder} | ${"Variable should be of type Object."}
+      ${{ id: "kjhs8090" }}                                | ${undefined} | ${taskOrder} | ${"Variable should be of type Object."}
+      ${{}}                                                | ${undefined} | ${taskOrder} | ${"Variable should be defined."}
+      ${new RequestRecord({ id: "kjhs8090", fields: {} })} | ${undefined} | ${taskOrder} | ${"Variable should be of type Object."}
+      ${new RequestRecord({ id: "kjhs8090", fields: {} })} | ${undefined} | ${taskOrder} | ${"Variable should be of type Object."}
+      ${new RequestRecord({ id: "kjhs8090", fields: {} })} | ${{}}        | ${undefined} | ${"Variable should be a String."}
     `(
       "should throw in case of invalid arguments",
-      ({ request, task, expectedError }) => {
+      ({ request, task, order, expectedError }) => {
         expect(() =>
-          AirtableUtils.cloneRequestFieldsWithGivenTask(request, task)
+          AirtableUtils.cloneRequestFieldsWithGivenTask(request, task, order)
         ).toThrow(expectedError);
       }
     );
@@ -42,7 +48,8 @@ describe("AirtableUtils", () => {
       (request) => {
         const clonedRequest = AirtableUtils.cloneRequestFieldsWithGivenTask(
           request,
-          Task.possibleTasks[0]
+          Task.possibleTasks[0],
+          taskOrder
         );
         expect(clonedRequest.fields).not.toHaveProperty("Created time");
         expect(clonedRequest.fields).not.toHaveProperty("Error");
@@ -69,7 +76,8 @@ describe("AirtableUtils", () => {
       const task = Task.possibleTasks[0];
       const clonedRequest = AirtableUtils.cloneRequestFieldsWithGivenTask(
         request,
-        task
+        task,
+        taskOrder
       );
       expect(clonedRequest.fields).toHaveProperty("Tasks");
       expect(clonedRequest.fields.Tasks).toEqual([task.rawTask]);
@@ -85,7 +93,8 @@ describe("AirtableUtils", () => {
       expect(
         AirtableUtils.cloneRequestFieldsWithGivenTask(
           givenRequest,
-          Task.possibleTasks[0]
+          Task.possibleTasks[0],
+          taskOrder
         ).fields
       ).toEqual(expect.objectContaining(givenRequest.rawFields));
     });
@@ -95,9 +104,21 @@ describe("AirtableUtils", () => {
       expect(
         AirtableUtils.cloneRequestFieldsWithGivenTask(
           request,
-          Task.possibleTasks[0]
+          Task.possibleTasks[0],
+          "1 of 3"
         ).fields["Cloned from"]
       ).toEqual([id]);
+    });
+    it("should set the 'Task Order' field with the task order string", () => {
+      const id = "jsdhf9329";
+      const request = new RequestRecord({ fields: {}, id });
+      expect(
+        AirtableUtils.cloneRequestFieldsWithGivenTask(
+          request,
+          Task.possibleTasks[0],
+          taskOrder
+        ).fields["Task Order"]
+      ).toEqual(taskOrder);
     });
   });
 });

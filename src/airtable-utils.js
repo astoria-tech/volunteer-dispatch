@@ -40,18 +40,22 @@ class AirtableUtils {
    *
    * @param {object} request Request whose fields you want to clone
    * @param {object} task Task to be set
-   * @returns {{fields: {Tasks: string[], "Cloned from": string[]}}} along with
-   * properties from the original request
+   * @param {string} order String that indicates the order of given task
+   * relative to total tasks in the request
+   * @returns {{fields: {Tasks: string[], "Cloned from": string[],
+   * "Task Order": string[]}}} along with properties from the original request
    */
-  static cloneRequestFieldsWithGivenTask(request, task) {
+  static cloneRequestFieldsWithGivenTask(request, task, order) {
     preconditions.shouldBeObject(request);
     preconditions.shouldBeDefined(request.id);
     preconditions.shouldBeObject(request.rawFields);
     preconditions.shouldBeObject(task);
+    preconditions.shouldBeString(order);
     const fields = {
       ...request.rawFields,
       Tasks: [task.rawTask],
       "Cloned from": [request.id],
+      "Task Order": order,
     };
     delete fields["Created time"];
     delete fields["Record ID"];
