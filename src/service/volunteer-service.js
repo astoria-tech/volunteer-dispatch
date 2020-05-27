@@ -16,7 +16,8 @@ class VolunteerService {
 
   /**
    * Honestly, this is being exposed for testing.
-   * @param lonelinessVolunteers Array to append to
+   *
+   * @param {Array} lonelinessVolunteers to append to.
    * @returns {function(...[*]=)} A function that can be provided to Airtable's `eachPage` function
    */
   // eslint-disable-next-line class-methods-use-this
@@ -31,12 +32,16 @@ class VolunteerService {
 
   /**
    * Fetches volunteers willing to to take on loneliness relates tasks
+   *
    * @returns {Promise<[]>} Volunteers capable of handling loneliness tasks
    */
   async findVolunteersForLoneliness() {
     const lonelinessVolunteers = [];
     await this.base
-      .select({ view: config.AIRTABLE_VOLUNTEERS_VIEW_NAME })
+      .select({
+        view: config.AIRTABLE_VOLUNTEERS_VIEW_NAME,
+        filterByFormula: "{Account Disabled} != TRUE()",
+      })
       .eachPage(this.appendVolunteersForLoneliness(lonelinessVolunteers));
     const sampleSize =
       lonelinessVolunteers.length > 10 ? 10 : lonelinessVolunteers.length;

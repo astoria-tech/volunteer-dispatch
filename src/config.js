@@ -1,5 +1,12 @@
 require("dotenv").config();
 
+/**
+ * Environment boolean.
+ *
+ * @param {string} name The name of the environment variable.
+ * @param {boolean} defaultValue The default value if name is not available.
+ * @returns {boolean} True if name environment variable exists, or defaultValue.
+ */
 function envBoolean(name, defaultValue) {
   if (process.env[name]) {
     return process.env[name] === "true";

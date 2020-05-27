@@ -1,6 +1,6 @@
 const NodeGeocoder = require("node-geocoder");
 const geolib = require("geolib");
-const { logger } = require("./logger/");
+const { logger } = require("./logger");
 const config = require("./config");
 require("dotenv").config();
 
@@ -21,7 +21,12 @@ const geocoder = NodeGeocoder(ngcOptions);
 
 logger.info(`Geocoder: ${ngcOptions.provider}`);
 
-// Accepts an address and returns lat/long
+/**
+ * Get coordinates.
+ *
+ * @param {string} address The Airtable address to pull coordinates from.
+ * @returns {Promise} Promise object containing properties latitude and longitude.
+ */
 function getCoords(address) {
   return new Promise((resolve, reject) => {
     geocoder.geocode(address, (err, res) => {

@@ -34,10 +34,12 @@ const volunteerService = new VolunteerService(
 );
 
 /**
- * @param volunteerAndDistance An array with volunteer record on the 0th index and its distance
- * from requester on the 1st index
- * @param request A Request record
- * @returns {{Number: *, record: *, Distance: *, Name: *, Language: *}}
+ * Fetch volunteers and return custom fields.
+ *
+ * @param {Array} volunteerAndDistance An array with volunteer record on the 0th index and its
+ * distance from requester on the 1st index
+ * @param {object} request The Airtable request object.
+ * @returns {{Number: *, record: *, Distance: *, Name: *, Language: *}} Custom volunteer fields.
  */
 function volunteerWithCustomFields(volunteerAndDistance, request) {
   const [volunteer, distance] = volunteerAndDistance;
@@ -47,17 +49,26 @@ function volunteerWithCustomFields(volunteerAndDistance, request) {
     Distance: distance,
     record: volunteer,
     Id: volunteer.id,
-    Language: request.get("Language")
+    Language: request.get("Language"),
   };
 }
 
 // Accepts errand address and checks volunteer spreadsheet for closest volunteers
+/**
+ * Find volunteers.
+ *
+ * @param {object} request The Airtable request object.
+ * @returns {Array} An array of objects of the closest volunteers to the request,
+ * or an empty array if none are found.
+ */
 async function findVolunteers(request) {
   const { tasks } = request;
   if (tasks && tasks.length > 0 && tasks[0].equals(Task.LONELINESS)) {
     return (await volunteerService.findVolunteersForLoneliness())
       .map((v) => [v, "N/A"])
-      .map(volunteerAndDistance => volunteerWithCustomFields(volunteerAndDistance, request));
+      .map((volunteerAndDistance) =>
+        volunteerWithCustomFields(volunteerAndDistance, request)
+      );
   }
 
   let errandCoords;
@@ -74,7 +85,10 @@ async function findVolunteers(request) {
   const volunteerDistances = [];
   // Figure out which volunteers can fulfill at least one of the tasks
   await base(config.AIRTABLE_VOLUNTEERS_TABLE_NAME)
-    .select({ view: config.AIRTABLE_VOLUNTEERS_VIEW_NAME })
+    .select({
+      view: config.AIRTABLE_VOLUNTEERS_VIEW_NAME,
+      filterByFormula: "{Account Disabled} != TRUE()",
+    })
     .eachPage(async (volunteers, nextPage) => {
       const suitableVolunteers = volunteers.filter((volunteer) =>
         tasks.some((task) => task.canBeFulfilledByVolunteer(volunteer))
@@ -139,18 +153,19 @@ async function findVolunteers(request) {
     .filter((volunteerAndDistance) => {
       const volunteer = volunteerAndDistance[0];
       const volLanguages = volunteer.get(
-        "Please list what other languages you speak, if any, and level of fluency. "
+        "Please select any language you have verbal fluency with:"
       );
       if (volLanguages) {
         return volLanguages.some(
-          (languageAndFluency) =>
-            languageAndFluency.split(" - ")[0] === request.get("Language")
+          (languageAndFluency) => languageAndFluency === request.get("Language")
         );
       }
     })
     .sort((a, b) => a[1] - b[1])
     .slice(0, 10)
-    .map(volunteerAndDistance => volunteerWithCustomFields(volunteerAndDistance, request));
+    .map((volunteerAndDistance) =>
+      volunteerWithCustomFields(volunteerAndDistance, request)
+    );
 
   logger.info("Closest:");
   closestVolunteers.forEach((v) => {
@@ -160,8 +175,13 @@ async function findVolunteers(request) {
   return closestVolunteers;
 }
 
-// Checks for updates on errand spreadsheet, finds closest volunteers from volunteer spreadsheet and
-// executes slack message if new row has been detected or if the row's reminder date/time has passed
+/**
+ * Checks for updates on errand spreadsheet, finds closest volunteers from volunteer
+ * spreadsheet and executes slack message if new row has been detected or if the row's reminder
+ * date/time has passed
+ *
+ * @returns {void}
+ */
 async function checkForNewSubmissions() {
   base(config.AIRTABLE_REQUESTS_TABLE_NAME)
     .select({
@@ -267,6 +287,11 @@ async function checkForNewSubmissions() {
     });
 }
 
+/**
+ * Start the chat bot service.
+ *
+ * @returns {void}
+ */
 async function start() {
   try {
     // Run once right away, and run again every 15 seconds
