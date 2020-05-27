@@ -280,7 +280,9 @@ const getVolunteers = (volunteers, taskCounts) => {
       typeof volunteer.Distance === "number"
         ? `${volunteer.Distance.toFixed(2)} Mi.`
         : "Distance N/A";
-    const volunteerLanguage = volunteer.Language;
+    const volunteerLanguage = volunteer.Language
+      ? volunteer.Language
+      : "English";
     const taskCount = taskCounts.has(volunteer.Id)
       ? pluralize(taskCounts.get(volunteer.Id), "assigned task")
       : pluralize(0, "assigned task");
