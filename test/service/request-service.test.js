@@ -17,6 +17,7 @@ describe("RequestService", () => {
     mockAirtableRequest = {
       id: "lkdjf8979",
       get: mockAirtableGet,
+      fields: {},
     };
     service = new RequestService(base);
   });
@@ -43,13 +44,17 @@ describe("RequestService", () => {
     });
     it("should try to create correct records", async () => {
       expect.assertions(1);
+      mockAirtableRequest.fields.Tasks = [
+        Task.possibleTasks[0],
+        Task.possibleTasks[1],
+      ];
       when(mockAirtableGet)
         .calledWith("Tasks")
         .mockReturnValue([Task.possibleTasks[0], Task.possibleTasks[1]]);
       const request = new RequestRecord(mockAirtableRequest);
       const newRecords = [
-        { fields: { Task: Task.possibleTasks[0] } },
-        { fields: { Task: Task.possibleTasks[1] } },
+        { fields: { Tasks: Task.possibleTasks[0] } },
+        { fields: { Tasks: Task.possibleTasks[1] } },
       ];
       AirtableUtils.cloneRequestFieldsWithGivenTask.mockReturnValueOnce(
         newRecords[0]
@@ -58,7 +63,7 @@ describe("RequestService", () => {
         newRecords[1]
       );
       await service.splitMultiTaskRequest(request);
-      expect(base.create).toHaveBeenCalledWith(newRecords);
+      expect(base.create).toHaveBeenCalledWith([newRecords[0]]);
     });
   });
 });
