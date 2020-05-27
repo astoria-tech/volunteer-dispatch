@@ -43,13 +43,23 @@ const volunteerService = new VolunteerService(
  */
 function volunteerWithCustomFields(volunteerAndDistance, request) {
   const [volunteer, distance] = volunteerAndDistance;
+  let volLanguage = request.get("Language")
+    ? request.get("Language")
+    : volunteer.get("Please select any language you have verbal fluency with:");
+
+  if (Array.isArray(volLanguage)) {
+    if (volLanguage.length > 1) {
+      volLanguage = volLanguage.join(", ");
+    }
+  }
+
   return {
     Name: volunteer.get("Full Name"),
     Number: volunteer.get("Please provide your contact phone number:"),
     Distance: distance,
     record: volunteer,
     Id: volunteer.id,
-    Language: request.get("Language"),
+    Language: volLanguage,
   };
 }
 
@@ -149,18 +159,22 @@ async function findVolunteers(request) {
     });
 
   // Filter the volunteers by language, then sort by distance and grab the closest 10
-  const closestVolunteers = volunteerDistances
-    .filter((volunteerAndDistance) => {
-      const volunteer = volunteerAndDistance[0];
-      const volLanguages = volunteer.get(
-        "Please select any language you have verbal fluency with:"
-      );
-      if (volLanguages) {
-        return volLanguages.some(
-          (languageAndFluency) => languageAndFluency === request.get("Language")
-        );
-      }
-    })
+  const volFilteredByLanguage =
+    request.get("Language") && request.get("Language") !== "English"
+      ? volunteerDistances.filter((volunteerAndDistance) => {
+          const volunteer = volunteerAndDistance[0];
+          const volLanguages = volunteer.get(
+            "Please select any language you have verbal fluency with:"
+          );
+          if (volLanguages) {
+            return volLanguages.some(
+              (language) => language === request.get("Language")
+            );
+          }
+        })
+      : volunteerDistances;
+
+  const closestVolunteers = volFilteredByLanguage
     .sort((a, b) => a[1] - b[1])
     .slice(0, 10)
     .map((volunteerAndDistance) =>
