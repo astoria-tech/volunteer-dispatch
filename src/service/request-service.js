@@ -132,7 +132,7 @@ class RequestService {
   /**
    * Gets stats related to a volunteer's assigned tasks.
    *
-   * @returns {Map.<string, {count: number, lastDate: string}>} A map of volunteer keys and task stats.
+   * @returns {Map.<string, {count: number, lastDate: string}>} Volunteer ids and task stats.
    */
   async getVolunteerTaskStats() {
     const taskStats = new Map();
@@ -147,7 +147,7 @@ class RequestService {
           const recordCreatedTime = record.get("Created time");
           const volunteerIds = record.get("Assigned Volunteer");
 
-          volunteerIds.map((id) => {
+          volunteerIds.forEach((id) => {
             if (!taskStats.has(id)) {
               taskStats.set(id, { count: 1, lastDate: recordCreatedTime });
             } else {
