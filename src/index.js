@@ -186,13 +186,15 @@ async function checkForNewSubmissions() {
         )`,
     })
     .eachPage(async (records, nextPage) => {
-      const mappedRecords = records.map((r) => new Request(r));
+      if (!records.length) return;
+
+      const newSubmissions = records.map((r) => new Request(r));
 
       // Get the amount of tasks assigned to each volunteer
       const volunteerTaskCounts = await requestService.getVolunteerTaskCounts();
 
       // Look for records that have not been posted to slack yet
-      for (const record of mappedRecords) {
+      for (const record of newSubmissions) {
         let requestWithCoords;
         try {
           requestWithCoords = await requestService.resolveAndUpdateCoords(
