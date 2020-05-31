@@ -36,6 +36,7 @@ const mockVolunteers = [
     Name: "Jan",
     Distance: 4.2,
     Number: "212-222-2222",
+    Language: "Greek",
   },
   {
     record: { id: 42 },
@@ -43,6 +44,7 @@ const mockVolunteers = [
     Name: "Joe",
     Distance: 4.2,
     Number: "+1 212-222-2222",
+    Language: "Greek",
   },
   {
     record: { id: 42 },
@@ -50,6 +52,7 @@ const mockVolunteers = [
     Name: "Mary",
     Distance: 4.2,
     Number: "(212) 222-2222",
+    Language: "Spanish",
   },
   {
     record: { id: 42 },
@@ -57,6 +60,7 @@ const mockVolunteers = [
     Name: "Jill",
     Distance: 4.2,
     Number: "+1 (212) 222-2222",
+    Language: "Spanish",
   },
   {
     record: { id: 42 },
@@ -64,6 +68,7 @@ const mockVolunteers = [
     Name: "Steven",
     Distance: 4.2,
     Number: "2122222222",
+    Language: "Bengali",
   },
   {
     record: { id: 42 },
@@ -71,6 +76,7 @@ const mockVolunteers = [
     Name: "Nancy",
     Distance: 4.2,
     Number: "+12122222222",
+    Language: "Urdu",
   },
   {
     record: { id: 42 },
@@ -78,6 +84,7 @@ const mockVolunteers = [
     Name: "Jane",
     Distance: 4.2,
     Number: "+121222222222",
+    Language: "Italian",
   },
   {
     record: { id: 42 },
@@ -85,6 +92,7 @@ const mockVolunteers = [
     Name: "Anthony",
     Distance: 4.2,
     Number: "n/a",
+    Language: "English",
   },
   {
     record: { id: 42 },
@@ -92,6 +100,7 @@ const mockVolunteers = [
     Name: "Jason",
     Distance: 4.2,
     Number: undefined,
+    Language: "Cantonese",
   },
 ];
 
@@ -440,6 +449,36 @@ describe("The volunteers message", () => {
 
       volunteerSections.map((section) =>
         expect(validateSection(section)).toBe(true)
+      );
+    });
+
+    test("Volunteers list elements should display volunteer language icon", () => {
+      const mockTaskCount = new Map([["24", 2]]);
+
+      const volunteerSections = message.getVolunteers(
+        mockVolunteers,
+        mockTaskCount
+      );
+
+      volunteerSections.map((section) =>
+        expect(section.text.text).toEqual(
+          expect.stringContaining(":speaking_head_in_silhouette:")
+        )
+      );
+    });
+
+    test("Volunteers list elements should display volunteer language", () => {
+      const mockTaskCount = new Map([["24", 2]]);
+
+      const volunteerSections = message.getVolunteers(
+        mockVolunteers,
+        mockTaskCount
+      );
+
+      volunteerSections.map((section) =>
+        expect(section.text.text).not.toEqual(
+          expect.stringContaining("undefined")
+        )
       );
     });
   });
