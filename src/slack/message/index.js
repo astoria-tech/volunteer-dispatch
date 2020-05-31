@@ -261,11 +261,11 @@ const getVolunteerHeading = (volunteers) => {
  * Format volunteer section for slack.
  *
  * @param {Array} volunteers The volunteers to format the heading for.
- * @param {Map} taskCounts A map of volunteers to the amount of their assigned tasks.
- * @returns {Array} The formatted volunteer section object.
+ * @param {Map} taskStats Volunteer IDs mapped to stats about tasks they've been assigned.
+ * @returns {Array} A array of formatted volunteer section objects.
  */
-const getVolunteers = (volunteers, taskCounts) => {
-  if (!volunteers || !volunteers.length || !taskCounts) {
+const getVolunteers = (volunteers, taskStats) => {
+  if (!volunteers || !volunteers.length || !taskStats) {
     const noneFoundText =
       "*No volunteers match this request!*\n*Check the full Airtable record, there might be more info there.*";
 
@@ -280,13 +280,24 @@ const getVolunteers = (volunteers, taskCounts) => {
       typeof volunteer.Distance === "number"
         ? `${volunteer.Distance.toFixed(2)} Mi.`
         : "Distance N/A";
-    const taskCount = taskCounts.has(volunteer.Id)
-      ? pluralize(taskCounts.get(volunteer.Id), "assigned task")
-      : pluralize(0, "assigned task");
 
-    const volunteerLine = `:wave: ${volunteerLink}\n 
-    ${displayNumber} - ${volunteerDistance} - ${taskCount}`;
-    const volunteerSection = getSection(volunteerLine);
+    let count, lastDate;
+    if (taskStats.has(volunteer.Id)) {
+      const stats = taskStats.get(volunteer.Id);
+
+      count = `${stats.count} assigned`;
+      lastDate = `(last on ${new Date(stats.lastDate).toLocaleDateString()})`;
+    } else {
+      count = "0 assigned";
+      lastDate = "";
+    }
+
+    const volunteerDetails =
+      `:wave: ${volunteerLink}\n` +
+      `:pushpin: ${displayNumber} - ${volunteerDistance}\n` +
+      `:chart_with_upwards_trend: ${count} ${lastDate}\n`;
+
+    const volunteerSection = getSection(volunteerDetails);
 
     return volunteerSection;
   });

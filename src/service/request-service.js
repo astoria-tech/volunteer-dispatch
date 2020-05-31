@@ -130,12 +130,12 @@ class RequestService {
   }
 
   /**
-   * Get the number of tasks assigned to each volunteer.
+   * Gets stats related to a volunteer's assigned tasks.
    *
-   * @returns {Map.<string, number>} A map of volunteer keys and task count values.
+   * @returns {Map.<string, {count: number, lastDate: string}>} A map of volunteer keys and task stats.
    */
-  async getVolunteerTaskCounts() {
-    const taskCounts = new Map();
+  async getVolunteerTaskStats() {
+    const taskStats = new Map();
 
     await this.base
       .select({
@@ -144,21 +144,31 @@ class RequestService {
       })
       .eachPage(async (records, nextPage) => {
         records.forEach((record) => {
+          const recordCreatedTime = record.get("Created time");
           const volunteerIds = record.get("Assigned Volunteer");
 
           volunteerIds.map((id) => {
-            if (taskCounts.has(id)) {
-              const count = taskCounts.get(id);
-              taskCounts.set(id, count + 1);
+            if (!taskStats.has(id)) {
+              taskStats.set(id, { count: 1, lastDate: recordCreatedTime });
             } else {
-              taskCounts.set(id, 1);
+              const { count, lastDate } = taskStats.get(id);
+
+              if (lastDate < recordCreatedTime) {
+                taskStats.set(id, {
+                  count: count + 1,
+                  lastDate: recordCreatedTime,
+                });
+              } else {
+                taskStats.set(id, { count: count + 1, lastDate });
+              }
             }
           });
         });
+
         nextPage();
       });
 
-    return taskCounts;
+    return taskStats;
   }
 }
 

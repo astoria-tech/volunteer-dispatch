@@ -189,9 +189,7 @@ async function checkForNewSubmissions() {
       if (!records.length) return;
 
       const newSubmissions = records.map((r) => new Request(r));
-
-      // Get the amount of tasks assigned to each volunteer
-      const volunteerTaskCounts = await requestService.getVolunteerTaskCounts();
+      const volunteerTaskStats = await requestService.getVolunteerTaskStats();
 
       // Look for records that have not been posted to slack yet
       for (const record of newSubmissions) {
@@ -229,7 +227,7 @@ async function checkForNewSubmissions() {
             await sendDispatch(
               requestWithCoords,
               volunteers,
-              volunteerTaskCounts,
+              volunteerTaskStats,
               true
             );
             reminder = true;
@@ -237,7 +235,7 @@ async function checkForNewSubmissions() {
             await sendDispatch(
               requestWithCoords,
               volunteers,
-              volunteerTaskCounts
+              volunteerTaskStats
             );
           }
 
