@@ -135,26 +135,30 @@ class RequestService {
    * @returns {Map.<string, number>} A map of volunteer keys and task count values.
    */
   async getVolunteerTaskCounts() {
-    const volunteerCounts = new Map();
+    const taskCounts = new Map();
+
     await this.base
       .select({
         view: config.AIRTABLE_REQUESTS_VIEW_NAME,
-        filterByFormula:
-          "AND({Status} != 'Completed', {Assigned Volunteer} != '')",
+        filterByFormula: "{Assigned Volunteer} != ''",
       })
       .eachPage(async (records, nextPage) => {
         records.forEach((record) => {
-          const volunteerReference = record.get("Assigned Volunteer")[0];
-          if (volunteerCounts.has(volunteerReference)) {
-            const amount = volunteerCounts.get(volunteerReference);
-            volunteerCounts.set(volunteerReference, amount + 1);
-          } else {
-            volunteerCounts.set(volunteerReference, 1);
-          }
+          const volunteerIds = record.get("Assigned Volunteer");
+
+          volunteerIds.map((id) => {
+            if (taskCounts.has(id)) {
+              const count = taskCounts.get(id);
+              taskCounts.set(id, count + 1);
+            } else {
+              taskCounts.set(id, 1);
+            }
+          });
         });
         nextPage();
       });
-    return volunteerCounts;
+
+    return taskCounts;
   }
 }
 
