@@ -475,9 +475,11 @@ describe("The volunteers message", () => {
         mockTaskCount
       );
 
+      console.log("volSec", volunteerSections);
+
       volunteerSections.map((section) =>
         expect(section.text.text).not.toEqual(
-          expect.stringContaining("undefined")
+          expect.stringContaining(":speaking_head_in_silhouette: undefined")
         )
       );
     });
