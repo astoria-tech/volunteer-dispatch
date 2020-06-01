@@ -476,8 +476,8 @@ describe("The volunteers message", () => {
       );
 
       volunteerSections.map((section) =>
-        expect(section.text.text).toEqual(
-          expect.not.stringContaining("undefined")
+        expect(section.text.text).not.toEqual(
+          expect.stringContaining("undefined")
         )
       );
     });
