@@ -2,6 +2,7 @@
 require("dotenv").config();
 const config = require("../../config");
 const { getDisplayNumber } = require("./phone-number-utils");
+const { getElapsedTime } = require("./date-utils");
 
 /**
  * Format section message for slack
@@ -57,18 +58,6 @@ const getTaskOrder = (record) => {
       `:bellhop_bell: This is *Task ${record.get("Task Order")}* of the Request`
     );
   }
-};
-
-/**
- * Pluralize strings.
- *
- * @param {number} num The number associated with the string.
- * @param {string} str The message to pluralize.
- * @returns {string} The pluralized string.
- */
-const pluralize = (num, str) => {
-  const sMaybe = num === 1 ? "" : "s";
-  return `${num} ${str}${sMaybe}`;
 };
 
 /**
@@ -258,14 +247,51 @@ const getVolunteerHeading = (volunteers) => {
 };
 
 /**
+ * Format the volunteer's distance for display in Slack message.
+ *
+ * @param distance
+ * @param {number} Volunteer's distance from request.
+ * @returns {string} Distance formatted for display in Slack message.
+ */
+const formatDistance = (distance) => {
+  return typeof distance === "number"
+    ? `${distance.toFixed(2)} Mi.`
+    : "Distance N/A";
+};
+
+/**
+ * Format volunteer stats for display in Slack message.
+ *
+ * @param {string} Volunteer's Airtable ID.
+ * @param volunteerId
+ * @param {Map} taskStats Volunteer IDs mapped to stats about tasks they've been assigned.
+ * @returns {object} Volunteer stats formatted for display in Slack message.
+ */
+const formatStats = (volunteerId, taskStats) => {
+  let count;
+  let lastDate;
+  if (taskStats.has(volunteerId)) {
+    const stats = taskStats.get(volunteerId);
+
+    count = `${stats.count} assigned`;
+    lastDate = `(last ${getElapsedTime(stats.lastDate)})`;
+  } else {
+    count = "0 assigned";
+    lastDate = "";
+  }
+
+  return { count, lastDate };
+};
+
+/**
  * Format volunteer section for slack.
  *
  * @param {Array} volunteers The volunteers to format the heading for.
- * @param {Map} taskCounts A map of volunteers to the amount of their assigned tasks.
- * @returns {Array} The formatted volunteer section object.
+ * @param {Map} taskStats Volunteer IDs mapped to stats about tasks they've been assigned.
+ * @returns {Array} A array of formatted volunteer section objects.
  */
-const getVolunteers = (volunteers, taskCounts) => {
-  if (!volunteers || !volunteers.length || !taskCounts) {
+const getVolunteers = (volunteers, taskStats) => {
+  if (!volunteers || !volunteers.length || !taskStats) {
     const noneFoundText =
       "*No volunteers match this request!*\n*Check the full Airtable record, there might be more info there.*";
 
@@ -276,21 +302,19 @@ const getVolunteers = (volunteers, taskCounts) => {
     const volunteerURL = `${config.AIRTABLE_VOLUNTEERS_VIEW_URL}/${volunteer.record.id}`;
     const volunteerLink = `<${volunteerURL}|${volunteer.Name}>`;
     const displayNumber = getDisplayNumber(volunteer.Number);
-    const volunteerDistance =
-      typeof volunteer.Distance === "number"
-        ? `${volunteer.Distance.toFixed(2)} Mi.`
-        : "Distance N/A";
+    const volunteerDistance = formatDistance(volunteer.Distance);
     const volunteerLanguage = volunteer.Language
       ? volunteer.Language
       : "English";
-    const taskCount = taskCounts.has(volunteer.Id)
-      ? pluralize(taskCounts.get(volunteer.Id), "assigned task")
-      : pluralize(0, "assigned task");
+    const displayStats = formatStats(volunteer.Id, taskStats);
 
-    const volunteerLine = `:wave: ${volunteerLink}\n 
-      ${displayNumber} - ${volunteerDistance} - :speaking_head_in_silhouette: ${volunteerLanguage}\n
-      ${taskCount}\n`;
-    const volunteerSection = getSection(volunteerLine);
+    const volunteerDetails =
+      `:wave: ${volunteerLink}\n` +
+      `:pushpin: ${displayNumber} - ${volunteerDistance}\n` +
+      `:speaking_head_in_silhouette: ${volunteerLanguage}\n` +
+      `:chart_with_upwards_trend: ${displayStats.count} ${displayStats.lastDate}\n`;
+
+    const volunteerSection = getSection(volunteerDetails);
 
     return volunteerSection;
   });
