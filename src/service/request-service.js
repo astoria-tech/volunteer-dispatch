@@ -130,31 +130,45 @@ class RequestService {
   }
 
   /**
-   * Get the number of tasks assigned to each volunteer.
+   * Gets stats related to a volunteer's assigned tasks.
    *
-   * @returns {Map.<string, number>} A map of volunteer keys and task count values.
+   * @returns {Map.<string, {count: number, lastDate: string}>} Volunteer ids and task stats.
    */
-  async getVolunteerTaskCounts() {
-    const volunteerCounts = new Map();
+  async getVolunteerTaskStats() {
+    const taskStats = new Map();
+
     await this.base
       .select({
         view: config.AIRTABLE_REQUESTS_VIEW_NAME,
-        filterByFormula:
-          "AND({Status} != 'Completed', {Assigned Volunteer} != '')",
+        filterByFormula: "{Assigned Volunteer} != ''",
       })
       .eachPage(async (records, nextPage) => {
         records.forEach((record) => {
-          const volunteerReference = record.get("Assigned Volunteer")[0];
-          if (volunteerCounts.has(volunteerReference)) {
-            const amount = volunteerCounts.get(volunteerReference);
-            volunteerCounts.set(volunteerReference, amount + 1);
-          } else {
-            volunteerCounts.set(volunteerReference, 1);
-          }
+          const recordCreatedTime = record.get("Created time");
+          const volunteerIds = record.get("Assigned Volunteer");
+
+          volunteerIds.forEach((id) => {
+            if (!taskStats.has(id)) {
+              taskStats.set(id, { count: 1, lastDate: recordCreatedTime });
+            } else {
+              const { count, lastDate } = taskStats.get(id);
+
+              if (lastDate < recordCreatedTime) {
+                taskStats.set(id, {
+                  count: count + 1,
+                  lastDate: recordCreatedTime,
+                });
+              } else {
+                taskStats.set(id, { count: count + 1, lastDate });
+              }
+            }
+          });
         });
+
         nextPage();
       });
-    return volunteerCounts;
+
+    return taskStats;
   }
 }
 
