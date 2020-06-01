@@ -2,6 +2,7 @@
 require("dotenv").config();
 const config = require("../../config");
 const { getDisplayNumber } = require("./phone-number-utils");
+const { getElapsedTime } = require("./date-utils");
 
 /**
  * Format section message for slack
@@ -57,18 +58,6 @@ const getTaskOrder = (record) => {
       `:bellhop_bell: This is *Task ${record.get("Task Order")}* of the Request`
     );
   }
-};
-
-/**
- * Pluralize strings.
- *
- * @param {number} num The number associated with the string.
- * @param {string} str The message to pluralize.
- * @returns {string} The pluralized string.
- */
-const pluralize = (num, str) => {
-  const sMaybe = num === 1 ? "" : "s";
-  return `${num} ${str}${sMaybe}`;
 };
 
 /**
@@ -258,6 +247,40 @@ const getVolunteerHeading = (volunteers) => {
 };
 
 /**
+ * Format the volunteer's distance for display in Slack message.
+ *
+ * @param {number} Volunteer's distance from request.
+ * @returns {string} Distance formatted for display in Slack message.
+ */
+const formatDistance = (distance) => {
+  return typeof distance === "number"
+    ? `${distance.toFixed(2)} Mi.`
+    : "Distance N/A";
+};
+
+/**
+ * Format volunteer stats for display in Slack message.
+ *
+ * @param {string} Volunteer's Airtable ID.
+ * @param {Map} taskStats Volunteer IDs mapped to stats about tasks they've been assigned.
+ * @returns {object} Volunteer stats formatted for display in Slack message.
+ */
+const formatStats = (volunteerId, taskStats) => {
+  let count, lastDate;
+  if (taskStats.has(volunteerId)) {
+    const stats = taskStats.get(volunteerId);
+
+    count = `${stats.count} assigned`;
+    lastDate = `(last ${getElapsedTime(stats.lastDate)})`;
+  } else {
+    count = "0 assigned";
+    lastDate = "";
+  }
+
+  return { count, lastDate };
+};
+
+/**
  * Format volunteer section for slack.
  *
  * @param {Array} volunteers The volunteers to format the heading for.
@@ -276,26 +299,13 @@ const getVolunteers = (volunteers, taskStats) => {
     const volunteerURL = `${config.AIRTABLE_VOLUNTEERS_VIEW_URL}/${volunteer.record.id}`;
     const volunteerLink = `<${volunteerURL}|${volunteer.Name}>`;
     const displayNumber = getDisplayNumber(volunteer.Number);
-    const volunteerDistance =
-      typeof volunteer.Distance === "number"
-        ? `${volunteer.Distance.toFixed(2)} Mi.`
-        : "Distance N/A";
-
-    let count, lastDate;
-    if (taskStats.has(volunteer.Id)) {
-      const stats = taskStats.get(volunteer.Id);
-
-      count = `${stats.count} assigned`;
-      lastDate = `(last on ${new Date(stats.lastDate).toLocaleDateString()})`;
-    } else {
-      count = "0 assigned";
-      lastDate = "";
-    }
+    const volunteerDistance = formatDistance(volunteer.Distance);
+    const displayStats = formatStats(volunteer.Id, taskStats);
 
     const volunteerDetails =
       `:wave: ${volunteerLink}\n` +
       `:pushpin: ${displayNumber} - ${volunteerDistance}\n` +
-      `:chart_with_upwards_trend: ${count} ${lastDate}\n`;
+      `:chart_with_upwards_trend: ${displayStats.count} ${displayStats.lastDate}\n`;
 
     const volunteerSection = getSection(volunteerDetails);
 
