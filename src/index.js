@@ -3,6 +3,7 @@ const Airtable = require("airtable");
 const Task = require("./task");
 const config = require("./config");
 const AirtableUtils = require("./airtable-utils");
+const { filterByLanguage } = require("./languageFilter");
 const http = require("./http");
 const { getCoords, distanceBetweenCoords } = require("./geo");
 const { logger } = require("./logger");
@@ -159,20 +160,7 @@ async function findVolunteers(request) {
     });
 
   // Filter the volunteers by language, then sort by distance and grab the closest 10
-  const volFilteredByLanguage =
-    request.get("Language") && request.get("Language") !== "English"
-      ? volunteerDistances.filter((volunteerAndDistance) => {
-          const volunteer = volunteerAndDistance[0];
-          const volLanguages = volunteer.get(
-            "Please select any language you have verbal fluency with:"
-          );
-          if (volLanguages) {
-            return volLanguages.some(
-              (language) => language === request.get("Language")
-            );
-          }
-        })
-      : volunteerDistances;
+  const volFilteredByLanguage = filterByLanguage(request, volunteerDistances);
 
   const closestVolunteers = volFilteredByLanguage
     .sort((a, b) => a[1] - b[1])
