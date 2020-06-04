@@ -1,8 +1,8 @@
 /* eslint-disable consistent-return */
 require("dotenv").config();
 const config = require("../../config");
-const { getDisplayNumber } = require("./phone-number-utils");
-const { getElapsedTime } = require("./date-utils");
+const { getDisplayNumber } = require("../../utils/phone-number-utils");
+const { getElapsedTime } = require("../../utils/date-utils");
 
 /**
  * Format section message for slack
@@ -249,6 +249,7 @@ const getVolunteerHeading = (volunteers) => {
 /**
  * Format the volunteer's distance for display in Slack message.
  *
+ * @param distance
  * @param {number} Volunteer's distance from request.
  * @returns {string} Distance formatted for display in Slack message.
  */
@@ -262,11 +263,13 @@ const formatDistance = (distance) => {
  * Format volunteer stats for display in Slack message.
  *
  * @param {string} Volunteer's Airtable ID.
+ * @param volunteerId
  * @param {Map} taskStats Volunteer IDs mapped to stats about tasks they've been assigned.
  * @returns {object} Volunteer stats formatted for display in Slack message.
  */
 const formatStats = (volunteerId, taskStats) => {
-  let count, lastDate;
+  let count;
+  let lastDate;
   if (taskStats.has(volunteerId)) {
     const stats = taskStats.get(volunteerId);
 

@@ -1,5 +1,5 @@
 const preconditions = require("preconditions").singleton();
-const { logger } = require("./logger");
+const { logger } = require("../logger");
 
 class AirtableUtils {
   constructor(base) {

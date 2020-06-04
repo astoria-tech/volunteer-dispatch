@@ -2,11 +2,12 @@ const Airtable = require("airtable");
 
 const Task = require("./task");
 const config = require("./config");
-const AirtableUtils = require("./airtable-utils");
+const AirtableUtils = require("./utils/airtable-utils");
 const http = require("./http");
 const { getCoords, distanceBetweenCoords } = require("./geo");
 const { logger } = require("./logger");
 const Request = require("./model/request-record");
+const RequesterService = require("./service/requester-service");
 const RequestService = require("./service/request-service");
 const VolunteerService = require("./service/volunteer-service");
 
@@ -25,9 +26,13 @@ const base = new Airtable({ apiKey: config.AIRTABLE_API_KEY }).base(
   config.AIRTABLE_BASE_ID
 );
 const customAirtable = new AirtableUtils(base);
+const requesterService = new RequesterService(
+  base(config.AIRTABLE_REQUESTERS_TABLE_NAME)
+);
 const requestService = new RequestService(
   base(config.AIRTABLE_REQUESTS_TABLE_NAME),
-  customAirtable
+  customAirtable,
+  requesterService
 );
 const volunteerService = new VolunteerService(
   base(config.AIRTABLE_VOLUNTEERS_TABLE_NAME)
@@ -211,6 +216,10 @@ async function checkForNewSubmissions() {
         }
 
         logger.info(`New help request for: ${requestWithCoords.get("Name")}`);
+
+        // Can be an async operation
+        // noinspection ES6MissingAwait - no need to wait for a response.
+        requestService.linkUserWithRequest(record);
 
         // Find the closest volunteers
         const volunteers = await findVolunteers(requestWithCoords);
