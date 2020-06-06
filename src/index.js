@@ -3,6 +3,7 @@ const Airtable = require("airtable");
 const Task = require("./task");
 const config = require("./config");
 const AirtableUtils = require("./airtable-utils");
+const { filterByLanguage } = require("./languageFilter");
 const http = require("./http");
 const { getCoords, distanceBetweenCoords } = require("./geo");
 const { logger } = require("./logger");
@@ -38,16 +39,28 @@ const volunteerService = new VolunteerService(
  *
  * @param {Array} volunteerAndDistance An array with volunteer record on the 0th index and its
  * distance from requester on the 1st index
- * @returns {{Number: *, record: *, Distance: *, Name: *}} Custom volunteer fields.
+ * @param {object} request The Airtable request object.
+ * @returns {{Number: *, record: *, Distance: *, Name: *, Language: *}} Custom volunteer fields.
  */
-function volunteerWithCustomFields(volunteerAndDistance) {
+function volunteerWithCustomFields(volunteerAndDistance, request) {
   const [volunteer, distance] = volunteerAndDistance;
+  let volLanguage = request.get("Language")
+    ? request.get("Language")
+    : volunteer.get("Please select any language you have verbal fluency with:");
+
+  if (Array.isArray(volLanguage)) {
+    if (volLanguage.length > 1) {
+      volLanguage = volLanguage.join(", ");
+    }
+  }
+
   return {
     Name: volunteer.get("Full Name"),
     Number: volunteer.get("Please provide your contact phone number:"),
     Distance: distance,
     record: volunteer,
     Id: volunteer.id,
+    Language: volLanguage,
   };
 }
 
@@ -64,7 +77,9 @@ async function findVolunteers(request) {
   if (tasks && tasks.length > 0 && tasks[0].equals(Task.LONELINESS)) {
     return (await volunteerService.findVolunteersForLoneliness())
       .map((v) => [v, "N/A"])
-      .map(volunteerWithCustomFields);
+      .map((volunteerAndDistance) =>
+        volunteerWithCustomFields(volunteerAndDistance, request)
+      );
   }
 
   let errandCoords;
@@ -144,11 +159,15 @@ async function findVolunteers(request) {
       nextPage();
     });
 
-  // Sort the volunteers by distance and grab the closest 10
-  const closestVolunteers = volunteerDistances
+  // Filter the volunteers by language, then sort by distance and grab the closest 10
+  const volFilteredByLanguage = filterByLanguage(request, volunteerDistances);
+
+  const closestVolunteers = volFilteredByLanguage
     .sort((a, b) => a[1] - b[1])
     .slice(0, 10)
-    .map(volunteerWithCustomFields);
+    .map((volunteerAndDistance) =>
+      volunteerWithCustomFields(volunteerAndDistance, request)
+    );
 
   logger.info("Closest:");
   closestVolunteers.forEach((v) => {

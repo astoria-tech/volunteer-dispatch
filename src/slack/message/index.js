@@ -249,6 +249,7 @@ const getVolunteerHeading = (volunteers) => {
 /**
  * Format the volunteer's distance for display in Slack message.
  *
+ * @param distance
  * @param {number} Volunteer's distance from request.
  * @returns {string} Distance formatted for display in Slack message.
  */
@@ -262,11 +263,13 @@ const formatDistance = (distance) => {
  * Format volunteer stats for display in Slack message.
  *
  * @param {string} Volunteer's Airtable ID.
+ * @param volunteerId
  * @param {Map} taskStats Volunteer IDs mapped to stats about tasks they've been assigned.
  * @returns {object} Volunteer stats formatted for display in Slack message.
  */
 const formatStats = (volunteerId, taskStats) => {
-  let count, lastDate;
+  let count;
+  let lastDate;
   if (taskStats.has(volunteerId)) {
     const stats = taskStats.get(volunteerId);
 
@@ -300,11 +303,15 @@ const getVolunteers = (volunteers, taskStats) => {
     const volunteerLink = `<${volunteerURL}|${volunteer.Name}>`;
     const displayNumber = getDisplayNumber(volunteer.Number);
     const volunteerDistance = formatDistance(volunteer.Distance);
+    const volunteerLanguage = volunteer.Language
+      ? volunteer.Language
+      : "English";
     const displayStats = formatStats(volunteer.Id, taskStats);
 
     const volunteerDetails =
       `:wave: ${volunteerLink}\n` +
       `:pushpin: ${displayNumber} - ${volunteerDistance}\n` +
+      `:speaking_head_in_silhouette: ${volunteerLanguage}\n` +
       `:chart_with_upwards_trend: ${displayStats.count} ${displayStats.lastDate}\n`;
 
     const volunteerSection = getSection(volunteerDetails);
