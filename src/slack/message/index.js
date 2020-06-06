@@ -303,11 +303,15 @@ const getVolunteers = (volunteers, taskStats) => {
     const volunteerLink = `<${volunteerURL}|${volunteer.Name}>`;
     const displayNumber = getDisplayNumber(volunteer.Number);
     const volunteerDistance = formatDistance(volunteer.Distance);
+    const volunteerLanguage = volunteer.Language
+      ? volunteer.Language
+      : "English";
     const displayStats = formatStats(volunteer.Id, taskStats);
 
     const volunteerDetails =
       `:wave: ${volunteerLink}\n` +
       `:pushpin: ${displayNumber} - ${volunteerDistance}\n` +
+      `:speaking_head_in_silhouette: ${volunteerLanguage}\n` +
       `:chart_with_upwards_trend: ${displayStats.count} ${displayStats.lastDate}\n`;
 
     const volunteerSection = getSection(volunteerDetails);
