@@ -1,8 +1,8 @@
 /* eslint-disable consistent-return */
 require("dotenv").config();
 const config = require("../../config");
-const { getDisplayNumber } = require("./phone-number-utils");
-const { getElapsedTime } = require("./date-utils");
+const { getDisplayNumber } = require("../../utils/phone-number-utils");
+const { getElapsedTime } = require("../../utils/date-utils");
 
 /**
  * Format section message for slack
