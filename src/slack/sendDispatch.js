@@ -59,14 +59,13 @@ const sendSecondaryRequestInfo = async (record, text, threadTs) => {
  * Send volunteer info.
  *
  * @param {Array} volunteers The list of identified volunteers.
- * @param {Map} taskStats Volunteer IDs mapped to stats about tasks they've been assigned.
  * @param {string} text The message to send to slack.
  * @param {string} threadTs The threaded message object returned from slack.
  * @returns {object} The slack chat message object sent.
  */
-const sendVolunteerInfo = async (volunteers, taskStats, text, threadTs) => {
+const sendVolunteerInfo = async (volunteers, text, threadTs) => {
   const volunteerHeading = message.getVolunteerHeading(volunteers);
-  const volunteerList = message.getVolunteers(volunteers, taskStats);
+  const volunteerList = message.getVolunteers(volunteers);
   const volunteerClosing = message.getVolunteerClosing(volunteers);
 
   return bot.chat.postMessage({
@@ -101,23 +100,17 @@ const sendCopyPasteNumbers = async (volunteers, threadTs) => {
  *
  * @param {object} record The Airtable record to use.
  * @param {Array} volunteers The volunteer list selected.
- * @param {Map} taskStats Volunteer IDs mapped to stats about tasks they've been assigned.
  * @param {boolean} [reminder] Whether this is a reminder task. Defaults to false.
  * @throws {Error} If no record is provided.
  * @returns {void}
  */
-const sendDispatch = async (
-  record,
-  volunteers,
-  taskStats,
-  reminder = false
-) => {
+const sendDispatch = async (record, volunteers, reminder = false) => {
   if (!record) throw new Error("No record passed to sendMessage().");
 
   const text = message.getText({ reminder });
   const { ts } = await sendPrimaryRequestInfo(record, text, reminder);
   await sendSecondaryRequestInfo(record, text, ts);
-  await sendVolunteerInfo(volunteers, taskStats, text, ts);
+  await sendVolunteerInfo(volunteers, text, ts);
   await sendCopyPasteNumbers(volunteers, ts);
 };
 

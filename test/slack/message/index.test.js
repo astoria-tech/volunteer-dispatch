@@ -31,7 +31,7 @@ class MockRequestRecord {
 
 const mockVolunteers = [
   {
-    record: { id: 42 },
+    record: { id: 42, get: () => 0 },
     Id: 24,
     Name: "Jan",
     Distance: 4.2,
@@ -39,7 +39,7 @@ const mockVolunteers = [
     Language: "Greek",
   },
   {
-    record: { id: 42 },
+    record: { id: 42, get: () => 0 },
     Id: 25,
     Name: "Joe",
     Distance: 4.2,
@@ -47,7 +47,7 @@ const mockVolunteers = [
     Language: "Greek",
   },
   {
-    record: { id: 42 },
+    record: { id: 42, get: () => 0 },
     Id: 26,
     Name: "Mary",
     Distance: 4.2,
@@ -55,7 +55,7 @@ const mockVolunteers = [
     Language: "Spanish",
   },
   {
-    record: { id: 42 },
+    record: { id: 42, get: () => 0 },
     Id: 27,
     Name: "Jill",
     Distance: 4.2,
@@ -63,7 +63,7 @@ const mockVolunteers = [
     Language: "Spanish",
   },
   {
-    record: { id: 42 },
+    record: { id: 42, get: () => 0 },
     Id: 28,
     Name: "Steven",
     Distance: 4.2,
@@ -71,7 +71,7 @@ const mockVolunteers = [
     Language: "Bengali",
   },
   {
-    record: { id: 42 },
+    record: { id: 42, get: () => 0 },
     Id: 29,
     Name: "Nancy",
     Distance: 4.2,
@@ -79,7 +79,7 @@ const mockVolunteers = [
     Language: "Urdu",
   },
   {
-    record: { id: 42 },
+    record: { id: 42, get: () => 0 },
     Id: 30,
     Name: "Jane",
     Distance: 4.2,
@@ -87,7 +87,7 @@ const mockVolunteers = [
     Language: "Italian",
   },
   {
-    record: { id: 42 },
+    record: { id: 42, get: () => 0 },
     Id: 31,
     Name: "Anthony",
     Distance: 4.2,
@@ -95,7 +95,7 @@ const mockVolunteers = [
     Language: "English",
   },
   {
-    record: { id: 42 },
+    record: { id: 42, get: () => 0 },
     Id: 32,
     Name: "Jason",
     Distance: 4.2,

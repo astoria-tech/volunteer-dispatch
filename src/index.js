@@ -213,7 +213,6 @@ async function checkForNewSubmissions() {
       if (!records.length) return;
 
       const newSubmissions = records.map((r) => new Request(r));
-      const volunteerTaskStats = await requestService.getVolunteerTaskStats();
 
       // Look for records that have not been posted to slack yet
       for (const record of newSubmissions) {
@@ -252,19 +251,10 @@ async function checkForNewSubmissions() {
             Date.now() > record.get("Reminder Date/Time") &&
             record.get("Posted to Slack?") === "yes"
           ) {
-            await sendDispatch(
-              requestWithCoords,
-              volunteers,
-              volunteerTaskStats,
-              true
-            );
+            await sendDispatch(requestWithCoords, volunteers, true);
             reminder = true;
           } else {
-            await sendDispatch(
-              requestWithCoords,
-              volunteers,
-              volunteerTaskStats
-            );
+            await sendDispatch(requestWithCoords, volunteers);
           }
 
           messageSent = true;
