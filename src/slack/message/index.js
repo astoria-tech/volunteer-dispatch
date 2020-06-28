@@ -262,19 +262,17 @@ const formatDistance = (distance) => {
 /**
  * Format volunteer stats for display in Slack message.
  *
- * @param {string} Volunteer's Airtable ID.
- * @param volunteerId
- * @param {Map} taskStats Volunteer IDs mapped to stats about tasks they've been assigned.
+ * @param {object} volunteer Volunteer's Airtable record.
  * @returns {object} Volunteer stats formatted for display in Slack message.
  */
-const formatStats = (volunteerId, taskStats) => {
+const formatStats = (volunteer) => {
   let count;
   let lastDate;
-  if (taskStats.has(volunteerId)) {
-    const stats = taskStats.get(volunteerId);
-
-    count = `${stats.count} assigned`;
-    lastDate = `(last ${getElapsedTime(stats.lastDate)})`;
+  const { record } = volunteer;
+  const requests = record.get("Requests count");
+  if (requests > 0) {
+    count = `${requests} assigned`;
+    lastDate = `(last ${getElapsedTime(record.get("Latest Request"))})`;
   } else {
     count = "0 assigned";
     lastDate = "";
@@ -287,11 +285,10 @@ const formatStats = (volunteerId, taskStats) => {
  * Format volunteer section for slack.
  *
  * @param {Array} volunteers The volunteers to format the heading for.
- * @param {Map} taskStats Volunteer IDs mapped to stats about tasks they've been assigned.
  * @returns {Array} A array of formatted volunteer section objects.
  */
-const getVolunteers = (volunteers, taskStats) => {
-  if (!volunteers || !volunteers.length || !taskStats) {
+const getVolunteers = (volunteers) => {
+  if (!volunteers || !volunteers.length) {
     const noneFoundText =
       "*No volunteers match this request!*\n*Check the full Airtable record, there might be more info there.*";
 
@@ -306,7 +303,7 @@ const getVolunteers = (volunteers, taskStats) => {
     const volunteerLanguage = volunteer.Language
       ? volunteer.Language
       : "English";
-    const displayStats = formatStats(volunteer.Id, taskStats);
+    const displayStats = formatStats(volunteer);
 
     const volunteerDetails =
       `:wave: ${volunteerLink}\n` +

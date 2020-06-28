@@ -139,48 +139,6 @@ class RequestService {
   }
 
   /**
-   * Gets stats related to a volunteer's assigned tasks.
-   *
-   * @returns {Map.<string, {count: number, lastDate: string}>} Volunteer ids and task stats.
-   */
-  async getVolunteerTaskStats() {
-    const taskStats = new Map();
-
-    await this.base
-      .select({
-        view: config.AIRTABLE_REQUESTS_VIEW_NAME,
-        filterByFormula: "{Assigned Volunteer} != ''",
-      })
-      .eachPage(async (records, nextPage) => {
-        records.forEach((record) => {
-          const recordCreatedTime = record.get("Created time");
-          const volunteerIds = record.get("Assigned Volunteer");
-
-          volunteerIds.forEach((id) => {
-            if (!taskStats.has(id)) {
-              taskStats.set(id, { count: 1, lastDate: recordCreatedTime });
-            } else {
-              const { count, lastDate } = taskStats.get(id);
-
-              if (lastDate < recordCreatedTime) {
-                taskStats.set(id, {
-                  count: count + 1,
-                  lastDate: recordCreatedTime,
-                });
-              } else {
-                taskStats.set(id, { count: count + 1, lastDate });
-              }
-            }
-          });
-        });
-
-        nextPage();
-      });
-
-    return taskStats;
-  }
-
-  /**
    * Links a user to the request.
    * We try to identify the User by the requester's phone number first, followed by name.
    * A new user is created if they don't already exist in the system.
