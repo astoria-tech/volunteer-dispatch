@@ -31,6 +31,7 @@
     "google-libphonenumber": "^3.2.8",
     "moment": "^2.26.0",
     "node-geocoder": "^3.25.1",
+    "phone": "^2.4.12",
     "preconditions": "^2.2.3",
     "qs": "^6.9.3",
     "random-js": "^2.1.0",
