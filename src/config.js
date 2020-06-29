@@ -51,6 +51,10 @@ const config = {
   SLACK_SIGNING_SECRET: process.env.SLACK_SIGNING_SECRET,
   SLACK_CHANNEL_ID: process.env.SLACK_CHANNEL_ID,
   SLACK_ALERT_CHANNEL_ID: process.env.SLACK_ALERT_CHANNEL_ID,
+
+  // Twilio
+  TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID,
+  TWILIO_AUTH_TOKEN: process.env.TWILIO_AUTH_TOKEN,
 };
 
 module.exports = Object.freeze(config);
