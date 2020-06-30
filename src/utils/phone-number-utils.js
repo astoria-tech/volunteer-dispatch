@@ -1,5 +1,6 @@
 const PNF = require("google-libphonenumber").PhoneNumberFormat;
 const phoneUtil = require("google-libphonenumber").PhoneNumberUtil.getInstance();
+const phone = require("phone");
 
 /**
  * Parse phone numbers
@@ -40,6 +41,17 @@ const getDisplayNumber = (rawInput) => {
   return displayNumber;
 };
 
+/**
+ * Normalizes mobile phone number into E.164 format
+ *
+ * @param {string} phoneNumber - Mobile phone number
+ * @returns {string} E.164-formatted mobile phone number
+ */
+const formatPhoneNumber = (phoneNumber) => {
+  return phone(phoneNumber)[0];
+};
+
 module.exports = {
   getDisplayNumber,
+  formatPhoneNumber,
 };
