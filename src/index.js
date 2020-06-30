@@ -11,6 +11,7 @@ const Request = require("./model/request-record");
 const RequesterService = require("./service/requester-service");
 const RequestService = require("./service/request-service");
 const VolunteerService = require("./service/volunteer-service");
+const { formatPhoneNumber } = require("./utils/phone-number-utils");
 
 const { sendDispatch } = require("./slack/sendDispatch");
 require("dotenv").config();
@@ -283,6 +284,79 @@ async function checkForNewSubmissions() {
         }
       }
 
+      nextPage();
+    });
+
+  // Check Airtable for tasks completed in the last day, then send volunteer
+  // a followup text
+  base(config.AIRTABLE_REQUESTS_TABLE_NAME)
+    .select({
+      view: config.AIRTABLE_REQUESTS_VIEW_NAME,
+      filterByFormula: `
+        AND(
+          {Status} = 'Completed',
+          IS_AFTER({Last modified time}, (DATEADD(TODAY(), -1, 'days'))),
+          {Followup SMS Sent?} = 'No'
+        )`,
+    })
+    .eachPage(async (records, nextPage) => {
+      if (!records.length) return;
+
+      for (const record of records) {
+        const volunteerId = record.get("Assigned Volunteer")[0];
+
+        base(config.AIRTABLE_VOLUNTEERS_TABLE_NAME).find(volunteerId, function (
+          err,
+          rec
+        ) {
+          if (err) {
+            logger.error(err);
+            return;
+          }
+          const accountSid = config.TWILIO_ACCOUNT_SID;
+          const authToken = config.TWILIO_AUTH_TOKEN;
+          const client = require("twilio")(accountSid, authToken);
+          const phoneNumber = rec.get(
+            "Please provide your contact phone number:"
+          );
+          const formattedPhoneNumber = formatPhoneNumber(phoneNumber);
+
+          logger.info(`Sending followup text to: ${formattedPhoneNumber}`);
+          client.messages
+            .create({
+              body: "Thank you for being a great neighbor!",
+              from: config.TWILIO_PHONE_NUMBER,
+              to: formattedPhoneNumber,
+            })
+            .then((message) => {
+              logger.info(`Message SID: ${message.sid}`);
+              base(config.AIRTABLE_REQUESTS_TABLE_NAME).update(
+                [
+                  {
+                    id: record.id,
+                    fields: {
+                      "Followup SMS Sent?": "Yes",
+                    },
+                  },
+                ],
+                function (err, records) {
+                  if (err) {
+                    logger.error(err);
+                    return;
+                  }
+                  records.forEach(function (record) {
+                    logger.info(
+                      `Followup text sent?: ${record.get("Followup SMS Sent?")}`
+                    );
+                  });
+                }
+              );
+            })
+            .catch((error) => {
+              logger.error(`onRejected function called: ${error.message}`);
+            });
+        });
+      }
       nextPage();
     });
 }
