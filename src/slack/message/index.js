@@ -249,7 +249,8 @@ const getVolunteerHeading = (volunteers) => {
 /**
  * Format the volunteer's distance for display in Slack message.
  *
- * @param {number} distance Volunteer's distance from request.
+ * @param distance
+ * @param {number} Volunteer's distance from request.
  * @returns {string} Distance formatted for display in Slack message.
  */
 const formatDistance = (distance) => {
@@ -303,16 +304,9 @@ const getVolunteers = (volunteers) => {
       ? volunteer.Language
       : "English";
     const displayStats = formatStats(volunteer);
-    const hasCar = Array.from(
-      volunteer.record.get(
-        "Do you have a private mode of transportation with valid license/insurance? "
-      )
-    ).includes("Yes, I have a car")
-      ? " :car:"
-      : "";
 
     const volunteerDetails =
-      `:wave:${hasCar} ${volunteerLink}\n` +
+      `:wave: ${volunteerLink}\n` +
       `:pushpin: ${displayNumber} - ${volunteerDistance}\n` +
       `:speaking_head_in_silhouette: ${volunteerLanguage}\n` +
       `:chart_with_upwards_trend: ${displayStats.count} ${displayStats.lastDate}\n`;
