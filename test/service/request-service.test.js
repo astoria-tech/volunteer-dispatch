@@ -44,7 +44,7 @@ describe("RequestService", () => {
       );
       when(mockAirtableGet)
         .calledWith("Tasks")
-        .mockReturnValue([Task.possibleTasks[0]]);
+        .mockReturnValue([Task.possibleTasks[0].rawTask]);
       request = new RequestRecord(mockAirtableRequest);
       await expect(service.splitMultiTaskRequest(request)).rejects.toThrow(
         "Illegal Argument."
@@ -58,7 +58,10 @@ describe("RequestService", () => {
       ];
       when(mockAirtableGet)
         .calledWith("Tasks")
-        .mockReturnValue([Task.possibleTasks[0], Task.possibleTasks[1]]);
+        .mockReturnValue([
+          Task.possibleTasks[0].rawTask,
+          Task.possibleTasks[1].rawTask,
+        ]);
       const request = new RequestRecord(mockAirtableRequest);
       const newRecords = [
         { fields: { Tasks: Task.possibleTasks[0] } },
