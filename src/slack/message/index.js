@@ -306,7 +306,7 @@ const getVolunteers = (volunteers) => {
     const hasCar = Array.from(
       volunteer.record.get(
         "Do you have a private mode of transportation with valid license/insurance? "
-      )
+      ) || []
     ).includes("Yes, I have a car")
       ? " :car:"
       : "";
