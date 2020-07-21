@@ -108,6 +108,11 @@ const cache = {};
 Task.possibleTasks.forEach((errand) => {
   cache[errand.rawTask] = errand;
 });
-Task.mapFromRawTask = (rawTask) => cache[rawTask];
+Task.mapFromRawTask = (rawTask) => {
+  return (
+    cache[rawTask] ||
+    new Task(rawTask, ["Unrecognized task so it's unsupportable"])
+  );
+};
 
 module.exports = Task;
