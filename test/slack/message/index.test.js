@@ -250,7 +250,7 @@ describe("The primary message", () => {
     // only regular tasks passed
     test("If standard tasks are passed in, a standard list is returned", () => {
       const requester = new MockRequestRecord();
-      const taskList = ["Dog walking", "Grocery shopping"];
+      const taskList = ["Dog walking", "Food Assistance"];
       requester.set("Tasks", taskList);
 
       const getFormattedTasks = message.__get__("formatTasks");
@@ -280,7 +280,7 @@ describe("The primary message", () => {
     // mix of regular and other task passed
     test("If an 'Other' task is passed along with regular tasks, the task list plus the warning is returned", () => {
       const requester = new MockRequestRecord();
-      const taskList = ["Grocery shopping", "Other"];
+      const taskList = ["Food Assistance", "Other"];
       requester.set("Tasks", taskList);
       requester.set("Task - other", "Moving house");
 
