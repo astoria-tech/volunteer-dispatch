@@ -66,7 +66,7 @@ const doesVolunteerHaveACar = (volunteer) => {
   return false;
 };
 
-Task.GROCERY_SHOPPING = new Task("Grocery shopping", [
+Task.GROCERY_SHOPPING = new Task("Food Assistance", [
   "Picking up groceries/medications",
 ]);
 Task.PRESCRIPTION_PICKUP = new Task("Picking up a prescription", [
@@ -109,10 +109,7 @@ Task.possibleTasks.forEach((errand) => {
   cache[errand.rawTask] = errand;
 });
 Task.mapFromRawTask = (rawTask) => {
-  return (
-    cache[rawTask] ||
-    new Task(rawTask, ["Unrecognized task so it's unsupportable"])
-  );
+  return cache[rawTask] || new Task(rawTask, []);
 };
 
 module.exports = Task;
