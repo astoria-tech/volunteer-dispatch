@@ -11,3 +11,7 @@ build: ## Build Docker services.
 
 run: ## Start Docker services.
 	docker-compose up
+
+pr: ## Prepare for pull request
+	npm run lint
+	npm run test
