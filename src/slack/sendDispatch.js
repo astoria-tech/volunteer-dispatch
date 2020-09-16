@@ -12,69 +12,44 @@ const channel = config.SLACK_CHANNEL_ID;
  * @param {object} record The request record object.
  * @param {string} text The message to send to slack.
  * @param {boolean} reminder The reminder object.
- * @returns {object} The slack post object sent.
+ * @returns {object} Block to send to slack.
  */
-const sendPrimaryRequestInfo = async (record, text, reminder) => {
+const getPrimaryRequestInfoBlock = (record, text, reminder) => {
   const heading = message.getHeading({ reminder, text });
   const taskOrder = message.getTaskOrder(record);
   const requester = message.getRequester(record);
   const tasks = message.getTasks(record);
   const requestedTimeframe = message.getTimeframe(record);
-  const blocks = taskOrder
+  return taskOrder
     ? [heading, taskOrder, requester, tasks, requestedTimeframe, followUpButton]
     : [heading, requester, tasks, requestedTimeframe, followUpButton];
-
-  const res = await bot.chat.postMessage({
-    token,
-    channel,
-    text,
-    blocks,
-  });
-
-  return res;
 };
 
 /**
  * Send secondary request info.
  *
  * @param {object} record The request record object.
- * @param {string} text The message to send to slack.
- * @param {string} threadTs The message threads object returned from slack.
- * @returns {object} The slack chat message object sent.
+ * @returns {object} Block to send to slack.
  */
-const sendSecondaryRequestInfo = async (record, text, threadTs) => {
+const getSecondaryRequestInfoBlock = (record) => {
   const subsidyRequested = message.getSubsidyRequest(record);
   const anythingElse = message.getAnythingElse(record);
 
-  return bot.chat.postMessage({
-    thread_ts: threadTs,
-    token,
-    channel,
-    text,
-    blocks: [subsidyRequested, anythingElse],
-  });
+  return [subsidyRequested, anythingElse];
 };
 
 /**
  * Send volunteer info.
  *
  * @param {Array} volunteers The list of identified volunteers.
- * @param {string} text The message to send to slack.
- * @param {string} threadTs The threaded message object returned from slack.
- * @returns {object} The slack chat message object sent.
+ * @returns {object} Block to send to slack.
  */
-const sendVolunteerInfo = async (volunteers, text, threadTs) => {
+const getVolunteerInfoBlock = (volunteers) => {
   const volunteerHeading = message.getVolunteerHeading(volunteers);
   const volunteerList = message.getVolunteers(volunteers);
   const volunteerClosing = message.getVolunteerClosing(volunteers);
 
-  return bot.chat.postMessage({
-    thread_ts: threadTs,
-    token,
-    channel,
-    text,
-    blocks: [volunteerHeading, ...volunteerList, volunteerClosing],
-  });
+  return [volunteerHeading, ...volunteerList, volunteerClosing];
 };
 
 /**
@@ -108,9 +83,27 @@ const sendDispatch = async (record, volunteers, reminder = false) => {
   if (!record) throw new Error("No record passed to sendMessage().");
 
   const text = message.getText({ reminder });
-  const { ts } = await sendPrimaryRequestInfo(record, text, reminder);
-  await sendSecondaryRequestInfo(record, text, ts);
-  await sendVolunteerInfo(volunteers, text, ts);
+  const primaryRequestInfo = getPrimaryRequestInfoBlock(record, text, reminder);
+  const blocksList = [
+    getSecondaryRequestInfoBlock(record),
+    getVolunteerInfoBlock(volunteers),
+  ];
+  const res = await bot.chat.postMessage({
+    token,
+    channel,
+    text,
+    blocks: primaryRequestInfo,
+  });
+  const { ts } = res;
+  for (const blocks of blocksList) {
+    await bot.chat.postMessage({
+      thread_ts: ts,
+      token,
+      channel,
+      text,
+      blocks,
+    });
+  }
   await sendCopyPasteNumbers(volunteers, ts);
 };
 

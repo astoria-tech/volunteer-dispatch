@@ -4,7 +4,7 @@ const Task = require("../src/task");
 describe("Task", () => {
   describe("mapFromRawTask", () => {
     it("raw string maps to correct task", () => {
-      const rawtask = "Grocery shopping";
+      const rawtask = "Food Assistance";
       const mappedtask = Task.mapFromRawTask(rawtask);
       expect(mappedtask.rawTask).toBe(rawtask);
       expect(mappedtask.supportRequirements).toEqual([
@@ -14,7 +14,7 @@ describe("Task", () => {
   });
   describe("canBeFulfilledByVolunteer", () => {
     it("should throw error if volunteer does not have get function", () => {
-      const task = Task.mapFromRawTask("Grocery shopping");
+      const task = Task.mapFromRawTask("Food Assistance");
       const volunteer = {};
       expect(() => task.canBeFulfilledByVolunteer(volunteer)).toThrowError();
     });
@@ -24,7 +24,7 @@ describe("Task", () => {
         .calledWith("I can provide the following support (non-binding)")
         .mockReturnValue([]);
       const volunteer = { get: getMock };
-      const task = Task.mapFromRawTask("Grocery shopping");
+      const task = Task.mapFromRawTask("Food Assistance");
       expect(task.canBeFulfilledByVolunteer(volunteer)).toBeFalsy();
     });
     it("should return false if volunteer does have capabilities but none supporting the task at hand", () => {
@@ -35,7 +35,7 @@ describe("Task", () => {
           "Check-in on folks throughout the day (in-person or phone call)",
         ]);
       const volunteer = { get: getMock };
-      const task = Task.mapFromRawTask("Grocery shopping");
+      const task = Task.mapFromRawTask("Food Assistance");
       expect(task.canBeFulfilledByVolunteer(volunteer)).toBeFalsy();
     });
     it("should return true if volunteer does have supporting capabilities", () => {
@@ -44,7 +44,7 @@ describe("Task", () => {
         .calledWith("I can provide the following support (non-binding)")
         .mockReturnValue(["Picking up groceries/medications"]);
       const volunteer = { get: getMock };
-      const task = Task.mapFromRawTask("Grocery shopping");
+      const task = Task.mapFromRawTask("Food Assistance");
       expect(task.canBeFulfilledByVolunteer(volunteer)).toBeTruthy();
     });
     it("should return false if task requires volunteer to have a car, but volunteer does not have one", () => {
@@ -81,7 +81,7 @@ describe("Task", () => {
   describe("equals", () => {
     it.each`
       task                                | raw
-      ${Task.GROCERY_SHOPPING}            | ${"Grocery shopping"}
+      ${Task.GROCERY_SHOPPING}            | ${"Food Assistance"}
       ${Task.PRESCRIPTION_PICKUP}         | ${"Picking up a prescription"}
       ${Task.MEDICAL_APPT_TRANSPORTATION} | ${"Transportation to/from a medical appointment"}
       ${Task.DOG_WALKING}                 | ${"Dog walking"}

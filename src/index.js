@@ -236,12 +236,21 @@ async function checkForNewSubmissions() {
 
         logger.info(`New help request for: ${requestWithCoords.get("Name")}`);
 
-        // Can be an async operation
-        // noinspection ES6MissingAwait - no need to wait for a response.
-        requestService.linkUserWithRequest(record);
+        try {
+          // Can be an async operation
+          // noinspection ES6MissingAwait - no need to wait for a response.
+          requestService.linkUserWithRequest(record);
+        } catch (e) {
+          logger.error("Unable to link user with request ", e);
+        }
 
-        // Find the closest volunteers
-        const volunteers = await findVolunteers(requestWithCoords);
+        let volunteers;
+        try {
+          // Find the closest volunteers
+          volunteers = await findVolunteers(requestWithCoords);
+        } catch (e) {
+          logger.error("Unable to find volunteers for request ", e);
+        }
 
         // Send the message to Slack
         let messageSent = false;
