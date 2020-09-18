@@ -301,7 +301,8 @@ async function checkForNewSubmissions() {
   const authToken = config.TWILIO_AUTH_TOKEN;
   const client = require("twilio")(accountSid, authToken);
   const twilioPhoneNumber = config.TWILIO_PHONE_NUMBER;
-  const hasTwilioCredentials = accountSid && authToken && twilioPhoneNumber;
+  const hasTwilioCredentials =
+    (accountSid && authToken && twilioPhoneNumber) || false;
 
   // Check Airtable for tasks completed in the last day, then send volunteer
   // a followup text
