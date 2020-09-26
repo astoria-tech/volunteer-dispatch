@@ -2,9 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const { logger } = require("./logger");
 const { handleButtonUpdate, slackConf } = require("./slack/reminder");
-const {
-  getVolunteersNearAddress,
-} = require("./slack/getVolunteersNearAddress");
+const { getVolunteersNearAddress } = require("./slack/getVolunteersNearAddress");
 
 const app = express();
 const port = 3000;
@@ -30,8 +28,7 @@ app.post("/slack/actions/", (req, res) => {
 
 app.post("/slack/address/", (req, res) => {
   res.sendStatus(200);
-  console.log(req.body)
-//   getVolunteersNearAddress(req.body);
+  getVolunteersNearAddress(req.body);
 });
 
 function run() {
