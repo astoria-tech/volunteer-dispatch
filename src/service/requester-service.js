@@ -43,11 +43,10 @@ class RequesterService {
    */
   async findUserByPhoneNumber(phoneNumber) {
     preconditions.shouldBeString(phoneNumber);
-    const phoneNumberToSearch = phoneNumberUtil.getDisplayNumber(phoneNumber);
     const records = await this.base
       .select({
         view: config.AIRTABLE_USERS_VIEW_NAME,
-        filterByFormula: `{Phone Number} = '${phoneNumberToSearch}'`,
+        filterByFormula: `{Phone Number} = "${phoneNumber}"`,
       })
       .firstPage();
     return extractUserRecordIfAvailable(phoneNumber, records);
@@ -62,10 +61,17 @@ class RequesterService {
   async findUserByFullName(fullName) {
     preconditions.shouldBeString(fullName);
     // eslint-disable-next-line prefer-const
+    let searchName = fullName;
+
+    // Escape double quotes in name
+    if (fullName.includes('"')) {
+      searchName = fullName.replace(/"/g, '\\"');
+    }
+
     const records = await this.base
       .select({
         view: config.AIRTABLE_USERS_VIEW_NAME,
-        filterByFormula: `{Full Name} = '${fullName}'`,
+        filterByFormula: `{Full Name} = "${searchName}"`,
       })
       .firstPage();
     return extractUserRecordIfAvailable(fullName, records);
