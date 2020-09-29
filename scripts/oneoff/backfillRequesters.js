@@ -47,7 +47,7 @@ async function backfillRequesters() {
           await requestService.linkUserWithRequest(record);
           successCount++;
           logger.info(
-            `succesfully processed: ${successCount} of ${totalCount + 1}`
+            `successfully processed ${successCount} of ${totalCount + 1}`
           );
         } catch (err) {
           errors.push({
