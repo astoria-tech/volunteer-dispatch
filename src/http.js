@@ -27,8 +27,12 @@ app.post("/slack/actions/", (req, res) => {
 });
 
 app.post("/slack/address/", (req, res) => {
-  res.sendStatus(200);
-  getVolunteersNearAddress(req.body);
+  if (slackConf(req)) {
+    res.sendStatus(200);
+    getVolunteersNearAddress(req.body);
+  } else {
+    res.status(400).send("Ignore this request.");
+  }
 });
 
 function run() {

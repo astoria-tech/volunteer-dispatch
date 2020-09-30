@@ -37,7 +37,7 @@ And grab the API keys from each (and channel ID for Slack), and put them into th
 - `AIRTABLE_VOLUNTEERS_VIEW_URL` - go to the **Grid View** of the **Volunteers** table in your **Volunteer Dispatch** base, and copy the URL (e.g. `https://airtable.com/tbl9xI8U5heH4EoGX/viwp51zSgXEicB3wB`)
 - `MAPQUEST_KEY`
 - `SLACK_XOXB` - Slack bot token. To setup: create an app, add the OAuth `chat:write` bot scope, install the app to a channel, and grab the bot token
-- `SLACK_SECRET` - Slack app signing secret. Found in the 'Basic Information' section of your app on api.slack.com/apps
+- `SLACK_SIGNING_SECRET` - Slack app signing secret. Found in the 'Basic Information' section of your app on api.slack.com/apps
 - `SLACK_CHANNEL_ID` - Slack channel ID (e.g. `C0107MVRF08`)
 
 ## How to run
