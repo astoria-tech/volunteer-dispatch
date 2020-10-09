@@ -1,5 +1,4 @@
 const RequesterService = require("../../src/service/requester-service");
-const phoneNumberUtils = require("../../src/utils/phone-number-utils");
 
 jest.mock("../../src/utils/phone-number-utils");
 jest.mock("../../src/config", () => {
@@ -10,7 +9,7 @@ jest.mock("../../src/config", () => {
 const mockUsersViewName = "Grid View";
 
 const fullName = "Ezekiel Adams";
-const phoneNumber = "055.956.1902";
+const phoneNumber = "(055) 956-1902";
 const records = [
   {
     get: (field) => {
@@ -39,7 +38,6 @@ describe("RequesterService", () => {
       select: mockSelect,
     };
     service = new RequesterService(base);
-    phoneNumberUtils.getDisplayNumber.mockReturnValue(phoneNumber);
   });
   describe("findUserByPhoneNumber", () => {
     it("should check is supplied argument is a string", async () => {
@@ -53,15 +51,12 @@ describe("RequesterService", () => {
         "Variable should be a String."
       );
     });
-    const expectedFilterByFormula = `{Phone Number} = '${phoneNumber}'`;
+    const expectedFilterByFormula = `{Phone Number} = "${phoneNumber}"`;
     it("should throw error if more than one records are found for given number", async () => {
-      expect.assertions(3);
+      expect.assertions(2);
       mockFirstPage.mockReturnValue([records[0], records[1]]);
       await expect(service.findUserByPhoneNumber(phoneNumber)).rejects.toThrow(
         `${phoneNumber} has more than one user linked to it!`
-      );
-      expect(phoneNumberUtils.getDisplayNumber).toHaveBeenCalledWith(
-        phoneNumber
       );
       expect(mockSelect).toHaveBeenCalledWith({
         view: mockUsersViewName,
@@ -69,12 +64,9 @@ describe("RequesterService", () => {
       });
     });
     it("should throw return null if no users found for given phone number", async () => {
-      expect.assertions(3);
+      expect.assertions(2);
       mockFirstPage.mockReturnValue([]);
       const userRecord = await service.findUserByPhoneNumber(phoneNumber);
-      expect(phoneNumberUtils.getDisplayNumber).toHaveBeenCalledWith(
-        phoneNumber
-      );
       expect(mockSelect).toHaveBeenCalledWith({
         view: mockUsersViewName,
         filterByFormula: expectedFilterByFormula,
@@ -82,12 +74,9 @@ describe("RequesterService", () => {
       expect(userRecord).toBe(null);
     });
     it("should search for users with formatted phone number", async () => {
-      expect.assertions(4);
+      expect.assertions(3);
       mockFirstPage.mockReturnValue(records);
       const userRecord = await service.findUserByPhoneNumber(phoneNumber);
-      expect(phoneNumberUtils.getDisplayNumber).toHaveBeenCalledWith(
-        phoneNumber
-      );
       expect(mockSelect).toHaveBeenCalledWith({
         view: mockUsersViewName,
         filterByFormula: expectedFilterByFormula,
@@ -108,7 +97,8 @@ describe("RequesterService", () => {
         "Variable should be a String."
       );
     });
-    const expectedFilterByFormula = `{Full Name} = '${fullName}'`;
+    const searchName = fullName.replace(/"/g, '\\"');
+    const expectedFilterByFormula = `{Full Name} = "${searchName}"`;
     it("should throw error if more than one records are found for given full name", async () => {
       expect.assertions(2);
       mockFirstPage.mockReturnValue([records[0], records[1]]);

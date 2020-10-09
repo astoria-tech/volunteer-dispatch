@@ -5,6 +5,7 @@ const config = require("../../src/config");
 const Request = require("../../src/model/request-record");
 const RequesterService = require("../../src/service/requester-service");
 const RequestService = require("../../src/service/request-service");
+const { logger } = require("../../src/logger");
 
 const base = new Airtable({ apiKey: config.AIRTABLE_API_KEY }).base(
   config.AIRTABLE_BASE_ID
@@ -26,7 +27,10 @@ const requestService = new RequestService(
  * @returns {void}
  */
 async function backfillRequesters() {
-  base(config.AIRTABLE_REQUESTS_TABLE_NAME)
+  const errors = [];
+  let totalCount = 0;
+  let successCount = 0;
+  await base(config.AIRTABLE_REQUESTS_TABLE_NAME)
     .select({
       view: config.AIRTABLE_REQUESTS_VIEW_NAME,
       filterByFormula: `{Requester} = ''`,
@@ -35,11 +39,33 @@ async function backfillRequesters() {
       if (!records.length) return;
       const mappedRecords = records.map((r) => new Request(r));
       for (const record of mappedRecords) {
-        await requestService.linkUserWithRequest(record);
+        const requesterName = record.get("Name");
+        const phoneNumber = record.get("Phone number");
+        logger.info(`Now processing:`);
+        logger.info(`id: ${record.id}`);
+        try {
+          await requestService.linkUserWithRequest(record);
+          successCount++;
+          logger.info(
+            `successfully processed ${successCount} of ${totalCount + 1}`
+          );
+        } catch (err) {
+          errors.push({
+            id: record.id,
+            name: requesterName,
+            phone: phoneNumber,
+            error: err,
+          });
+          logger.error(err);
+        }
+        totalCount++;
+        console.log("");
       }
 
       nextPage();
     });
+  logger.info(`successfully processed ${successCount} of ${totalCount}`);
+  console.log("errors", errors);
 }
 
 backfillRequesters();
