@@ -9,7 +9,8 @@
     "start": "nodemon src/index.js",
     "lint": "eslint src/**/*.js test/**/*.js",
     "lint:fix": "eslint src/**/*.js test/**/*.js --fix",
-    "backfill-requesters": "node scripts/oneoff/backfillRequesters.js"
+    "backfill-requesters": "node scripts/oneoff/backfillRequesters.js",
+    "remove-extra-whitespace": "node scripts/oneoff/removeExtraWhitespace.js"
   },
   "repository": {
     "type": "git",
@@ -22,9 +23,10 @@
   },
   "homepage": "https://github.com/astoria-tech/slack-volunteer-seeker#readme",
   "dependencies": {
-    "airtable": "^0.8.1",
+    "airtable": "^0.10.0",
     "axios": "^0.19.2",
     "body-parser": "^1.19.0",
+    "condense-whitespace": "^2.0.0",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "geolib": "^3.2.1",
